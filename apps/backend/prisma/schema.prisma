@@ -1,0 +1,173 @@
+// ============================================================
+//  Local Service Marketplace — Prisma Schema
+//  Matches SQL schema exactly (snake_case columns via @map)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ------------------------------------------------------------
+//  Enums
+// ------------------------------------------------------------
+
+enum DocumentType {
+  NIC_PHOTO
+  SELFIE
+  SERVICE_PROOF
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ------------------------------------------------------------
+//  1. MainCategory  →  main_category
+// ------------------------------------------------------------
+
+model MainCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  iconUrl   String?  @map("icon_url")   @db.VarChar(255)
+  isActive  Boolean  @default(true)     @map("is_active")
+  createdAt DateTime @default(now())    @map("created_at")
+
+  subCategories    SubCategory[]
+  providerServices ProviderService[]
+
+  @@map("main_category")
+}
+
+// ------------------------------------------------------------
+//  2. SubCategory  →  sub_category
+// ------------------------------------------------------------
+
+model SubCategory {
+  id             Int      @id @default(autoincrement())
+  mainCategoryId Int      @map("main_category_id")
+  name           String   @db.VarChar(100)
+  isActive       Boolean  @default(true)  @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  mainCategory     MainCategory      @relation(fields: [mainCategoryId], references: [id], onDelete: Cascade)
+  providerServices ProviderService[]
+
+  @@index([mainCategoryId], name: "idx_sub_category_main")
+  @@map("sub_category")
+}
+
+// ------------------------------------------------------------
+//  3. ServiceProvider  →  service_provider
+// ------------------------------------------------------------
+
+model ServiceProvider {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName       String   @map("full_name")       @db.VarChar(150)
+  mobileNumber   String   @unique @map("mobile_number")   @db.VarChar(20)
+  mobileVerified Boolean  @default(false)         @map("mobile_verified")
+  whatsappNumber String?  @map("whatsapp_number") @db.VarChar(20)
+  email          String?  @db.VarChar(150)
+  nicNumber      String   @unique @map("nic_number") @db.VarChar(30)
+  isActive       Boolean  @default(false) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  providerServices      ProviderService[]
+  serviceAreas          ServiceArea[]
+  availability          Availability?
+  verificationDocuments VerificationDocument[]
+
+  @@index([mobileNumber], name: "idx_sp_mobile")
+  @@index([nicNumber],    name: "idx_sp_nic")
+  @@map("service_provider")
+}
+
+// ------------------------------------------------------------
+//  4. ProviderService  →  provider_service
+// ------------------------------------------------------------
+
+model ProviderService {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId      String   @map("provider_id")      @db.Uuid
+  mainCategoryId  Int      @map("main_category_id")
+  subCategoryId   Int      @map("sub_category_id")
+  experienceYears Int?     @map("experience_years")
+  description     String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  provider     ServiceProvider @relation(fields: [providerId],     references: [id], onDelete: Cascade)
+  mainCategory MainCategory    @relation(fields: [mainCategoryId], references: [id])
+  subCategory  SubCategory     @relation(fields: [subCategoryId],  references: [id])
+
+  @@unique([providerId, subCategoryId])
+  @@index([providerId],     name: "idx_ps_provider")
+  @@index([mainCategoryId], name: "idx_ps_main_category")
+  @@index([subCategoryId],  name: "idx_ps_sub_category")
+  @@map("provider_service")
+}
+
+// ------------------------------------------------------------
+//  5. ServiceArea  →  service_area
+// ------------------------------------------------------------
+
+model ServiceArea {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId      String   @map("provider_id")      @db.Uuid
+  town            String   @db.VarChar(100)
+  areaDescription String?  @map("area_description") @db.VarChar(255)
+  latitude        Decimal? @db.Decimal(9, 6)
+  longitude       Decimal? @db.Decimal(9, 6)
+  address         String?  @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId], name: "idx_sa_provider")
+  @@index([town],       name: "idx_sa_town")
+  @@map("service_area")
+}
+
+// ------------------------------------------------------------
+//  6. Availability  →  availability
+// ------------------------------------------------------------
+
+model Availability {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId     String    @unique @map("provider_id") @db.Uuid
+  availableDays  String?   @map("available_days") @db.VarChar(20)
+  availableFrom  DateTime? @map("available_from") @db.Time
+  availableTo    DateTime? @map("available_to")   @db.Time
+  is24_7         Boolean   @default(false) @map("is_24_7")
+  isAvailableNow Boolean   @default(false) @map("is_available_now")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([isAvailableNow], name: "idx_av_available_now")
+  @@index([providerId],     name: "idx_av_provider")
+  @@map("availability")
+}
+
+// ------------------------------------------------------------
+//  7. VerificationDocument  →  verification_document
+// ------------------------------------------------------------
+
+model VerificationDocument {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId   String         @map("provider_id") @db.Uuid
+  documentType DocumentType   @map("document_type")
+  bucketKey    String         @map("bucket_key")  @db.VarChar(500)
+  status       DocumentStatus @default(PENDING)
+  uploadedAt   DateTime       @default(now()) @map("uploaded_at")
+
+  provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId],         name: "idx_vd_provider")
+  @@index([providerId, status], name: "idx_vd_provider_status")
+  @@map("verification_document")
+}
