@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -134,9 +135,11 @@ export default function Home() {
                 Testimonials
               </a>
             </div>
-            <Button className="bg-green-600 hover:bg-green-700 text-white">
-              Get Started
-            </Button>
+            <Link href="/get-started">
+              <Button className="bg-green-600 hover:bg-green-700 text-white">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
