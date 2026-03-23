@@ -81,7 +81,7 @@ export default function GetStarted() {
             </p>
 
             <Link
-              href="#"
+              href="/register/partner"
               className="inline-flex items-center gap-2 text-[#1aae74] font-semibold text-sm hover:gap-3 transition-all duration-200 relative z-10"
             >
               Apply as partner <ArrowRight className="w-4 h-4" />
