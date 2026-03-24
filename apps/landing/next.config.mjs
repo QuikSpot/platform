@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: '../../dist/apps/landing',
   typescript: {
     ignoreBuildErrors: true,
   },

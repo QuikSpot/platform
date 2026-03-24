@@ -23,8 +23,8 @@
       "executor": "nx:run-commands",
       "continuous": true,
       "options": {
-        "command": "node dist/main",
-        "cwd": "apps/backend"
+        "command": "node dist/apps/backend/main",
+        "cwd": "."
       },
       "dependsOn": ["build"]
     }
