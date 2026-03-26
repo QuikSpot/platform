@@ -8,7 +8,7 @@ export default function GetStarted() {
     <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #e8f5ee 0%, #d4eddf 50%, #e8f5ee 100%)' }}>
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
-        <span className="text-xl font-bold text-[#114b2e]">FixMate</span>
+        <span className="text-xl font-bold text-[#114b2e]">InstaFixd</span>
         <Link
           href="/"
           className="text-sm font-medium text-slate-700 hover:text-[#114b2e] transition-colors"
@@ -100,7 +100,7 @@ export default function GetStarted() {
 
       {/* Footer */}
       <footer className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-emerald-100/60">
-        <p className="text-xs text-slate-400">© 2024 FixMate. All rights reserved.</p>
+        <p className="text-xs text-slate-400">© 2024 InstaFixd. All rights reserved.</p>
         <div className="flex items-center gap-6 mt-3 md:mt-0">
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Privacy</Link>
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Terms</Link>

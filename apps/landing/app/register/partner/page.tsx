@@ -22,23 +22,25 @@ type FormData = {
   mobileNumber: string;
   whatsappNumber: string;
   email: string;
-  hometown: string;
-  serviceRadius: number;
-  gpsSharing: boolean;
+  address: string;
+  province: string;
+  district: string;
+  serviceZones: string[];
   primaryCategory: string;
   experienceLevel: string;
   subCategories: string[];
   bio: string;
-  availableNow: boolean;
   nightService: boolean;
   serviceDays: string[];
   workStartTime: string;
   workEndTime: string;
-  nicImage: File | null;
+  nicFrontImage: File | null;
+  nicBackImage: File | null;
   selfieImage: File | null;
   portfolio: File | null;
   agreeTerms: boolean;
   agreeCommission: boolean;
+  otp: string;
 };
 
 const STEPS = [
@@ -49,11 +51,57 @@ const STEPS = [
   { id: 5, label: 'Verification' },
 ];
 
-const SUB_CATEGORIES = ['Painting', 'Furniture Assembly', 'Roof Repair', 'Tiling', 'AC Repair', 'Plumbing', 'Electrical', 'Cleaning'];
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const TOWNS = ['Colombo', 'Kandy', 'Galle', 'Jaffna', 'Negombo', 'Anuradhapura', 'Ratnapura', 'Matara'];
-const CATEGORIES = ['Home Maintenance', 'Cleaning', 'Electrical', 'Plumbing', 'Carpentry', 'Landscaping'];
+const PROVINCES = ['Central', 'Eastern', 'North Central', 'Northern', 'North Western', 'Sabaragamuwa', 'Southern', 'Uva', 'Western'];
+const DISTRICTS: Record<string, string[]> = {
+  'Central': ['Kandy', 'Matale', 'Nuwara Eliya'],
+  'Eastern': ['Ampara', 'Batticaloa', 'Trincomalee'],
+  'North Central': ['Anuradhapura', 'Polonnaruwa'],
+  'Northern': ['Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya'],
+  'North Western': ['Kurunegala', 'Puttalam'],
+  'Sabaragamuwa': ['Kegalle', 'Ratnapura'],
+  'Southern': ['Galle', 'Hambantota', 'Matara'],
+  'Uva': ['Badulla', 'Moneragala'],
+  'Western': ['Colombo', 'Gampaha', 'Kalutara']
+};
+const CATEGORIES_MAP: Record<string, string[]> = {
+  'Home Maintenance': ['Painting', 'Furniture Assembly', 'Roof Repair', 'Tiling', 'Carpentry', 'Masonry'],
+  'Cleaning': ['House Cleaning', 'Deep Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Upholstery Cleaning'],
+  'Electrical': ['Wiring', 'Appliance Repair', 'Lighting Installation', 'CCTV Installation', 'Solar Panel Maintenance'],
+  'Plumbing': ['Leak Repair', 'Pipe Installation', 'Drain Cleaning', 'Bathroom Fitting', 'Water Tank Cleaning'],
+  'Carpentry': ['Custom Furniture', 'Kitchen Cabinets', 'Door Repair', 'Wood Polishing', 'Deck Building'],
+  'Landscaping': ['Garden Design', 'Lawn Mowing', 'Fence Installation', 'Tree Trimming', 'Irrigation Systems']
+};
+const CATEGORIES = Object.keys(CATEGORIES_MAP);
 const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
+
+const SERVICE_ZONES_MAP: Record<string, string[]> = {
+  'Colombo': ['Maharagama', 'Kottawa', 'Pannipitiya', 'Nugegoda', 'Mount Lavinia', 'Dehiwala', 'Ratmalana', 'Battaramulla', 'Malabe', 'Kaduwela', 'Pita Kotte', 'Ethul Kotte', 'Rajagiriya'],
+  'Gampaha': ['Negombo', 'Wattala', 'Kiribathgoda', 'Kadawatha', 'Ja-Ela', 'Kelaniya', 'Minuwangoda', 'Veyangoda', 'Gampaha Town', 'Ragama'],
+  'Kalutara': ['Panadura', 'Horana', 'Wadduwa', 'Beruwala', 'Alutgama', 'Matugama', 'Kalutara Town'],
+  'Kandy': ['Peradeniya', 'Katugastota', 'Gampola', 'Nawalapitiya', 'Kundasale', 'Digana', 'Gelioya'],
+  'Matale': ['Matale Town', 'Dambulla', 'Sigiriya', 'Pallepola'],
+  'Nuwara Eliya': ['Nuwara Eliya Town', 'Talawakele', 'Hatton', 'Walapane'],
+  'Galle': ['Galle Fort', 'Hikkaduwa', 'Karapitiya', 'Unawatuna', 'Ambalangoda', 'Baddegama'],
+  'Matara': ['Matara Town', 'Weligama', 'Mirissa', 'Dikwella', 'Akuressa', 'Deniyaya'],
+  'Hambantota': ['Hambantota Town', 'Tangalle', 'Beliatta', 'Ambalantota', 'Tissamaharama'],
+  'Jaffna': ['Jaffna Town', 'Chavakachcheri', 'Point Pedro', 'Kopay'],
+  'Kilinochchi': ['Kilinochchi Town', 'Pooneryn'],
+  'Mannar': ['Mannar Town', 'Nanattan'],
+  'Mullaitivu': ['Mullaitivu Town', 'Oddusuddan'],
+  'Vavuniya': ['Vavuniya Town', 'Cheddikulam'],
+  'Anuradhapura': ['Anuradhapura Town', 'Eppawala', 'Medawachchiya', 'Kebithigollewa', 'Thambuttegama'],
+  'Polonnaruwa': ['Polonnaruwa Town', 'Hingurakgoda', 'Medirigiriya'],
+  'Kurunegala': ['Kurunegala Town', 'Kuliyapitiya', 'Narammala', 'Wariyapola', 'Pannala'],
+  'Puttalam': ['Puttalam Town', 'Chilaw', 'Marawila', 'Wennappuwa', 'Dankotuwa'],
+  'Badulla': ['Badulla Town', 'Bandarawela', 'Haputale', 'Diyatalawa', 'Ella', 'Mahiyanganaya'],
+  'Moneragala': ['Moneragala Town', 'Wellawaya', 'Buttala', 'Kataragama'],
+  'Ratnapura': ['Ratnapura Town', 'Balangoda', 'Eheliyagoda', 'Pelmadulla', 'Embilipitiya'],
+  'Kegalle': ['Kegalle Town', 'Mawanella', 'Warakapola', 'Rambukkana', 'Dehiowita'],
+  'Ampara': ['Ampara Town', 'Samanthurai', 'Kalmunai', 'Akkaraipattu'],
+  'Batticaloa': ['Batticaloa Town', 'Eravur', 'Kattankudy', 'Valaichchenai'],
+  'Trincomalee': ['Trincomalee Town', 'Kinniya', 'Muttur', 'Kantale']
+};
 
 const SelectChevron = () => (
   <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -79,24 +127,33 @@ export default function PartnerRegistration() {
     mobileNumber: '',
     whatsappNumber: '',
     email: '',
-    hometown: 'Colombo',
-    serviceRadius: 25,
-    gpsSharing: true,
+    address: '',
+    province: 'Western',
+    district: 'Colombo',
+    serviceZones: [],
     primaryCategory: 'Home Maintenance',
     experienceLevel: 'Entry Level (1–2 years)',
-    subCategories: ['Furniture Assembly'],
+    subCategories: [],
     bio: '',
-    availableNow: true,
     nightService: false,
     serviceDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
     workStartTime: '08:00',
     workEndTime: '18:00',
-    nicImage: null,
+    nicFrontImage: null,
+    nicBackImage: null,
     selfieImage: null,
     portfolio: null,
     agreeTerms: false,
     agreeCommission: false,
+    otp: '',
   });
+  const [showOtp, setShowOtp] = useState(false);
+  const [zoneSearch, setZoneSearch] = useState('');
+
+  const toggleZone = (zone: string) =>
+    set('serviceZones', form.serviceZones.includes(zone)
+      ? form.serviceZones.filter(z => z !== zone)
+      : [...form.serviceZones, zone]);
 
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) =>
     setForm(f => ({ ...f, [key]: value }));
@@ -119,7 +176,7 @@ export default function PartnerRegistration() {
     <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #e8f5ee 0%, #d4eddf 50%, #e8f5ee 100%)' }}>
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
-        <span className="text-xl font-bold text-[#114b2e]">LushLocal</span>
+        <span className="text-xl font-bold text-[#114b2e]">InstaFixd</span>
         <Link href="/" className="text-sm font-medium text-slate-700 hover:text-[#114b2e] transition-colors">
           Back to Home
         </Link>
@@ -132,7 +189,7 @@ export default function PartnerRegistration() {
             Partner Registration
           </span>
           <h1 className="text-5xl font-extrabold text-[#114b2e] mb-3 leading-tight">
-            Become a FixMate Expert
+            Become an InstaFixd Expert
           </h1>
           <p className="text-slate-500 text-base max-w-md mx-auto leading-relaxed">
             Join our ecosystem of premium service providers. Grow your local business with the support of a lush community.
@@ -194,11 +251,29 @@ export default function PartnerRegistration() {
                     <input type="tel" placeholder="+94 77 123 4567" value={form.mobileNumber}
                       onChange={e => set('mobileNumber', e.target.value)}
                       className="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition" />
-                    <button type="button" className="px-5 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowOtp(true)}
+                      className="px-5 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap"
+                    >
                       Verify
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1.5">An OTP will be sent to this number.</p>
+                  {showOtp ? (
+                    <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <label className="text-[10px] font-bold text-[#1aae74] uppercase tracking-wider mb-1 block">Enter OTP</label>
+                      <input 
+                        type="text" 
+                        maxLength={6}
+                        placeholder="000000" 
+                        value={form.otp}
+                        onChange={e => set('otp', e.target.value)} 
+                        className="w-32 px-4 py-2 rounded-lg border border-[#1aae74] bg-emerald-50 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-[#1aae74]/20 transition" 
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 mt-1.5">An OTP will be sent to this number.</p>
+                  )}
                 </div>
                 <div>
                   <label className={labelCls}>WhatsApp Number</label>
@@ -206,8 +281,13 @@ export default function PartnerRegistration() {
                     onChange={e => set('whatsappNumber', e.target.value)} className={inputCls} />
                 </div>
                 <div className="md:col-span-2">
+                  <label className={labelCls}>Permanent Address</label>
+                  <input type="text" placeholder="123, Lush Lane, Garden City" value={form.address}
+                    onChange={e => set('address', e.target.value)} className={inputCls} />
+                </div>
+                <div className="md:col-span-2">
                   <label className={labelCls}>Email Address</label>
-                  <input type="email" placeholder="johnathan@lushlocal.com" value={form.email}
+                  <input type="email" placeholder="johnathan@instafixd.com" value={form.email}
                     onChange={e => set('email', e.target.value)} className={inputCls} />
                 </div>
               </div>
@@ -224,38 +304,89 @@ export default function PartnerRegistration() {
                 <h2 className="text-2xl font-bold text-slate-900">Service Location</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 <div>
-                  <label className={labelCls}>Hometown</label>
+                  <label className={labelCls}>Province</label>
                   <div className="relative">
-                    <select value={form.hometown} onChange={e => set('hometown', e.target.value)} className={selectCls}>
-                      {TOWNS.map(t => <option key={t}>{t}</option>)}
+                    <select value={form.province} 
+                      onChange={e => {
+                        const p = e.target.value;
+                        set('province', p);
+                        set('district', DISTRICTS[p][0]);
+                      }} 
+                      className={selectCls}>
+                      {PROVINCES.map(p => <option key={p}>{p}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>
-                    Service Radius (KM) — <span className="text-[#1aae74] normal-case">{form.serviceRadius} km</span>
-                  </label>
-                  <div className="pt-3">
-                    <input type="range" min={5} max={100} step={5} value={form.serviceRadius}
-                      onChange={e => set('serviceRadius', Number(e.target.value))}
-                      className="w-full accent-[#1aae74]" />
-                    <div className="flex justify-between text-xs text-slate-400 mt-1">
-                      <span>5 km</span>
-                      <span>100 km</span>
-                    </div>
+                  <label className={labelCls}>District</label>
+                  <div className="relative">
+                    <select value={form.district} onChange={e => set('district', e.target.value)} className={selectCls}>
+                      {DISTRICTS[form.province].map(d => <option key={d}>{d}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-slate-800">GPS Location Sharing</p>
-                  <p className="text-sm text-slate-500 mt-0.5">Allow customers to find you based on proximity</p>
+              <div className="mb-8">
+                <label className={labelCls}>Your Selected Service Zones</label>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
+                  {form.serviceZones.length > 0 ? (
+                    form.serviceZones.map(zone => (
+                      <span key={zone} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#114b2e] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
+                        {zone}
+                        <button type="button" onClick={() => toggleZone(zone)} className="hover:text-emerald-300 transition-colors">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">No zones selected yet. Select from the available towns in {form.district}.</p>
+                  )}
                 </div>
-                <Toggle on={form.gpsSharing} onToggle={() => set('gpsSharing', !form.gpsSharing)} />
+              </div>
+
+              <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl relative">
+                <label className={labelCls}>Search & Select Service Zones in {form.district}</label>
+                <div className="relative mt-3">
+                  <input 
+                    type="text" 
+                    placeholder="Search for towns (e.g. Maharagama...)" 
+                    value={zoneSearch}
+                    onChange={e => setZoneSearch(e.target.value)}
+                    className={inputCls} 
+                  />
+                  {zoneSearch.trim() && (
+                    <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                      {(SERVICE_ZONES_MAP[form.district] || [])
+                        .filter(z => z.toLowerCase().includes(zoneSearch.toLowerCase()))
+                        .map(zone => (
+                          <button 
+                            key={zone} 
+                            type="button" 
+                            onClick={() => {
+                              toggleZone(zone);
+                              setZoneSearch('');
+                            }}
+                            className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-emerald-50 transition-colors ${
+                              form.serviceZones.includes(zone) ? 'bg-emerald-50/50 text-[#1aae74] font-semibold' : 'text-slate-600'
+                            }`}
+                          >
+                            {zone}
+                            {form.serviceZones.includes(zone) && <CheckCircle2 className="w-4 h-4" />}
+                          </button>
+                        ))}
+                      {(SERVICE_ZONES_MAP[form.district] || [])
+                        .filter(z => z.toLowerCase().includes(zoneSearch.toLowerCase())).length === 0 && (
+                          <div className="px-4 py-3 text-xs text-slate-400 italic">No matching zones found in this district.</div>
+                        )}
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 italic uppercase tracking-wider">Type to find specific areas where you provide service.</p>
               </div>
             </div>
           )}
@@ -270,7 +401,7 @@ export default function PartnerRegistration() {
                 <h2 className="text-2xl font-bold text-slate-900">Expertise</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 <div>
                   <label className={labelCls}>Primary Category</label>
                   <div className="relative">
@@ -291,15 +422,34 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              <div className="mb-5">
-                <label className={labelCls}>Sub-Categories (Select all that apply)</label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {SUB_CATEGORIES.map(cat => (
+              {/* Selected Expertise Container */}
+              <div className="mb-8">
+                <label className={labelCls}>Your Selected Expertise</label>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
+                  {form.subCategories.length > 0 ? (
+                    form.subCategories.map(cat => (
+                      <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a3d2b] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
+                        {cat}
+                        <button type="button" onClick={() => toggleSubCategory(cat)} className="hover:text-emerald-300 transition-colors">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories below.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                <label className={labelCls}>Available Sub-Categories for {form.primaryCategory}</label>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {CATEGORIES_MAP[form.primaryCategory].map(cat => (
                     <button key={cat} type="button" onClick={() => toggleSubCategory(cat)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
                         form.subCategories.includes(cat)
-                          ? 'bg-[#1a3d2b] border-[#1a3d2b] text-white'
-                          : 'bg-white border-slate-300 text-slate-600 hover:border-[#1aae74] hover:text-[#1aae74]'
+                          ? 'bg-[#1aae74] border-[#1aae74] text-white shadow-md shadow-[#1aae74]/20'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-[#1aae74] hover:text-[#1aae74]'
                       }`}>
                       {cat}
                     </button>
@@ -331,18 +481,8 @@ export default function PartnerRegistration() {
                 <h2 className="text-2xl font-bold text-white">Availability Schedule</h2>
               </div>
 
-              {/* Status + Night Service */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 relative z-10">
-                <div className="bg-white/10 rounded-2xl p-5">
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1aae74] inline-block" />
-                    <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase">Status Control</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white font-semibold text-lg">Available Now</span>
-                    <Toggle on={form.availableNow} onToggle={() => set('availableNow', !form.availableNow)} dark />
-                  </div>
-                </div>
+              {/* Night Service */}
+              <div className="mb-6 relative z-10">
                 <div className="bg-white/10 rounded-2xl p-5">
                   <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-3">Night Service</p>
                   <div className="flex items-center justify-between">
@@ -398,15 +538,48 @@ export default function PartnerRegistration() {
                   <h2 className="text-2xl font-bold text-slate-900">Trust & Verification</h2>
                 </div>
 
-                {/* Upload Areas */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {/* NIC Container Card */}
+                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 mb-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BadgeCheck className="w-4 h-4 text-[#1aae74]" />
+                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">NIC / ID Card Verification</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Front */}
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={e => set('nicFrontImage', e.target.files?.[0] ?? null)} />
+                      <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
+                      <p className="font-semibold text-slate-700 text-xs text-center">NIC Front Side</p>
+                      {form.nicFrontImage && (
+                        <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
+                          {form.nicFrontImage.name}
+                        </p>
+                      )}
+                    </label>
+                    {/* Back */}
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={e => set('nicBackImage', e.target.files?.[0] ?? null)} />
+                      <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
+                      <p className="font-semibold text-slate-700 text-xs text-center">NIC Back Side</p>
+                      {form.nicBackImage && (
+                        <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
+                          {form.nicBackImage.name}
+                        </p>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                {/* Other Uploads */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                   {[
-                    { key: 'nicImage' as const, icon: Camera, label: 'NIC Front/Back', sub: 'Clear photo of your ID', accept: 'image/*' },
                     { key: 'selfieImage' as const, icon: UserRound, label: 'Verification Selfie', sub: 'Holding your ID card', accept: 'image/*' },
                     { key: 'portfolio' as const, icon: Upload, label: 'Portfolio / Work', sub: 'Past project photos (ZIP/PDF)', accept: '.zip,.pdf,image/*' },
                   ].map(({ key, icon: Icon, label, sub, accept }) => (
                     <label key={key}
-                      className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 cursor-pointer hover:border-[#1aae74] transition-colors group">
+                      className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
                       <input type="file" accept={accept} className="hidden"
                         onChange={e => set(key, e.target.files?.[0] ?? null)} />
                       <Icon className="w-8 h-8 text-slate-300 group-hover:text-[#1aae74] mb-3 transition-colors" />
@@ -426,13 +599,13 @@ export default function PartnerRegistration() {
                   {[
                     {
                       key: 'agreeTerms' as const,
-                      title: 'I agree to the LushLocal FixMate Terms & Conditions',
+                      title: 'I agree to the InstaFixd Terms & Conditions',
                       desc: 'By checking this, you agree to our professional code of conduct and service quality standards.',
                     },
                     {
                       key: 'agreeCommission' as const,
                       title: 'I acknowledge the 10% Platform Commission',
-                      desc: 'FixMate retains a small commission on successful bookings to maintain the platform and customer support.',
+                      desc: 'InstaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
                     },
                   ].map(({ key, title, desc }) => (
                     <button key={key} type="button" onClick={() => set(key, !form[key])}
@@ -482,7 +655,7 @@ export default function PartnerRegistration() {
 
       {/* Footer */}
       <footer className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-emerald-100/60">
-        <p className="text-xs text-slate-400">© 2024 LushLocal. All rights reserved.</p>
+        <p className="text-xs text-slate-400">© 2024 InstaFixd. All rights reserved.</p>
         <div className="flex items-center gap-6 mt-3 md:mt-0">
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Privacy</Link>
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Terms</Link>

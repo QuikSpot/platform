@@ -22,7 +22,7 @@ export class AppConfigService {
   }
 
   get appName(): string {
-    return this.config.get<string>('APP_NAME', 'Fixmate');
+    return this.config.get<string>('APP_NAME', 'InstaFixd');
   }
 
   get isDevelopment(): boolean {
