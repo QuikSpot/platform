@@ -62,7 +62,7 @@ const services = [
 const steps = [
   {
     number: '1',
-    title: 'Message FixMate Bot',
+    title: 'Message InstaFixd Bot',
     description: 'Start a WhatsApp conversation and describe your problem',
   },
   {
@@ -86,13 +86,13 @@ const testimonials = [
   {
     name: 'Ravi Kumar',
     role: 'Homeowner',
-    text: 'FixMate fixed my AC in hours! The WhatsApp integration made everything so convenient.',
+    text: 'InstaFixd fixed my AC in hours! The WhatsApp integration made everything so convenient.',
     rating: 5,
   },
   {
     name: 'Priya Silva',
     role: 'Business Owner',
-    text: 'Reliable, fast, and professional. All my property maintenance is now handled through FixMate.',
+    text: 'Reliable, fast, and professional. All my property maintenance is now handled through InstaFixd.',
     rating: 5,
   },
   {
@@ -122,7 +122,7 @@ export default function Home() {
               <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center">
                 <Wrench className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">FixMate</span>
+              <span className="text-xl font-bold text-gray-900">InstaFixd</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#services" className="text-sm text-gray-600 hover:text-primary transition-colors">
@@ -334,7 +334,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-              How FixMate Works
+              How InstaFixd Works
             </h2>
             <p className="text-xl text-gray-600">
               Smart AI matching powered by WhatsApp
@@ -431,10 +431,10 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
             <div className="max-w-3xl">
               <h2 className="text-4xl md:text-5xl font-extrabold mb-6 text-slate-900 leading-tight">
-                Features of FixMate <br /> Freelance Business Management Software
+                Features of InstaFixd <br /> Freelance Business Management Software
               </h2>
               <p className="text-xl text-slate-500 leading-relaxed font-medium">
-                FixMate comprises a unique and powerful suite of features with all the capabilities to deliver professional handyman & freelance services and scale your business. With the right set of features, FixMate enables you to run and manage your business smoothly.
+                InstaFixd comprises a unique and powerful suite of features with all the capabilities to deliver professional handyman & freelance services and scale your business. With the right set of features, InstaFixd enables you to run and manage your business smoothly.
               </p>
             </div>
             <div className="flex gap-4 shrink-0">
@@ -654,7 +654,7 @@ export default function Home() {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end p-12 md:p-16">
                <div>
                   <h1 className="text-7xl md:text-[8rem] font-black text-[#114b2e] tracking-tighter leading-none">
-                    FixMate
+                    InstaFixd
                   </h1>
                </div>
                
@@ -669,7 +669,7 @@ export default function Home() {
                  
                  <div className="text-slate-900 font-semibold md:text-right space-y-1">
                    <p>+94 11 234 5678</p>
-                   <p className="underline underline-offset-4 decoration-2 cursor-pointer hover:text-emerald-700 transition-colors">sales@fixmate.lk</p>
+                   <p className="underline underline-offset-4 decoration-2 cursor-pointer hover:text-emerald-700 transition-colors">sales@instafixd.lk</p>
                  </div>
                  
                  <div className="text-xs font-bold text-slate-900 flex gap-4">
@@ -683,7 +683,7 @@ export default function Home() {
         </div>
         
         <div className="text-center mt-8 text-sm font-medium text-slate-500">
-          © FixMate - A product of <span className="underline decoration-slate-300 underline-offset-4">FixMate Technologies</span>.
+          © InstaFixd - A product of <span className="underline decoration-slate-300 underline-offset-4">InstaFixd Technologies</span>.
         </div>
       </footer>
     </div>
