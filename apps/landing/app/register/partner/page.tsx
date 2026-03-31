@@ -157,9 +157,23 @@ export default function PartnerRegistration() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const mapExperienceLevel = (level: string): string => {
+    const map: Record<string, string> = {
+      'Entry Level (1–2 years)': 'BEGINNER',
+      'Intermediate (3–5 years)': 'INTERMEDIATE',
+      'Expert (5–10 years)': 'EXPERT',
+      'Master (10+ years)': 'EXPERT',
+    };
+    return map[level] ?? 'BEGINNER';
+  };
+
   const handleSubmit = async () => {
     if (form.password !== form.confirmPassword) {
       setApiError('Passwords do not match');
+      return;
+    }
+    if (!form.agreeTerms || !form.agreeCommission) {
+      setApiError('You must accept the terms and commission agreement');
       return;
     }
     setIsLoading(true);
@@ -170,12 +184,36 @@ export default function PartnerRegistration() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // Personal
           fullName: form.fullName,
           mobileNumber: form.mobileNumber,
           whatsappNumber: form.whatsappNumber || undefined,
           email: form.email,
           password: form.password,
           nicNumber: form.nicNumber,
+          // Location
+          province: form.province,
+          district: form.district,
+          serviceZones: form.serviceZones,
+          // Services / Expertise
+          services: form.subCategories.map((sub) => ({
+            mainCategory: form.primaryCategory,
+            subCategory: sub,
+            experienceLevel: mapExperienceLevel(form.experienceLevel),
+            description: form.bio || undefined,
+          })),
+          // Availability
+          availability: {
+            nightService: form.nightService,
+            serviceDays: form.serviceDays.join(','),
+            workStartTime: form.workStartTime,
+            workEndTime: form.workEndTime,
+          },
+          // Agreements
+          agreements: {
+            agreeTerms: form.agreeTerms,
+            agreeCommission: form.agreeCommission,
+          },
         }),
       });
       const data = await res.json();
