@@ -22,6 +22,8 @@ type FormData = {
   mobileNumber: string;
   whatsappNumber: string;
   email: string;
+  password: string;
+  confirmPassword: string;
   address: string;
   province: string;
   district: string;
@@ -127,6 +129,8 @@ export default function PartnerRegistration() {
     mobileNumber: '',
     whatsappNumber: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     address: '',
     province: 'Western',
     district: 'Colombo',
@@ -149,6 +153,43 @@ export default function PartnerRegistration() {
   });
   const [showOtp, setShowOtp] = useState(false);
   const [zoneSearch, setZoneSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async () => {
+    if (form.password !== form.confirmPassword) {
+      setApiError('Passwords do not match');
+      return;
+    }
+    setIsLoading(true);
+    setApiError(null);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
+      const res = await fetch(`${backendUrl}/api/v1/provider/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          mobileNumber: form.mobileNumber,
+          whatsappNumber: form.whatsappNumber || undefined,
+          email: form.email,
+          password: form.password,
+          nicNumber: form.nicNumber,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setApiError(data?.message ?? 'Registration failed. Please try again.');
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setApiError('Unable to reach the server. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleZone = (zone: string) =>
     set('serviceZones', form.serviceZones.includes(zone)
@@ -289,6 +330,16 @@ export default function PartnerRegistration() {
                   <label className={labelCls}>Email Address</label>
                   <input type="email" placeholder="johnathan@instafixd.com" value={form.email}
                     onChange={e => set('email', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Password</label>
+                  <input type="password" placeholder="Min. 8 characters" value={form.password}
+                    onChange={e => set('password', e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Confirm Password</label>
+                  <input type="password" placeholder="Re-enter your password" value={form.confirmPassword}
+                    onChange={e => set('confirmPassword', e.target.value)} className={inputCls} />
                 </div>
               </div>
             </div>
@@ -625,12 +676,28 @@ export default function PartnerRegistration() {
               </div>
 
               {/* Submit footer */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-sm text-slate-500 italic">Your application will be reviewed by our curation team within 48 hours.</p>
-                <button type="button"
-                  className="inline-flex items-center gap-2 bg-[#1a3d2b] text-white px-8 py-4 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors whitespace-nowrap">
-                  Submit Application <ArrowRight className="w-4 h-4" />
-                </button>
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl px-8 py-5 flex flex-col gap-4">
+                {apiError && (
+                  <p className="text-sm text-red-600 font-medium">{apiError}</p>
+                )}
+                {submitted ? (
+                  <div className="flex items-center gap-3 text-[#1aae74] font-semibold">
+                    <CheckCircle2 className="w-5 h-5" />
+                    Application submitted! We&apos;ll review it within 48 hours.
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-slate-500 italic">Your application will be reviewed by our curation team within 48 hours.</p>
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={isLoading}
+                      className="inline-flex items-center gap-2 bg-[#1a3d2b] text-white px-8 py-4 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'Submitting…' : 'Submit Application'} <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
