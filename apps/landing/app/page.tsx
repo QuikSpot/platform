@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
   Wrench,
@@ -24,7 +25,13 @@ import {
   Twitter,
   ChevronLeft,
   ChevronRight,
+  UserCircle,
+  Eye,
+  EyeOff,
+  LogIn,
+  X,
 } from 'lucide-react';
+import { saveAuth, getUser, clearAuth, isLoggedIn, apiFetch, type AuthProvider } from '@/lib/auth';
 
 const services = [
   {
@@ -104,11 +111,64 @@ const testimonials = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+
+  // Auth state
+  const [loggedInUser, setLoggedInUser] = useState<AuthProvider | null>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [whatsapp, setWhatsapp] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
+    if (isLoggedIn()) setLoggedInUser(getUser());
   }, []);
+
+  // Close dialog on backdrop click
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLoginOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+    try {
+      const res = await apiFetch('/provider/login', {
+        method: 'POST',
+        body: JSON.stringify({ whatsappNumber: whatsapp, password }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setLoginError(body?.message ?? 'Login failed. Check your details.');
+        return;
+      }
+      saveAuth(body.data.accessToken, body.data.provider);
+      setLoggedInUser(body.data.provider);
+      setLoginOpen(false);
+      setWhatsapp('');
+      setPassword('');
+      router.push('/profile');
+    } catch {
+      setLoginError('Unable to connect. Please try again.');
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    clearAuth();
+    setLoggedInUser(null);
+  }
 
   if (!mounted) return null;
 
@@ -135,14 +195,165 @@ export default function Home() {
                 Testimonials
               </a>
             </div>
-            <Link href="/get-started">
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                Get Started
-              </Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/get-started">
+                <Button className="bg-green-600 hover:bg-green-700 text-white">
+                  Get Started
+                </Button>
+              </Link>
+              {loggedInUser ? (
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white text-sm font-bold shadow hover:shadow-md transition-all hover:scale-105"
+                  title={loggedInUser.fullName}
+                >
+                  {loggedInUser.fullName.charAt(0).toUpperCase()}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setLoginOpen(true)}
+                  className="w-9 h-9 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-green-700 hover:border-green-300 transition-all hover:scale-105 shadow-sm"
+                  title="Provider Login"
+                >
+                  <UserCircle className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </nav>
+
+      {/* Login Dialog */}
+      <AnimatePresence>
+        {loginOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setLoginOpen(false); }}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+
+            {/* Dialog */}
+            <motion.div
+              ref={dialogRef}
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.97 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+            >
+              {/* Green accent bar */}
+              <div className="h-1 w-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-700" />
+
+              <div className="p-8">
+                <button
+                  onClick={() => setLoginOpen(false)}
+                  className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-7">
+                  <div className="w-11 h-11 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center shadow-md shadow-green-200">
+                    <LogIn className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Provider Login</h2>
+                    <p className="text-sm text-gray-500">Access your InstaFixd profile</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-5">
+                  {/* WhatsApp Number */}
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-medium text-gray-700">
+                      WhatsApp Number
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium select-none">
+                        +94
+                      </span>
+                      <input
+                        type="tel"
+                        value={whatsapp}
+                        onChange={(e) => setWhatsapp(e.target.value)}
+                        placeholder="07XXXXXXXX"
+                        maxLength={10}
+                        required
+                        className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPass ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        required
+                        className="w-full pl-4 pr-11 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPass(!showPass)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Error */}
+                  {loginError && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
+                    >
+                      {loginError}
+                    </motion.p>
+                  )}
+
+                  {/* Submit */}
+                  <button
+                    type="submit"
+                    disabled={loginLoading}
+                    className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-xl shadow-md shadow-green-200 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  >
+                    {loginLoading ? (
+                      <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                    ) : (
+                      <LogIn className="w-4 h-4" />
+                    )}
+                    {loginLoading ? 'Signing in…' : 'Sign In'}
+                  </button>
+                </form>
+
+                <p className="mt-5 text-center text-xs text-gray-400">
+                  Not registered yet?{' '}
+                  <Link href="/register/partner" onClick={() => setLoginOpen(false)} className="text-green-600 font-medium hover:underline">
+                    Join as a provider
+                  </Link>
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-white">
