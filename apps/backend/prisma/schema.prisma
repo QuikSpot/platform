@@ -1,14 +1,15 @@
 // ============================================================
-//  Local Service Marketplace — Prisma Schema
-//  Matches SQL schema exactly (snake_case columns via @map)
+//  Local Service Marketplace — Prisma Schema v2
+//  Updated to match migration_v2_refactored.sql
 // ============================================================
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
 }
 
 // ------------------------------------------------------------
@@ -17,6 +18,7 @@ datasource db {
 
 enum DocumentType {
   NIC_PHOTO
+  NIC_BACK
   SELFIE
   SERVICE_PROOF
 }
@@ -27,6 +29,12 @@ enum DocumentStatus {
   REJECTED
 }
 
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
+
 // ------------------------------------------------------------
 //  1. MainCategory  →  main_category
 // ------------------------------------------------------------
@@ -34,9 +42,9 @@ enum DocumentStatus {
 model MainCategory {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
-  iconUrl   String?  @map("icon_url")   @db.VarChar(255)
-  isActive  Boolean  @default(true)     @map("is_active")
-  createdAt DateTime @default(now())    @map("created_at")
+  iconUrl   String?  @map("icon_url")  @db.VarChar(255)
+  isActive  Boolean  @default(true)    @map("is_active")
+  createdAt DateTime @default(now())   @map("created_at")
 
   subCategories    SubCategory[]
   providerServices ProviderService[]
@@ -64,6 +72,7 @@ model SubCategory {
 
 // ------------------------------------------------------------
 //  3. ServiceProvider  →  service_provider
+//     + province, district
 // ------------------------------------------------------------
 
 model ServiceProvider {
@@ -74,13 +83,17 @@ model ServiceProvider {
   whatsappNumber String?  @map("whatsapp_number") @db.VarChar(20)
   email          String?  @db.VarChar(150)
   nicNumber      String   @unique @map("nic_number") @db.VarChar(30)
+  province       String?  @db.VarChar(100)
+  district       String?  @db.VarChar(100)
   isActive       Boolean  @default(false) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
 
   providerServices      ProviderService[]
   serviceAreas          ServiceArea[]
+  serviceZones          ServiceZone[]
   availability          Availability?
   verificationDocuments VerificationDocument[]
+  agreement             ProviderAgreement?
 
   @@index([mobileNumber], name: "idx_sp_mobile")
   @@index([nicNumber],    name: "idx_sp_nic")
@@ -89,16 +102,18 @@ model ServiceProvider {
 
 // ------------------------------------------------------------
 //  4. ProviderService  →  provider_service
+//     + experienceLevel
 // ------------------------------------------------------------
 
 model ProviderService {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  providerId      String   @map("provider_id")      @db.Uuid
-  mainCategoryId  Int      @map("main_category_id")
-  subCategoryId   Int      @map("sub_category_id")
-  experienceYears Int?     @map("experience_years")
-  description     String?  @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId      String          @map("provider_id")     @db.Uuid
+  mainCategoryId  Int             @map("main_category_id")
+  subCategoryId   Int             @map("sub_category_id")
+  experienceYears Int?            @map("experience_years")
+  experienceLevel ExperienceLevel? @map("experience_level")
+  description     String?         @db.Text
+  createdAt       DateTime        @default(now()) @map("created_at")
 
   provider     ServiceProvider @relation(fields: [providerId],     references: [id], onDelete: Cascade)
   mainCategory MainCategory    @relation(fields: [mainCategoryId], references: [id])
@@ -113,6 +128,7 @@ model ProviderService {
 
 // ------------------------------------------------------------
 //  5. ServiceArea  →  service_area
+//     Holds GPS coordinates and address (unchanged)
 // ------------------------------------------------------------
 
 model ServiceArea {
@@ -133,17 +149,37 @@ model ServiceArea {
 }
 
 // ------------------------------------------------------------
-//  6. Availability  →  availability
+//  6. ServiceZone  →  service_zone  (new)
+//     One row per zone string from serviceZones[] form field
+// ------------------------------------------------------------
+
+model ServiceZone {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId String   @map("provider_id") @db.Uuid
+  zoneName   String   @map("zone_name")   @db.VarChar(150)
+  createdAt  DateTime @default(now())     @map("created_at")
+
+  provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId], name: "idx_sz_provider")
+  @@index([zoneName],   name: "idx_sz_zone_name")
+  @@map("service_zone")
+}
+
+// ------------------------------------------------------------
+//  7. Availability  →  availability
+//     + nightService
 // ------------------------------------------------------------
 
 model Availability {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   providerId     String    @unique @map("provider_id") @db.Uuid
-  availableDays  String?   @map("available_days") @db.VarChar(20)
-  availableFrom  DateTime? @map("available_from") @db.Time
-  availableTo    DateTime? @map("available_to")   @db.Time
-  is24_7         Boolean   @default(false) @map("is_24_7")
-  isAvailableNow Boolean   @default(false) @map("is_available_now")
+  availableDays  String?   @map("available_days")  @db.VarChar(20)
+  availableFrom  DateTime? @map("available_from")  @db.Time
+  availableTo    DateTime? @map("available_to")    @db.Time
+  is24_7         Boolean   @default(false)         @map("is_24_7")
+  isAvailableNow Boolean   @default(false)         @map("is_available_now")
+  nightService   Boolean   @default(false)         @map("night_service")
   updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
 
   provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -154,7 +190,8 @@ model Availability {
 }
 
 // ------------------------------------------------------------
-//  7. VerificationDocument  →  verification_document
+//  8. VerificationDocument  →  verification_document
+//     DocumentType enum now includes NIC_BACK
 // ------------------------------------------------------------
 
 model VerificationDocument {
@@ -163,11 +200,32 @@ model VerificationDocument {
   documentType DocumentType   @map("document_type")
   bucketKey    String         @map("bucket_key")  @db.VarChar(500)
   status       DocumentStatus @default(PENDING)
-  uploadedAt   DateTime       @default(now()) @map("uploaded_at")
+  uploadedAt   DateTime       @default(now())     @map("uploaded_at")
 
   provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId],         name: "idx_vd_provider")
   @@index([providerId, status], name: "idx_vd_provider_status")
   @@map("verification_document")
+}
+
+// ------------------------------------------------------------
+//  9. ProviderAgreement  →  provider_agreement  (new)
+//     Captures agreeTerms + agreeCommission with timestamps
+// ------------------------------------------------------------
+
+model ProviderAgreement {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId           String    @unique @map("provider_id") @db.Uuid
+  termsAccepted        Boolean   @default(false) @map("terms_accepted")
+  termsAcceptedAt      DateTime? @map("terms_accepted_at")
+  commissionAccepted   Boolean   @default(false) @map("commission_accepted")
+  commissionAcceptedAt DateTime? @map("commission_accepted_at")
+  ipAddress            String?   @map("ip_address") @db.VarChar(45)
+  createdAt            DateTime  @default(now())    @map("created_at")
+
+  provider ServiceProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId], name: "idx_pa_provider")
+  @@map("provider_agreement")
 }
