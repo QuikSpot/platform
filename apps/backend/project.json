@@ -7,7 +7,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "nest build",
+        "command": "prisma generate && nest build",
         "cwd": "apps/backend"
       }
     },
