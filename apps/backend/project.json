@@ -15,7 +15,7 @@
       "executor": "nx:run-commands",
       "continuous": true,
       "options": {
-        "command": "nest start --watch",
+        "command": "prisma generate && nest start --watch",
         "cwd": "apps/backend"
       }
     },
