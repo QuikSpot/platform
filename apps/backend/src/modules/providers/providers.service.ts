@@ -26,7 +26,7 @@ export class ProvidersService {
     const { data, error: authError } = await this.supabase.admin.createUser({
       email: dto.email,
       password: dto.password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: { full_name: dto.fullName },
     });
 

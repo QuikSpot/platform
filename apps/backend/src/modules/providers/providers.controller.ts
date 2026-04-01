@@ -29,6 +29,7 @@ export class ProvidersController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: ProviderLoginDto) {
+    console.log('Test');
     return this.providersService.login(dto);
   }
 

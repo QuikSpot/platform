@@ -13,6 +13,8 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "../../dist/apps/backend",
+    "tsBuildInfoFile": "../../dist/apps/backend/.tsbuildinfo",
+    "rootDir": "src",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
@@ -21,5 +23,6 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "include": ["src/**/*"]
 }
