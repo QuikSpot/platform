@@ -111,13 +111,17 @@ const SelectChevron = () => (
   </svg>
 );
 
+const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+
 const Toggle = ({ on, onToggle, dark = false }: { on: boolean; onToggle: () => void; dark?: boolean }) => (
   <button
     type="button"
     onClick={onToggle}
-    className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${on ? 'bg-[#1aae74]' : dark ? 'bg-white/20' : 'bg-slate-300'}`}
+    aria-checked={on}
+    role="switch"
+    className={`relative inline-flex w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1aae74] focus-visible:ring-offset-1 ${on ? 'bg-[#1aae74]' : dark ? 'bg-white/20' : 'bg-slate-300'}`}
   >
-    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${on ? 'translate-x-6' : 'translate-x-0.5'}`} />
+    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${on ? 'translate-x-[22px]' : 'translate-x-0'}`} />
   </button>
 );
 
@@ -326,14 +330,14 @@ export default function PartnerRegistration() {
                 </div>
                 <div>
                   <label className={labelCls}>Mobile Number</label>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2 w-full min-w-0 overflow-hidden">
                     <input type="tel" placeholder="+94 77 123 4567" value={form.mobileNumber}
                       onChange={e => set('mobileNumber', e.target.value)}
-                      className="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition" />
-                    <button 
-                      type="button" 
+                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition" />
+                    <button
+                      type="button"
                       onClick={() => setShowOtp(true)}
-                      className="px-5 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap"
+                      className="shrink-0 px-4 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap"
                     >
                       Verify
                     </button>
@@ -602,15 +606,31 @@ export default function PartnerRegistration() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 <div>
                   <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-2">Work Start Time</p>
-                  <input type="time" value={form.workStartTime}
-                    onChange={e => set('workStartTime', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#1aae74]/40 transition [color-scheme:dark]" />
+                  <div className="relative">
+                    <select value={form.workStartTime} onChange={e => set('workStartTime', e.target.value)}
+                      className="w-full appearance-none px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#1aae74]/40 transition cursor-pointer">
+                      {TIME_OPTIONS.map(t => <option key={t} value={t} className="bg-[#1a3d2b] text-white">{t}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-2">Work End Time</p>
-                  <input type="time" value={form.workEndTime}
-                    onChange={e => set('workEndTime', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#1aae74]/40 transition [color-scheme:dark]" />
+                  <div className="relative">
+                    <select value={form.workEndTime} onChange={e => set('workEndTime', e.target.value)}
+                      className="w-full appearance-none px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#1aae74]/40 transition cursor-pointer">
+                      {TIME_OPTIONS.map(t => <option key={t} value={t} className="bg-[#1a3d2b] text-white">{t}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
