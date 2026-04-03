@@ -39,6 +39,11 @@ export type ProviderService = $Result.DefaultSelection<Prisma.$ProviderServicePa
  */
 export type ServiceArea = $Result.DefaultSelection<Prisma.$ServiceAreaPayload>
 /**
+ * Model ServiceZone
+ * 
+ */
+export type ServiceZone = $Result.DefaultSelection<Prisma.$ServiceZonePayload>
+/**
  * Model Availability
  * 
  */
@@ -48,6 +53,11 @@ export type Availability = $Result.DefaultSelection<Prisma.$AvailabilityPayload>
  * 
  */
 export type VerificationDocument = $Result.DefaultSelection<Prisma.$VerificationDocumentPayload>
+/**
+ * Model ProviderAgreement
+ * 
+ */
+export type ProviderAgreement = $Result.DefaultSelection<Prisma.$ProviderAgreementPayload>
 
 /**
  * Enums
@@ -55,6 +65,7 @@ export type VerificationDocument = $Result.DefaultSelection<Prisma.$Verification
 export namespace $Enums {
   export const DocumentType: {
   NIC_PHOTO: 'NIC_PHOTO',
+  NIC_BACK: 'NIC_BACK',
   SELFIE: 'SELFIE',
   SERVICE_PROOF: 'SERVICE_PROOF'
 };
@@ -70,6 +81,15 @@ export const DocumentStatus: {
 
 export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus]
 
+
+export const ExperienceLevel: {
+  BEGINNER: 'BEGINNER',
+  INTERMEDIATE: 'INTERMEDIATE',
+  EXPERT: 'EXPERT'
+};
+
+export type ExperienceLevel = (typeof ExperienceLevel)[keyof typeof ExperienceLevel]
+
 }
 
 export type DocumentType = $Enums.DocumentType
@@ -79,6 +99,10 @@ export const DocumentType: typeof $Enums.DocumentType
 export type DocumentStatus = $Enums.DocumentStatus
 
 export const DocumentStatus: typeof $Enums.DocumentStatus
+
+export type ExperienceLevel = $Enums.ExperienceLevel
+
+export const ExperienceLevel: typeof $Enums.ExperienceLevel
 
 /**
  * ##  Prisma Client ʲˢ
@@ -252,6 +276,16 @@ export class PrismaClient<
   get serviceArea(): Prisma.ServiceAreaDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.serviceZone`: Exposes CRUD operations for the **ServiceZone** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ServiceZones
+    * const serviceZones = await prisma.serviceZone.findMany()
+    * ```
+    */
+  get serviceZone(): Prisma.ServiceZoneDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.availability`: Exposes CRUD operations for the **Availability** model.
     * Example usage:
     * ```ts
@@ -270,6 +304,16 @@ export class PrismaClient<
     * ```
     */
   get verificationDocument(): Prisma.VerificationDocumentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.providerAgreement`: Exposes CRUD operations for the **ProviderAgreement** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProviderAgreements
+    * const providerAgreements = await prisma.providerAgreement.findMany()
+    * ```
+    */
+  get providerAgreement(): Prisma.ProviderAgreementDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -709,8 +753,10 @@ export namespace Prisma {
     ServiceProvider: 'ServiceProvider',
     ProviderService: 'ProviderService',
     ServiceArea: 'ServiceArea',
+    ServiceZone: 'ServiceZone',
     Availability: 'Availability',
-    VerificationDocument: 'VerificationDocument'
+    VerificationDocument: 'VerificationDocument',
+    ProviderAgreement: 'ProviderAgreement'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -726,7 +772,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "mainCategory" | "subCategory" | "serviceProvider" | "providerService" | "serviceArea" | "availability" | "verificationDocument"
+      modelProps: "mainCategory" | "subCategory" | "serviceProvider" | "providerService" | "serviceArea" | "serviceZone" | "availability" | "verificationDocument" | "providerAgreement"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1100,6 +1146,80 @@ export namespace Prisma {
           }
         }
       }
+      ServiceZone: {
+        payload: Prisma.$ServiceZonePayload<ExtArgs>
+        fields: Prisma.ServiceZoneFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ServiceZoneFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ServiceZoneFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>
+          }
+          findFirst: {
+            args: Prisma.ServiceZoneFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ServiceZoneFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>
+          }
+          findMany: {
+            args: Prisma.ServiceZoneFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>[]
+          }
+          create: {
+            args: Prisma.ServiceZoneCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>
+          }
+          createMany: {
+            args: Prisma.ServiceZoneCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ServiceZoneCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>[]
+          }
+          delete: {
+            args: Prisma.ServiceZoneDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>
+          }
+          update: {
+            args: Prisma.ServiceZoneUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>
+          }
+          deleteMany: {
+            args: Prisma.ServiceZoneDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ServiceZoneUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ServiceZoneUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>[]
+          }
+          upsert: {
+            args: Prisma.ServiceZoneUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServiceZonePayload>
+          }
+          aggregate: {
+            args: Prisma.ServiceZoneAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateServiceZone>
+          }
+          groupBy: {
+            args: Prisma.ServiceZoneGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ServiceZoneGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ServiceZoneCountArgs<ExtArgs>
+            result: $Utils.Optional<ServiceZoneCountAggregateOutputType> | number
+          }
+        }
+      }
       Availability: {
         payload: Prisma.$AvailabilityPayload<ExtArgs>
         fields: Prisma.AvailabilityFieldRefs
@@ -1248,6 +1368,80 @@ export namespace Prisma {
           }
         }
       }
+      ProviderAgreement: {
+        payload: Prisma.$ProviderAgreementPayload<ExtArgs>
+        fields: Prisma.ProviderAgreementFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProviderAgreementFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProviderAgreementFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>
+          }
+          findFirst: {
+            args: Prisma.ProviderAgreementFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProviderAgreementFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>
+          }
+          findMany: {
+            args: Prisma.ProviderAgreementFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>[]
+          }
+          create: {
+            args: Prisma.ProviderAgreementCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>
+          }
+          createMany: {
+            args: Prisma.ProviderAgreementCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProviderAgreementCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>[]
+          }
+          delete: {
+            args: Prisma.ProviderAgreementDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>
+          }
+          update: {
+            args: Prisma.ProviderAgreementUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProviderAgreementDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProviderAgreementUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProviderAgreementUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProviderAgreementUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProviderAgreementPayload>
+          }
+          aggregate: {
+            args: Prisma.ProviderAgreementAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProviderAgreement>
+          }
+          groupBy: {
+            args: Prisma.ProviderAgreementGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProviderAgreementGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProviderAgreementCountArgs<ExtArgs>
+            result: $Utils.Optional<ProviderAgreementCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1361,8 +1555,10 @@ export namespace Prisma {
     serviceProvider?: ServiceProviderOmit
     providerService?: ProviderServiceOmit
     serviceArea?: ServiceAreaOmit
+    serviceZone?: ServiceZoneOmit
     availability?: AvailabilityOmit
     verificationDocument?: VerificationDocumentOmit
+    providerAgreement?: ProviderAgreementOmit
   }
 
   /* Types for Logging */
@@ -1516,12 +1712,14 @@ export namespace Prisma {
   export type ServiceProviderCountOutputType = {
     providerServices: number
     serviceAreas: number
+    serviceZones: number
     verificationDocuments: number
   }
 
   export type ServiceProviderCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerServices?: boolean | ServiceProviderCountOutputTypeCountProviderServicesArgs
     serviceAreas?: boolean | ServiceProviderCountOutputTypeCountServiceAreasArgs
+    serviceZones?: boolean | ServiceProviderCountOutputTypeCountServiceZonesArgs
     verificationDocuments?: boolean | ServiceProviderCountOutputTypeCountVerificationDocumentsArgs
   }
 
@@ -1548,6 +1746,13 @@ export namespace Prisma {
    */
   export type ServiceProviderCountOutputTypeCountServiceAreasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ServiceAreaWhereInput
+  }
+
+  /**
+   * ServiceProviderCountOutputType without action
+   */
+  export type ServiceProviderCountOutputTypeCountServiceZonesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServiceZoneWhereInput
   }
 
   /**
@@ -3848,6 +4053,8 @@ export namespace Prisma {
     whatsappNumber: string | null
     email: string | null
     nicNumber: string | null
+    province: string | null
+    district: string | null
     isActive: boolean | null
     createdAt: Date | null
   }
@@ -3860,6 +4067,8 @@ export namespace Prisma {
     whatsappNumber: string | null
     email: string | null
     nicNumber: string | null
+    province: string | null
+    district: string | null
     isActive: boolean | null
     createdAt: Date | null
   }
@@ -3872,6 +4081,8 @@ export namespace Prisma {
     whatsappNumber: number
     email: number
     nicNumber: number
+    province: number
+    district: number
     isActive: number
     createdAt: number
     _all: number
@@ -3886,6 +4097,8 @@ export namespace Prisma {
     whatsappNumber?: true
     email?: true
     nicNumber?: true
+    province?: true
+    district?: true
     isActive?: true
     createdAt?: true
   }
@@ -3898,6 +4111,8 @@ export namespace Prisma {
     whatsappNumber?: true
     email?: true
     nicNumber?: true
+    province?: true
+    district?: true
     isActive?: true
     createdAt?: true
   }
@@ -3910,6 +4125,8 @@ export namespace Prisma {
     whatsappNumber?: true
     email?: true
     nicNumber?: true
+    province?: true
+    district?: true
     isActive?: true
     createdAt?: true
     _all?: true
@@ -3995,6 +4212,8 @@ export namespace Prisma {
     whatsappNumber: string | null
     email: string | null
     nicNumber: string
+    province: string | null
+    district: string | null
     isActive: boolean
     createdAt: Date
     _count: ServiceProviderCountAggregateOutputType | null
@@ -4024,12 +4243,16 @@ export namespace Prisma {
     whatsappNumber?: boolean
     email?: boolean
     nicNumber?: boolean
+    province?: boolean
+    district?: boolean
     isActive?: boolean
     createdAt?: boolean
     providerServices?: boolean | ServiceProvider$providerServicesArgs<ExtArgs>
     serviceAreas?: boolean | ServiceProvider$serviceAreasArgs<ExtArgs>
+    serviceZones?: boolean | ServiceProvider$serviceZonesArgs<ExtArgs>
     availability?: boolean | ServiceProvider$availabilityArgs<ExtArgs>
     verificationDocuments?: boolean | ServiceProvider$verificationDocumentsArgs<ExtArgs>
+    agreement?: boolean | ServiceProvider$agreementArgs<ExtArgs>
     _count?: boolean | ServiceProviderCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["serviceProvider"]>
 
@@ -4041,6 +4264,8 @@ export namespace Prisma {
     whatsappNumber?: boolean
     email?: boolean
     nicNumber?: boolean
+    province?: boolean
+    district?: boolean
     isActive?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["serviceProvider"]>
@@ -4053,6 +4278,8 @@ export namespace Prisma {
     whatsappNumber?: boolean
     email?: boolean
     nicNumber?: boolean
+    province?: boolean
+    district?: boolean
     isActive?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["serviceProvider"]>
@@ -4065,16 +4292,20 @@ export namespace Prisma {
     whatsappNumber?: boolean
     email?: boolean
     nicNumber?: boolean
+    province?: boolean
+    district?: boolean
     isActive?: boolean
     createdAt?: boolean
   }
 
-  export type ServiceProviderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullName" | "mobileNumber" | "mobileVerified" | "whatsappNumber" | "email" | "nicNumber" | "isActive" | "createdAt", ExtArgs["result"]["serviceProvider"]>
+  export type ServiceProviderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullName" | "mobileNumber" | "mobileVerified" | "whatsappNumber" | "email" | "nicNumber" | "province" | "district" | "isActive" | "createdAt", ExtArgs["result"]["serviceProvider"]>
   export type ServiceProviderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     providerServices?: boolean | ServiceProvider$providerServicesArgs<ExtArgs>
     serviceAreas?: boolean | ServiceProvider$serviceAreasArgs<ExtArgs>
+    serviceZones?: boolean | ServiceProvider$serviceZonesArgs<ExtArgs>
     availability?: boolean | ServiceProvider$availabilityArgs<ExtArgs>
     verificationDocuments?: boolean | ServiceProvider$verificationDocumentsArgs<ExtArgs>
+    agreement?: boolean | ServiceProvider$agreementArgs<ExtArgs>
     _count?: boolean | ServiceProviderCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServiceProviderIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4085,8 +4316,10 @@ export namespace Prisma {
     objects: {
       providerServices: Prisma.$ProviderServicePayload<ExtArgs>[]
       serviceAreas: Prisma.$ServiceAreaPayload<ExtArgs>[]
+      serviceZones: Prisma.$ServiceZonePayload<ExtArgs>[]
       availability: Prisma.$AvailabilityPayload<ExtArgs> | null
       verificationDocuments: Prisma.$VerificationDocumentPayload<ExtArgs>[]
+      agreement: Prisma.$ProviderAgreementPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4096,6 +4329,8 @@ export namespace Prisma {
       whatsappNumber: string | null
       email: string | null
       nicNumber: string
+      province: string | null
+      district: string | null
       isActive: boolean
       createdAt: Date
     }, ExtArgs["result"]["serviceProvider"]>
@@ -4494,8 +4729,10 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     providerServices<T extends ServiceProvider$providerServicesArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProvider$providerServicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProviderServicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     serviceAreas<T extends ServiceProvider$serviceAreasArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProvider$serviceAreasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServiceAreaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    serviceZones<T extends ServiceProvider$serviceZonesArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProvider$serviceZonesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     availability<T extends ServiceProvider$availabilityArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProvider$availabilityArgs<ExtArgs>>): Prisma__AvailabilityClient<$Result.GetResult<Prisma.$AvailabilityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     verificationDocuments<T extends ServiceProvider$verificationDocumentsArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProvider$verificationDocumentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    agreement<T extends ServiceProvider$agreementArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProvider$agreementArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4532,6 +4769,8 @@ export namespace Prisma {
     readonly whatsappNumber: FieldRef<"ServiceProvider", 'String'>
     readonly email: FieldRef<"ServiceProvider", 'String'>
     readonly nicNumber: FieldRef<"ServiceProvider", 'String'>
+    readonly province: FieldRef<"ServiceProvider", 'String'>
+    readonly district: FieldRef<"ServiceProvider", 'String'>
     readonly isActive: FieldRef<"ServiceProvider", 'Boolean'>
     readonly createdAt: FieldRef<"ServiceProvider", 'DateTime'>
   }
@@ -4975,6 +5214,30 @@ export namespace Prisma {
   }
 
   /**
+   * ServiceProvider.serviceZones
+   */
+  export type ServiceProvider$serviceZonesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    where?: ServiceZoneWhereInput
+    orderBy?: ServiceZoneOrderByWithRelationInput | ServiceZoneOrderByWithRelationInput[]
+    cursor?: ServiceZoneWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ServiceZoneScalarFieldEnum | ServiceZoneScalarFieldEnum[]
+  }
+
+  /**
    * ServiceProvider.availability
    */
   export type ServiceProvider$availabilityArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5015,6 +5278,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: VerificationDocumentScalarFieldEnum | VerificationDocumentScalarFieldEnum[]
+  }
+
+  /**
+   * ServiceProvider.agreement
+   */
+  export type ServiceProvider$agreementArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    where?: ProviderAgreementWhereInput
   }
 
   /**
@@ -5066,6 +5348,7 @@ export namespace Prisma {
     mainCategoryId: number | null
     subCategoryId: number | null
     experienceYears: number | null
+    experienceLevel: $Enums.ExperienceLevel | null
     description: string | null
     createdAt: Date | null
   }
@@ -5076,6 +5359,7 @@ export namespace Prisma {
     mainCategoryId: number | null
     subCategoryId: number | null
     experienceYears: number | null
+    experienceLevel: $Enums.ExperienceLevel | null
     description: string | null
     createdAt: Date | null
   }
@@ -5086,6 +5370,7 @@ export namespace Prisma {
     mainCategoryId: number
     subCategoryId: number
     experienceYears: number
+    experienceLevel: number
     description: number
     createdAt: number
     _all: number
@@ -5110,6 +5395,7 @@ export namespace Prisma {
     mainCategoryId?: true
     subCategoryId?: true
     experienceYears?: true
+    experienceLevel?: true
     description?: true
     createdAt?: true
   }
@@ -5120,6 +5406,7 @@ export namespace Prisma {
     mainCategoryId?: true
     subCategoryId?: true
     experienceYears?: true
+    experienceLevel?: true
     description?: true
     createdAt?: true
   }
@@ -5130,6 +5417,7 @@ export namespace Prisma {
     mainCategoryId?: true
     subCategoryId?: true
     experienceYears?: true
+    experienceLevel?: true
     description?: true
     createdAt?: true
     _all?: true
@@ -5227,6 +5515,7 @@ export namespace Prisma {
     mainCategoryId: number
     subCategoryId: number
     experienceYears: number | null
+    experienceLevel: $Enums.ExperienceLevel | null
     description: string | null
     createdAt: Date
     _count: ProviderServiceCountAggregateOutputType | null
@@ -5256,6 +5545,7 @@ export namespace Prisma {
     mainCategoryId?: boolean
     subCategoryId?: boolean
     experienceYears?: boolean
+    experienceLevel?: boolean
     description?: boolean
     createdAt?: boolean
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
@@ -5269,6 +5559,7 @@ export namespace Prisma {
     mainCategoryId?: boolean
     subCategoryId?: boolean
     experienceYears?: boolean
+    experienceLevel?: boolean
     description?: boolean
     createdAt?: boolean
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
@@ -5282,6 +5573,7 @@ export namespace Prisma {
     mainCategoryId?: boolean
     subCategoryId?: boolean
     experienceYears?: boolean
+    experienceLevel?: boolean
     description?: boolean
     createdAt?: boolean
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
@@ -5295,11 +5587,12 @@ export namespace Prisma {
     mainCategoryId?: boolean
     subCategoryId?: boolean
     experienceYears?: boolean
+    experienceLevel?: boolean
     description?: boolean
     createdAt?: boolean
   }
 
-  export type ProviderServiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "providerId" | "mainCategoryId" | "subCategoryId" | "experienceYears" | "description" | "createdAt", ExtArgs["result"]["providerService"]>
+  export type ProviderServiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "providerId" | "mainCategoryId" | "subCategoryId" | "experienceYears" | "experienceLevel" | "description" | "createdAt", ExtArgs["result"]["providerService"]>
   export type ProviderServiceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
     mainCategory?: boolean | MainCategoryDefaultArgs<ExtArgs>
@@ -5329,6 +5622,7 @@ export namespace Prisma {
       mainCategoryId: number
       subCategoryId: number
       experienceYears: number | null
+      experienceLevel: $Enums.ExperienceLevel | null
       description: string | null
       createdAt: Date
     }, ExtArgs["result"]["providerService"]>
@@ -5762,6 +6056,7 @@ export namespace Prisma {
     readonly mainCategoryId: FieldRef<"ProviderService", 'Int'>
     readonly subCategoryId: FieldRef<"ProviderService", 'Int'>
     readonly experienceYears: FieldRef<"ProviderService", 'Int'>
+    readonly experienceLevel: FieldRef<"ProviderService", 'ExperienceLevel'>
     readonly description: FieldRef<"ProviderService", 'String'>
     readonly createdAt: FieldRef<"ProviderService", 'DateTime'>
   }
@@ -7324,6 +7619,1056 @@ export namespace Prisma {
 
 
   /**
+   * Model ServiceZone
+   */
+
+  export type AggregateServiceZone = {
+    _count: ServiceZoneCountAggregateOutputType | null
+    _min: ServiceZoneMinAggregateOutputType | null
+    _max: ServiceZoneMaxAggregateOutputType | null
+  }
+
+  export type ServiceZoneMinAggregateOutputType = {
+    id: string | null
+    providerId: string | null
+    zoneName: string | null
+    createdAt: Date | null
+  }
+
+  export type ServiceZoneMaxAggregateOutputType = {
+    id: string | null
+    providerId: string | null
+    zoneName: string | null
+    createdAt: Date | null
+  }
+
+  export type ServiceZoneCountAggregateOutputType = {
+    id: number
+    providerId: number
+    zoneName: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ServiceZoneMinAggregateInputType = {
+    id?: true
+    providerId?: true
+    zoneName?: true
+    createdAt?: true
+  }
+
+  export type ServiceZoneMaxAggregateInputType = {
+    id?: true
+    providerId?: true
+    zoneName?: true
+    createdAt?: true
+  }
+
+  export type ServiceZoneCountAggregateInputType = {
+    id?: true
+    providerId?: true
+    zoneName?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ServiceZoneAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServiceZone to aggregate.
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServiceZones to fetch.
+     */
+    orderBy?: ServiceZoneOrderByWithRelationInput | ServiceZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ServiceZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServiceZones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServiceZones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ServiceZones
+    **/
+    _count?: true | ServiceZoneCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ServiceZoneMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ServiceZoneMaxAggregateInputType
+  }
+
+  export type GetServiceZoneAggregateType<T extends ServiceZoneAggregateArgs> = {
+        [P in keyof T & keyof AggregateServiceZone]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateServiceZone[P]>
+      : GetScalarType<T[P], AggregateServiceZone[P]>
+  }
+
+
+
+
+  export type ServiceZoneGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServiceZoneWhereInput
+    orderBy?: ServiceZoneOrderByWithAggregationInput | ServiceZoneOrderByWithAggregationInput[]
+    by: ServiceZoneScalarFieldEnum[] | ServiceZoneScalarFieldEnum
+    having?: ServiceZoneScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ServiceZoneCountAggregateInputType | true
+    _min?: ServiceZoneMinAggregateInputType
+    _max?: ServiceZoneMaxAggregateInputType
+  }
+
+  export type ServiceZoneGroupByOutputType = {
+    id: string
+    providerId: string
+    zoneName: string
+    createdAt: Date
+    _count: ServiceZoneCountAggregateOutputType | null
+    _min: ServiceZoneMinAggregateOutputType | null
+    _max: ServiceZoneMaxAggregateOutputType | null
+  }
+
+  type GetServiceZoneGroupByPayload<T extends ServiceZoneGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ServiceZoneGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ServiceZoneGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ServiceZoneGroupByOutputType[P]>
+            : GetScalarType<T[P], ServiceZoneGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ServiceZoneSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    providerId?: boolean
+    zoneName?: boolean
+    createdAt?: boolean
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serviceZone"]>
+
+  export type ServiceZoneSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    providerId?: boolean
+    zoneName?: boolean
+    createdAt?: boolean
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serviceZone"]>
+
+  export type ServiceZoneSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    providerId?: boolean
+    zoneName?: boolean
+    createdAt?: boolean
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serviceZone"]>
+
+  export type ServiceZoneSelectScalar = {
+    id?: boolean
+    providerId?: boolean
+    zoneName?: boolean
+    createdAt?: boolean
+  }
+
+  export type ServiceZoneOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "providerId" | "zoneName" | "createdAt", ExtArgs["result"]["serviceZone"]>
+  export type ServiceZoneInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }
+  export type ServiceZoneIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }
+  export type ServiceZoneIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }
+
+  export type $ServiceZonePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ServiceZone"
+    objects: {
+      provider: Prisma.$ServiceProviderPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      providerId: string
+      zoneName: string
+      createdAt: Date
+    }, ExtArgs["result"]["serviceZone"]>
+    composites: {}
+  }
+
+  type ServiceZoneGetPayload<S extends boolean | null | undefined | ServiceZoneDefaultArgs> = $Result.GetResult<Prisma.$ServiceZonePayload, S>
+
+  type ServiceZoneCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ServiceZoneFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ServiceZoneCountAggregateInputType | true
+    }
+
+  export interface ServiceZoneDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ServiceZone'], meta: { name: 'ServiceZone' } }
+    /**
+     * Find zero or one ServiceZone that matches the filter.
+     * @param {ServiceZoneFindUniqueArgs} args - Arguments to find a ServiceZone
+     * @example
+     * // Get one ServiceZone
+     * const serviceZone = await prisma.serviceZone.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ServiceZoneFindUniqueArgs>(args: SelectSubset<T, ServiceZoneFindUniqueArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ServiceZone that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ServiceZoneFindUniqueOrThrowArgs} args - Arguments to find a ServiceZone
+     * @example
+     * // Get one ServiceZone
+     * const serviceZone = await prisma.serviceZone.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ServiceZoneFindUniqueOrThrowArgs>(args: SelectSubset<T, ServiceZoneFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ServiceZone that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneFindFirstArgs} args - Arguments to find a ServiceZone
+     * @example
+     * // Get one ServiceZone
+     * const serviceZone = await prisma.serviceZone.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ServiceZoneFindFirstArgs>(args?: SelectSubset<T, ServiceZoneFindFirstArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ServiceZone that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneFindFirstOrThrowArgs} args - Arguments to find a ServiceZone
+     * @example
+     * // Get one ServiceZone
+     * const serviceZone = await prisma.serviceZone.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ServiceZoneFindFirstOrThrowArgs>(args?: SelectSubset<T, ServiceZoneFindFirstOrThrowArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ServiceZones that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ServiceZones
+     * const serviceZones = await prisma.serviceZone.findMany()
+     * 
+     * // Get first 10 ServiceZones
+     * const serviceZones = await prisma.serviceZone.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const serviceZoneWithIdOnly = await prisma.serviceZone.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ServiceZoneFindManyArgs>(args?: SelectSubset<T, ServiceZoneFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ServiceZone.
+     * @param {ServiceZoneCreateArgs} args - Arguments to create a ServiceZone.
+     * @example
+     * // Create one ServiceZone
+     * const ServiceZone = await prisma.serviceZone.create({
+     *   data: {
+     *     // ... data to create a ServiceZone
+     *   }
+     * })
+     * 
+     */
+    create<T extends ServiceZoneCreateArgs>(args: SelectSubset<T, ServiceZoneCreateArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ServiceZones.
+     * @param {ServiceZoneCreateManyArgs} args - Arguments to create many ServiceZones.
+     * @example
+     * // Create many ServiceZones
+     * const serviceZone = await prisma.serviceZone.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ServiceZoneCreateManyArgs>(args?: SelectSubset<T, ServiceZoneCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ServiceZones and returns the data saved in the database.
+     * @param {ServiceZoneCreateManyAndReturnArgs} args - Arguments to create many ServiceZones.
+     * @example
+     * // Create many ServiceZones
+     * const serviceZone = await prisma.serviceZone.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ServiceZones and only return the `id`
+     * const serviceZoneWithIdOnly = await prisma.serviceZone.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ServiceZoneCreateManyAndReturnArgs>(args?: SelectSubset<T, ServiceZoneCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ServiceZone.
+     * @param {ServiceZoneDeleteArgs} args - Arguments to delete one ServiceZone.
+     * @example
+     * // Delete one ServiceZone
+     * const ServiceZone = await prisma.serviceZone.delete({
+     *   where: {
+     *     // ... filter to delete one ServiceZone
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ServiceZoneDeleteArgs>(args: SelectSubset<T, ServiceZoneDeleteArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ServiceZone.
+     * @param {ServiceZoneUpdateArgs} args - Arguments to update one ServiceZone.
+     * @example
+     * // Update one ServiceZone
+     * const serviceZone = await prisma.serviceZone.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ServiceZoneUpdateArgs>(args: SelectSubset<T, ServiceZoneUpdateArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ServiceZones.
+     * @param {ServiceZoneDeleteManyArgs} args - Arguments to filter ServiceZones to delete.
+     * @example
+     * // Delete a few ServiceZones
+     * const { count } = await prisma.serviceZone.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ServiceZoneDeleteManyArgs>(args?: SelectSubset<T, ServiceZoneDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ServiceZones.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ServiceZones
+     * const serviceZone = await prisma.serviceZone.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ServiceZoneUpdateManyArgs>(args: SelectSubset<T, ServiceZoneUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ServiceZones and returns the data updated in the database.
+     * @param {ServiceZoneUpdateManyAndReturnArgs} args - Arguments to update many ServiceZones.
+     * @example
+     * // Update many ServiceZones
+     * const serviceZone = await prisma.serviceZone.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ServiceZones and only return the `id`
+     * const serviceZoneWithIdOnly = await prisma.serviceZone.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ServiceZoneUpdateManyAndReturnArgs>(args: SelectSubset<T, ServiceZoneUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ServiceZone.
+     * @param {ServiceZoneUpsertArgs} args - Arguments to update or create a ServiceZone.
+     * @example
+     * // Update or create a ServiceZone
+     * const serviceZone = await prisma.serviceZone.upsert({
+     *   create: {
+     *     // ... data to create a ServiceZone
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ServiceZone we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ServiceZoneUpsertArgs>(args: SelectSubset<T, ServiceZoneUpsertArgs<ExtArgs>>): Prisma__ServiceZoneClient<$Result.GetResult<Prisma.$ServiceZonePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ServiceZones.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneCountArgs} args - Arguments to filter ServiceZones to count.
+     * @example
+     * // Count the number of ServiceZones
+     * const count = await prisma.serviceZone.count({
+     *   where: {
+     *     // ... the filter for the ServiceZones we want to count
+     *   }
+     * })
+    **/
+    count<T extends ServiceZoneCountArgs>(
+      args?: Subset<T, ServiceZoneCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ServiceZoneCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ServiceZone.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ServiceZoneAggregateArgs>(args: Subset<T, ServiceZoneAggregateArgs>): Prisma.PrismaPromise<GetServiceZoneAggregateType<T>>
+
+    /**
+     * Group by ServiceZone.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServiceZoneGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ServiceZoneGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ServiceZoneGroupByArgs['orderBy'] }
+        : { orderBy?: ServiceZoneGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ServiceZoneGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetServiceZoneGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ServiceZone model
+   */
+  readonly fields: ServiceZoneFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ServiceZone.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ServiceZoneClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    provider<T extends ServiceProviderDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProviderDefaultArgs<ExtArgs>>): Prisma__ServiceProviderClient<$Result.GetResult<Prisma.$ServiceProviderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ServiceZone model
+   */
+  interface ServiceZoneFieldRefs {
+    readonly id: FieldRef<"ServiceZone", 'String'>
+    readonly providerId: FieldRef<"ServiceZone", 'String'>
+    readonly zoneName: FieldRef<"ServiceZone", 'String'>
+    readonly createdAt: FieldRef<"ServiceZone", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ServiceZone findUnique
+   */
+  export type ServiceZoneFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which ServiceZone to fetch.
+     */
+    where: ServiceZoneWhereUniqueInput
+  }
+
+  /**
+   * ServiceZone findUniqueOrThrow
+   */
+  export type ServiceZoneFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which ServiceZone to fetch.
+     */
+    where: ServiceZoneWhereUniqueInput
+  }
+
+  /**
+   * ServiceZone findFirst
+   */
+  export type ServiceZoneFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which ServiceZone to fetch.
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServiceZones to fetch.
+     */
+    orderBy?: ServiceZoneOrderByWithRelationInput | ServiceZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServiceZones.
+     */
+    cursor?: ServiceZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServiceZones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServiceZones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServiceZones.
+     */
+    distinct?: ServiceZoneScalarFieldEnum | ServiceZoneScalarFieldEnum[]
+  }
+
+  /**
+   * ServiceZone findFirstOrThrow
+   */
+  export type ServiceZoneFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which ServiceZone to fetch.
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServiceZones to fetch.
+     */
+    orderBy?: ServiceZoneOrderByWithRelationInput | ServiceZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServiceZones.
+     */
+    cursor?: ServiceZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServiceZones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServiceZones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServiceZones.
+     */
+    distinct?: ServiceZoneScalarFieldEnum | ServiceZoneScalarFieldEnum[]
+  }
+
+  /**
+   * ServiceZone findMany
+   */
+  export type ServiceZoneFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which ServiceZones to fetch.
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServiceZones to fetch.
+     */
+    orderBy?: ServiceZoneOrderByWithRelationInput | ServiceZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ServiceZones.
+     */
+    cursor?: ServiceZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServiceZones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServiceZones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServiceZones.
+     */
+    distinct?: ServiceZoneScalarFieldEnum | ServiceZoneScalarFieldEnum[]
+  }
+
+  /**
+   * ServiceZone create
+   */
+  export type ServiceZoneCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ServiceZone.
+     */
+    data: XOR<ServiceZoneCreateInput, ServiceZoneUncheckedCreateInput>
+  }
+
+  /**
+   * ServiceZone createMany
+   */
+  export type ServiceZoneCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ServiceZones.
+     */
+    data: ServiceZoneCreateManyInput | ServiceZoneCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ServiceZone createManyAndReturn
+   */
+  export type ServiceZoneCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * The data used to create many ServiceZones.
+     */
+    data: ServiceZoneCreateManyInput | ServiceZoneCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ServiceZone update
+   */
+  export type ServiceZoneUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ServiceZone.
+     */
+    data: XOR<ServiceZoneUpdateInput, ServiceZoneUncheckedUpdateInput>
+    /**
+     * Choose, which ServiceZone to update.
+     */
+    where: ServiceZoneWhereUniqueInput
+  }
+
+  /**
+   * ServiceZone updateMany
+   */
+  export type ServiceZoneUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ServiceZones.
+     */
+    data: XOR<ServiceZoneUpdateManyMutationInput, ServiceZoneUncheckedUpdateManyInput>
+    /**
+     * Filter which ServiceZones to update
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * Limit how many ServiceZones to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ServiceZone updateManyAndReturn
+   */
+  export type ServiceZoneUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * The data used to update ServiceZones.
+     */
+    data: XOR<ServiceZoneUpdateManyMutationInput, ServiceZoneUncheckedUpdateManyInput>
+    /**
+     * Filter which ServiceZones to update
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * Limit how many ServiceZones to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ServiceZone upsert
+   */
+  export type ServiceZoneUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ServiceZone to update in case it exists.
+     */
+    where: ServiceZoneWhereUniqueInput
+    /**
+     * In case the ServiceZone found by the `where` argument doesn't exist, create a new ServiceZone with this data.
+     */
+    create: XOR<ServiceZoneCreateInput, ServiceZoneUncheckedCreateInput>
+    /**
+     * In case the ServiceZone was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ServiceZoneUpdateInput, ServiceZoneUncheckedUpdateInput>
+  }
+
+  /**
+   * ServiceZone delete
+   */
+  export type ServiceZoneDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+    /**
+     * Filter which ServiceZone to delete.
+     */
+    where: ServiceZoneWhereUniqueInput
+  }
+
+  /**
+   * ServiceZone deleteMany
+   */
+  export type ServiceZoneDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServiceZones to delete
+     */
+    where?: ServiceZoneWhereInput
+    /**
+     * Limit how many ServiceZones to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ServiceZone without action
+   */
+  export type ServiceZoneDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServiceZone
+     */
+    select?: ServiceZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ServiceZone
+     */
+    omit?: ServiceZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceZoneInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model Availability
    */
 
@@ -7341,6 +8686,7 @@ export namespace Prisma {
     availableTo: Date | null
     is24_7: boolean | null
     isAvailableNow: boolean | null
+    nightService: boolean | null
     updatedAt: Date | null
   }
 
@@ -7352,6 +8698,7 @@ export namespace Prisma {
     availableTo: Date | null
     is24_7: boolean | null
     isAvailableNow: boolean | null
+    nightService: boolean | null
     updatedAt: Date | null
   }
 
@@ -7363,6 +8710,7 @@ export namespace Prisma {
     availableTo: number
     is24_7: number
     isAvailableNow: number
+    nightService: number
     updatedAt: number
     _all: number
   }
@@ -7376,6 +8724,7 @@ export namespace Prisma {
     availableTo?: true
     is24_7?: true
     isAvailableNow?: true
+    nightService?: true
     updatedAt?: true
   }
 
@@ -7387,6 +8736,7 @@ export namespace Prisma {
     availableTo?: true
     is24_7?: true
     isAvailableNow?: true
+    nightService?: true
     updatedAt?: true
   }
 
@@ -7398,6 +8748,7 @@ export namespace Prisma {
     availableTo?: true
     is24_7?: true
     isAvailableNow?: true
+    nightService?: true
     updatedAt?: true
     _all?: true
   }
@@ -7482,6 +8833,7 @@ export namespace Prisma {
     availableTo: Date | null
     is24_7: boolean
     isAvailableNow: boolean
+    nightService: boolean
     updatedAt: Date
     _count: AvailabilityCountAggregateOutputType | null
     _min: AvailabilityMinAggregateOutputType | null
@@ -7510,6 +8862,7 @@ export namespace Prisma {
     availableTo?: boolean
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: boolean
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["availability"]>
@@ -7522,6 +8875,7 @@ export namespace Prisma {
     availableTo?: boolean
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: boolean
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["availability"]>
@@ -7534,6 +8888,7 @@ export namespace Prisma {
     availableTo?: boolean
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: boolean
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["availability"]>
@@ -7546,10 +8901,11 @@ export namespace Prisma {
     availableTo?: boolean
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: boolean
   }
 
-  export type AvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "providerId" | "availableDays" | "availableFrom" | "availableTo" | "is24_7" | "isAvailableNow" | "updatedAt", ExtArgs["result"]["availability"]>
+  export type AvailabilityOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "providerId" | "availableDays" | "availableFrom" | "availableTo" | "is24_7" | "isAvailableNow" | "nightService" | "updatedAt", ExtArgs["result"]["availability"]>
   export type AvailabilityInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
   }
@@ -7573,6 +8929,7 @@ export namespace Prisma {
       availableTo: Date | null
       is24_7: boolean
       isAvailableNow: boolean
+      nightService: boolean
       updatedAt: Date
     }, ExtArgs["result"]["availability"]>
     composites: {}
@@ -8005,6 +9362,7 @@ export namespace Prisma {
     readonly availableTo: FieldRef<"Availability", 'DateTime'>
     readonly is24_7: FieldRef<"Availability", 'Boolean'>
     readonly isAvailableNow: FieldRef<"Availability", 'Boolean'>
+    readonly nightService: FieldRef<"Availability", 'Boolean'>
     readonly updatedAt: FieldRef<"Availability", 'DateTime'>
   }
     
@@ -9502,6 +10860,1108 @@ export namespace Prisma {
 
 
   /**
+   * Model ProviderAgreement
+   */
+
+  export type AggregateProviderAgreement = {
+    _count: ProviderAgreementCountAggregateOutputType | null
+    _min: ProviderAgreementMinAggregateOutputType | null
+    _max: ProviderAgreementMaxAggregateOutputType | null
+  }
+
+  export type ProviderAgreementMinAggregateOutputType = {
+    id: string | null
+    providerId: string | null
+    termsAccepted: boolean | null
+    termsAcceptedAt: Date | null
+    commissionAccepted: boolean | null
+    commissionAcceptedAt: Date | null
+    ipAddress: string | null
+    createdAt: Date | null
+  }
+
+  export type ProviderAgreementMaxAggregateOutputType = {
+    id: string | null
+    providerId: string | null
+    termsAccepted: boolean | null
+    termsAcceptedAt: Date | null
+    commissionAccepted: boolean | null
+    commissionAcceptedAt: Date | null
+    ipAddress: string | null
+    createdAt: Date | null
+  }
+
+  export type ProviderAgreementCountAggregateOutputType = {
+    id: number
+    providerId: number
+    termsAccepted: number
+    termsAcceptedAt: number
+    commissionAccepted: number
+    commissionAcceptedAt: number
+    ipAddress: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ProviderAgreementMinAggregateInputType = {
+    id?: true
+    providerId?: true
+    termsAccepted?: true
+    termsAcceptedAt?: true
+    commissionAccepted?: true
+    commissionAcceptedAt?: true
+    ipAddress?: true
+    createdAt?: true
+  }
+
+  export type ProviderAgreementMaxAggregateInputType = {
+    id?: true
+    providerId?: true
+    termsAccepted?: true
+    termsAcceptedAt?: true
+    commissionAccepted?: true
+    commissionAcceptedAt?: true
+    ipAddress?: true
+    createdAt?: true
+  }
+
+  export type ProviderAgreementCountAggregateInputType = {
+    id?: true
+    providerId?: true
+    termsAccepted?: true
+    termsAcceptedAt?: true
+    commissionAccepted?: true
+    commissionAcceptedAt?: true
+    ipAddress?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ProviderAgreementAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProviderAgreement to aggregate.
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProviderAgreements to fetch.
+     */
+    orderBy?: ProviderAgreementOrderByWithRelationInput | ProviderAgreementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProviderAgreementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProviderAgreements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProviderAgreements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProviderAgreements
+    **/
+    _count?: true | ProviderAgreementCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProviderAgreementMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProviderAgreementMaxAggregateInputType
+  }
+
+  export type GetProviderAgreementAggregateType<T extends ProviderAgreementAggregateArgs> = {
+        [P in keyof T & keyof AggregateProviderAgreement]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProviderAgreement[P]>
+      : GetScalarType<T[P], AggregateProviderAgreement[P]>
+  }
+
+
+
+
+  export type ProviderAgreementGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProviderAgreementWhereInput
+    orderBy?: ProviderAgreementOrderByWithAggregationInput | ProviderAgreementOrderByWithAggregationInput[]
+    by: ProviderAgreementScalarFieldEnum[] | ProviderAgreementScalarFieldEnum
+    having?: ProviderAgreementScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProviderAgreementCountAggregateInputType | true
+    _min?: ProviderAgreementMinAggregateInputType
+    _max?: ProviderAgreementMaxAggregateInputType
+  }
+
+  export type ProviderAgreementGroupByOutputType = {
+    id: string
+    providerId: string
+    termsAccepted: boolean
+    termsAcceptedAt: Date | null
+    commissionAccepted: boolean
+    commissionAcceptedAt: Date | null
+    ipAddress: string | null
+    createdAt: Date
+    _count: ProviderAgreementCountAggregateOutputType | null
+    _min: ProviderAgreementMinAggregateOutputType | null
+    _max: ProviderAgreementMaxAggregateOutputType | null
+  }
+
+  type GetProviderAgreementGroupByPayload<T extends ProviderAgreementGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProviderAgreementGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProviderAgreementGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProviderAgreementGroupByOutputType[P]>
+            : GetScalarType<T[P], ProviderAgreementGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProviderAgreementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    providerId?: boolean
+    termsAccepted?: boolean
+    termsAcceptedAt?: boolean
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: boolean
+    ipAddress?: boolean
+    createdAt?: boolean
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["providerAgreement"]>
+
+  export type ProviderAgreementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    providerId?: boolean
+    termsAccepted?: boolean
+    termsAcceptedAt?: boolean
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: boolean
+    ipAddress?: boolean
+    createdAt?: boolean
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["providerAgreement"]>
+
+  export type ProviderAgreementSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    providerId?: boolean
+    termsAccepted?: boolean
+    termsAcceptedAt?: boolean
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: boolean
+    ipAddress?: boolean
+    createdAt?: boolean
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["providerAgreement"]>
+
+  export type ProviderAgreementSelectScalar = {
+    id?: boolean
+    providerId?: boolean
+    termsAccepted?: boolean
+    termsAcceptedAt?: boolean
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: boolean
+    ipAddress?: boolean
+    createdAt?: boolean
+  }
+
+  export type ProviderAgreementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "providerId" | "termsAccepted" | "termsAcceptedAt" | "commissionAccepted" | "commissionAcceptedAt" | "ipAddress" | "createdAt", ExtArgs["result"]["providerAgreement"]>
+  export type ProviderAgreementInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }
+  export type ProviderAgreementIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }
+  export type ProviderAgreementIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    provider?: boolean | ServiceProviderDefaultArgs<ExtArgs>
+  }
+
+  export type $ProviderAgreementPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProviderAgreement"
+    objects: {
+      provider: Prisma.$ServiceProviderPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      providerId: string
+      termsAccepted: boolean
+      termsAcceptedAt: Date | null
+      commissionAccepted: boolean
+      commissionAcceptedAt: Date | null
+      ipAddress: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["providerAgreement"]>
+    composites: {}
+  }
+
+  type ProviderAgreementGetPayload<S extends boolean | null | undefined | ProviderAgreementDefaultArgs> = $Result.GetResult<Prisma.$ProviderAgreementPayload, S>
+
+  type ProviderAgreementCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProviderAgreementFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProviderAgreementCountAggregateInputType | true
+    }
+
+  export interface ProviderAgreementDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProviderAgreement'], meta: { name: 'ProviderAgreement' } }
+    /**
+     * Find zero or one ProviderAgreement that matches the filter.
+     * @param {ProviderAgreementFindUniqueArgs} args - Arguments to find a ProviderAgreement
+     * @example
+     * // Get one ProviderAgreement
+     * const providerAgreement = await prisma.providerAgreement.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProviderAgreementFindUniqueArgs>(args: SelectSubset<T, ProviderAgreementFindUniqueArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProviderAgreement that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProviderAgreementFindUniqueOrThrowArgs} args - Arguments to find a ProviderAgreement
+     * @example
+     * // Get one ProviderAgreement
+     * const providerAgreement = await prisma.providerAgreement.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProviderAgreementFindUniqueOrThrowArgs>(args: SelectSubset<T, ProviderAgreementFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProviderAgreement that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementFindFirstArgs} args - Arguments to find a ProviderAgreement
+     * @example
+     * // Get one ProviderAgreement
+     * const providerAgreement = await prisma.providerAgreement.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProviderAgreementFindFirstArgs>(args?: SelectSubset<T, ProviderAgreementFindFirstArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProviderAgreement that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementFindFirstOrThrowArgs} args - Arguments to find a ProviderAgreement
+     * @example
+     * // Get one ProviderAgreement
+     * const providerAgreement = await prisma.providerAgreement.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProviderAgreementFindFirstOrThrowArgs>(args?: SelectSubset<T, ProviderAgreementFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProviderAgreements that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProviderAgreements
+     * const providerAgreements = await prisma.providerAgreement.findMany()
+     * 
+     * // Get first 10 ProviderAgreements
+     * const providerAgreements = await prisma.providerAgreement.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const providerAgreementWithIdOnly = await prisma.providerAgreement.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProviderAgreementFindManyArgs>(args?: SelectSubset<T, ProviderAgreementFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProviderAgreement.
+     * @param {ProviderAgreementCreateArgs} args - Arguments to create a ProviderAgreement.
+     * @example
+     * // Create one ProviderAgreement
+     * const ProviderAgreement = await prisma.providerAgreement.create({
+     *   data: {
+     *     // ... data to create a ProviderAgreement
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProviderAgreementCreateArgs>(args: SelectSubset<T, ProviderAgreementCreateArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProviderAgreements.
+     * @param {ProviderAgreementCreateManyArgs} args - Arguments to create many ProviderAgreements.
+     * @example
+     * // Create many ProviderAgreements
+     * const providerAgreement = await prisma.providerAgreement.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProviderAgreementCreateManyArgs>(args?: SelectSubset<T, ProviderAgreementCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProviderAgreements and returns the data saved in the database.
+     * @param {ProviderAgreementCreateManyAndReturnArgs} args - Arguments to create many ProviderAgreements.
+     * @example
+     * // Create many ProviderAgreements
+     * const providerAgreement = await prisma.providerAgreement.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProviderAgreements and only return the `id`
+     * const providerAgreementWithIdOnly = await prisma.providerAgreement.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProviderAgreementCreateManyAndReturnArgs>(args?: SelectSubset<T, ProviderAgreementCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProviderAgreement.
+     * @param {ProviderAgreementDeleteArgs} args - Arguments to delete one ProviderAgreement.
+     * @example
+     * // Delete one ProviderAgreement
+     * const ProviderAgreement = await prisma.providerAgreement.delete({
+     *   where: {
+     *     // ... filter to delete one ProviderAgreement
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProviderAgreementDeleteArgs>(args: SelectSubset<T, ProviderAgreementDeleteArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProviderAgreement.
+     * @param {ProviderAgreementUpdateArgs} args - Arguments to update one ProviderAgreement.
+     * @example
+     * // Update one ProviderAgreement
+     * const providerAgreement = await prisma.providerAgreement.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProviderAgreementUpdateArgs>(args: SelectSubset<T, ProviderAgreementUpdateArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProviderAgreements.
+     * @param {ProviderAgreementDeleteManyArgs} args - Arguments to filter ProviderAgreements to delete.
+     * @example
+     * // Delete a few ProviderAgreements
+     * const { count } = await prisma.providerAgreement.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProviderAgreementDeleteManyArgs>(args?: SelectSubset<T, ProviderAgreementDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProviderAgreements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProviderAgreements
+     * const providerAgreement = await prisma.providerAgreement.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProviderAgreementUpdateManyArgs>(args: SelectSubset<T, ProviderAgreementUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProviderAgreements and returns the data updated in the database.
+     * @param {ProviderAgreementUpdateManyAndReturnArgs} args - Arguments to update many ProviderAgreements.
+     * @example
+     * // Update many ProviderAgreements
+     * const providerAgreement = await prisma.providerAgreement.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProviderAgreements and only return the `id`
+     * const providerAgreementWithIdOnly = await prisma.providerAgreement.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProviderAgreementUpdateManyAndReturnArgs>(args: SelectSubset<T, ProviderAgreementUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProviderAgreement.
+     * @param {ProviderAgreementUpsertArgs} args - Arguments to update or create a ProviderAgreement.
+     * @example
+     * // Update or create a ProviderAgreement
+     * const providerAgreement = await prisma.providerAgreement.upsert({
+     *   create: {
+     *     // ... data to create a ProviderAgreement
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProviderAgreement we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProviderAgreementUpsertArgs>(args: SelectSubset<T, ProviderAgreementUpsertArgs<ExtArgs>>): Prisma__ProviderAgreementClient<$Result.GetResult<Prisma.$ProviderAgreementPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProviderAgreements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementCountArgs} args - Arguments to filter ProviderAgreements to count.
+     * @example
+     * // Count the number of ProviderAgreements
+     * const count = await prisma.providerAgreement.count({
+     *   where: {
+     *     // ... the filter for the ProviderAgreements we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProviderAgreementCountArgs>(
+      args?: Subset<T, ProviderAgreementCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProviderAgreementCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProviderAgreement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProviderAgreementAggregateArgs>(args: Subset<T, ProviderAgreementAggregateArgs>): Prisma.PrismaPromise<GetProviderAgreementAggregateType<T>>
+
+    /**
+     * Group by ProviderAgreement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProviderAgreementGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProviderAgreementGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProviderAgreementGroupByArgs['orderBy'] }
+        : { orderBy?: ProviderAgreementGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProviderAgreementGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProviderAgreementGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProviderAgreement model
+   */
+  readonly fields: ProviderAgreementFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProviderAgreement.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProviderAgreementClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    provider<T extends ServiceProviderDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServiceProviderDefaultArgs<ExtArgs>>): Prisma__ServiceProviderClient<$Result.GetResult<Prisma.$ServiceProviderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProviderAgreement model
+   */
+  interface ProviderAgreementFieldRefs {
+    readonly id: FieldRef<"ProviderAgreement", 'String'>
+    readonly providerId: FieldRef<"ProviderAgreement", 'String'>
+    readonly termsAccepted: FieldRef<"ProviderAgreement", 'Boolean'>
+    readonly termsAcceptedAt: FieldRef<"ProviderAgreement", 'DateTime'>
+    readonly commissionAccepted: FieldRef<"ProviderAgreement", 'Boolean'>
+    readonly commissionAcceptedAt: FieldRef<"ProviderAgreement", 'DateTime'>
+    readonly ipAddress: FieldRef<"ProviderAgreement", 'String'>
+    readonly createdAt: FieldRef<"ProviderAgreement", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProviderAgreement findUnique
+   */
+  export type ProviderAgreementFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * Filter, which ProviderAgreement to fetch.
+     */
+    where: ProviderAgreementWhereUniqueInput
+  }
+
+  /**
+   * ProviderAgreement findUniqueOrThrow
+   */
+  export type ProviderAgreementFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * Filter, which ProviderAgreement to fetch.
+     */
+    where: ProviderAgreementWhereUniqueInput
+  }
+
+  /**
+   * ProviderAgreement findFirst
+   */
+  export type ProviderAgreementFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * Filter, which ProviderAgreement to fetch.
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProviderAgreements to fetch.
+     */
+    orderBy?: ProviderAgreementOrderByWithRelationInput | ProviderAgreementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProviderAgreements.
+     */
+    cursor?: ProviderAgreementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProviderAgreements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProviderAgreements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProviderAgreements.
+     */
+    distinct?: ProviderAgreementScalarFieldEnum | ProviderAgreementScalarFieldEnum[]
+  }
+
+  /**
+   * ProviderAgreement findFirstOrThrow
+   */
+  export type ProviderAgreementFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * Filter, which ProviderAgreement to fetch.
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProviderAgreements to fetch.
+     */
+    orderBy?: ProviderAgreementOrderByWithRelationInput | ProviderAgreementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProviderAgreements.
+     */
+    cursor?: ProviderAgreementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProviderAgreements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProviderAgreements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProviderAgreements.
+     */
+    distinct?: ProviderAgreementScalarFieldEnum | ProviderAgreementScalarFieldEnum[]
+  }
+
+  /**
+   * ProviderAgreement findMany
+   */
+  export type ProviderAgreementFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * Filter, which ProviderAgreements to fetch.
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProviderAgreements to fetch.
+     */
+    orderBy?: ProviderAgreementOrderByWithRelationInput | ProviderAgreementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProviderAgreements.
+     */
+    cursor?: ProviderAgreementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProviderAgreements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProviderAgreements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProviderAgreements.
+     */
+    distinct?: ProviderAgreementScalarFieldEnum | ProviderAgreementScalarFieldEnum[]
+  }
+
+  /**
+   * ProviderAgreement create
+   */
+  export type ProviderAgreementCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProviderAgreement.
+     */
+    data: XOR<ProviderAgreementCreateInput, ProviderAgreementUncheckedCreateInput>
+  }
+
+  /**
+   * ProviderAgreement createMany
+   */
+  export type ProviderAgreementCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProviderAgreements.
+     */
+    data: ProviderAgreementCreateManyInput | ProviderAgreementCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ProviderAgreement createManyAndReturn
+   */
+  export type ProviderAgreementCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProviderAgreements.
+     */
+    data: ProviderAgreementCreateManyInput | ProviderAgreementCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProviderAgreement update
+   */
+  export type ProviderAgreementUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProviderAgreement.
+     */
+    data: XOR<ProviderAgreementUpdateInput, ProviderAgreementUncheckedUpdateInput>
+    /**
+     * Choose, which ProviderAgreement to update.
+     */
+    where: ProviderAgreementWhereUniqueInput
+  }
+
+  /**
+   * ProviderAgreement updateMany
+   */
+  export type ProviderAgreementUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProviderAgreements.
+     */
+    data: XOR<ProviderAgreementUpdateManyMutationInput, ProviderAgreementUncheckedUpdateManyInput>
+    /**
+     * Filter which ProviderAgreements to update
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * Limit how many ProviderAgreements to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProviderAgreement updateManyAndReturn
+   */
+  export type ProviderAgreementUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * The data used to update ProviderAgreements.
+     */
+    data: XOR<ProviderAgreementUpdateManyMutationInput, ProviderAgreementUncheckedUpdateManyInput>
+    /**
+     * Filter which ProviderAgreements to update
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * Limit how many ProviderAgreements to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProviderAgreement upsert
+   */
+  export type ProviderAgreementUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProviderAgreement to update in case it exists.
+     */
+    where: ProviderAgreementWhereUniqueInput
+    /**
+     * In case the ProviderAgreement found by the `where` argument doesn't exist, create a new ProviderAgreement with this data.
+     */
+    create: XOR<ProviderAgreementCreateInput, ProviderAgreementUncheckedCreateInput>
+    /**
+     * In case the ProviderAgreement was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProviderAgreementUpdateInput, ProviderAgreementUncheckedUpdateInput>
+  }
+
+  /**
+   * ProviderAgreement delete
+   */
+  export type ProviderAgreementDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+    /**
+     * Filter which ProviderAgreement to delete.
+     */
+    where: ProviderAgreementWhereUniqueInput
+  }
+
+  /**
+   * ProviderAgreement deleteMany
+   */
+  export type ProviderAgreementDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProviderAgreements to delete
+     */
+    where?: ProviderAgreementWhereInput
+    /**
+     * Limit how many ProviderAgreements to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProviderAgreement without action
+   */
+  export type ProviderAgreementDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProviderAgreement
+     */
+    select?: ProviderAgreementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProviderAgreement
+     */
+    omit?: ProviderAgreementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProviderAgreementInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -9545,6 +12005,8 @@ export namespace Prisma {
     whatsappNumber: 'whatsappNumber',
     email: 'email',
     nicNumber: 'nicNumber',
+    province: 'province',
+    district: 'district',
     isActive: 'isActive',
     createdAt: 'createdAt'
   };
@@ -9558,6 +12020,7 @@ export namespace Prisma {
     mainCategoryId: 'mainCategoryId',
     subCategoryId: 'subCategoryId',
     experienceYears: 'experienceYears',
+    experienceLevel: 'experienceLevel',
     description: 'description',
     createdAt: 'createdAt'
   };
@@ -9579,6 +12042,16 @@ export namespace Prisma {
   export type ServiceAreaScalarFieldEnum = (typeof ServiceAreaScalarFieldEnum)[keyof typeof ServiceAreaScalarFieldEnum]
 
 
+  export const ServiceZoneScalarFieldEnum: {
+    id: 'id',
+    providerId: 'providerId',
+    zoneName: 'zoneName',
+    createdAt: 'createdAt'
+  };
+
+  export type ServiceZoneScalarFieldEnum = (typeof ServiceZoneScalarFieldEnum)[keyof typeof ServiceZoneScalarFieldEnum]
+
+
   export const AvailabilityScalarFieldEnum: {
     id: 'id',
     providerId: 'providerId',
@@ -9587,6 +12060,7 @@ export namespace Prisma {
     availableTo: 'availableTo',
     is24_7: 'is24_7',
     isAvailableNow: 'isAvailableNow',
+    nightService: 'nightService',
     updatedAt: 'updatedAt'
   };
 
@@ -9603,6 +12077,20 @@ export namespace Prisma {
   };
 
   export type VerificationDocumentScalarFieldEnum = (typeof VerificationDocumentScalarFieldEnum)[keyof typeof VerificationDocumentScalarFieldEnum]
+
+
+  export const ProviderAgreementScalarFieldEnum: {
+    id: 'id',
+    providerId: 'providerId',
+    termsAccepted: 'termsAccepted',
+    termsAcceptedAt: 'termsAcceptedAt',
+    commissionAccepted: 'commissionAccepted',
+    commissionAcceptedAt: 'commissionAcceptedAt',
+    ipAddress: 'ipAddress',
+    createdAt: 'createdAt'
+  };
+
+  export type ProviderAgreementScalarFieldEnum = (typeof ProviderAgreementScalarFieldEnum)[keyof typeof ProviderAgreementScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -9680,6 +12168,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'ExperienceLevel'
+   */
+  export type EnumExperienceLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExperienceLevel'>
+    
+
+
+  /**
+   * Reference to a field of type 'ExperienceLevel[]'
+   */
+  export type ListEnumExperienceLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ExperienceLevel[]'>
     
 
 
@@ -9873,12 +12375,16 @@ export namespace Prisma {
     whatsappNumber?: StringNullableFilter<"ServiceProvider"> | string | null
     email?: StringNullableFilter<"ServiceProvider"> | string | null
     nicNumber?: StringFilter<"ServiceProvider"> | string
+    province?: StringNullableFilter<"ServiceProvider"> | string | null
+    district?: StringNullableFilter<"ServiceProvider"> | string | null
     isActive?: BoolFilter<"ServiceProvider"> | boolean
     createdAt?: DateTimeFilter<"ServiceProvider"> | Date | string
     providerServices?: ProviderServiceListRelationFilter
     serviceAreas?: ServiceAreaListRelationFilter
+    serviceZones?: ServiceZoneListRelationFilter
     availability?: XOR<AvailabilityNullableScalarRelationFilter, AvailabilityWhereInput> | null
     verificationDocuments?: VerificationDocumentListRelationFilter
+    agreement?: XOR<ProviderAgreementNullableScalarRelationFilter, ProviderAgreementWhereInput> | null
   }
 
   export type ServiceProviderOrderByWithRelationInput = {
@@ -9889,12 +12395,16 @@ export namespace Prisma {
     whatsappNumber?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     nicNumber?: SortOrder
+    province?: SortOrderInput | SortOrder
+    district?: SortOrderInput | SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     providerServices?: ProviderServiceOrderByRelationAggregateInput
     serviceAreas?: ServiceAreaOrderByRelationAggregateInput
+    serviceZones?: ServiceZoneOrderByRelationAggregateInput
     availability?: AvailabilityOrderByWithRelationInput
     verificationDocuments?: VerificationDocumentOrderByRelationAggregateInput
+    agreement?: ProviderAgreementOrderByWithRelationInput
   }
 
   export type ServiceProviderWhereUniqueInput = Prisma.AtLeast<{
@@ -9908,12 +12418,16 @@ export namespace Prisma {
     mobileVerified?: BoolFilter<"ServiceProvider"> | boolean
     whatsappNumber?: StringNullableFilter<"ServiceProvider"> | string | null
     email?: StringNullableFilter<"ServiceProvider"> | string | null
+    province?: StringNullableFilter<"ServiceProvider"> | string | null
+    district?: StringNullableFilter<"ServiceProvider"> | string | null
     isActive?: BoolFilter<"ServiceProvider"> | boolean
     createdAt?: DateTimeFilter<"ServiceProvider"> | Date | string
     providerServices?: ProviderServiceListRelationFilter
     serviceAreas?: ServiceAreaListRelationFilter
+    serviceZones?: ServiceZoneListRelationFilter
     availability?: XOR<AvailabilityNullableScalarRelationFilter, AvailabilityWhereInput> | null
     verificationDocuments?: VerificationDocumentListRelationFilter
+    agreement?: XOR<ProviderAgreementNullableScalarRelationFilter, ProviderAgreementWhereInput> | null
   }, "id" | "mobileNumber" | "nicNumber">
 
   export type ServiceProviderOrderByWithAggregationInput = {
@@ -9924,6 +12438,8 @@ export namespace Prisma {
     whatsappNumber?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     nicNumber?: SortOrder
+    province?: SortOrderInput | SortOrder
+    district?: SortOrderInput | SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     _count?: ServiceProviderCountOrderByAggregateInput
@@ -9942,6 +12458,8 @@ export namespace Prisma {
     whatsappNumber?: StringNullableWithAggregatesFilter<"ServiceProvider"> | string | null
     email?: StringNullableWithAggregatesFilter<"ServiceProvider"> | string | null
     nicNumber?: StringWithAggregatesFilter<"ServiceProvider"> | string
+    province?: StringNullableWithAggregatesFilter<"ServiceProvider"> | string | null
+    district?: StringNullableWithAggregatesFilter<"ServiceProvider"> | string | null
     isActive?: BoolWithAggregatesFilter<"ServiceProvider"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"ServiceProvider"> | Date | string
   }
@@ -9955,6 +12473,7 @@ export namespace Prisma {
     mainCategoryId?: IntFilter<"ProviderService"> | number
     subCategoryId?: IntFilter<"ProviderService"> | number
     experienceYears?: IntNullableFilter<"ProviderService"> | number | null
+    experienceLevel?: EnumExperienceLevelNullableFilter<"ProviderService"> | $Enums.ExperienceLevel | null
     description?: StringNullableFilter<"ProviderService"> | string | null
     createdAt?: DateTimeFilter<"ProviderService"> | Date | string
     provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
@@ -9968,6 +12487,7 @@ export namespace Prisma {
     mainCategoryId?: SortOrder
     subCategoryId?: SortOrder
     experienceYears?: SortOrderInput | SortOrder
+    experienceLevel?: SortOrderInput | SortOrder
     description?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     provider?: ServiceProviderOrderByWithRelationInput
@@ -9985,6 +12505,7 @@ export namespace Prisma {
     mainCategoryId?: IntFilter<"ProviderService"> | number
     subCategoryId?: IntFilter<"ProviderService"> | number
     experienceYears?: IntNullableFilter<"ProviderService"> | number | null
+    experienceLevel?: EnumExperienceLevelNullableFilter<"ProviderService"> | $Enums.ExperienceLevel | null
     description?: StringNullableFilter<"ProviderService"> | string | null
     createdAt?: DateTimeFilter<"ProviderService"> | Date | string
     provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
@@ -9998,6 +12519,7 @@ export namespace Prisma {
     mainCategoryId?: SortOrder
     subCategoryId?: SortOrder
     experienceYears?: SortOrderInput | SortOrder
+    experienceLevel?: SortOrderInput | SortOrder
     description?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: ProviderServiceCountOrderByAggregateInput
@@ -10016,6 +12538,7 @@ export namespace Prisma {
     mainCategoryId?: IntWithAggregatesFilter<"ProviderService"> | number
     subCategoryId?: IntWithAggregatesFilter<"ProviderService"> | number
     experienceYears?: IntNullableWithAggregatesFilter<"ProviderService"> | number | null
+    experienceLevel?: EnumExperienceLevelNullableWithAggregatesFilter<"ProviderService"> | $Enums.ExperienceLevel | null
     description?: StringNullableWithAggregatesFilter<"ProviderService"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ProviderService"> | Date | string
   }
@@ -10092,6 +12615,56 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"ServiceArea"> | Date | string
   }
 
+  export type ServiceZoneWhereInput = {
+    AND?: ServiceZoneWhereInput | ServiceZoneWhereInput[]
+    OR?: ServiceZoneWhereInput[]
+    NOT?: ServiceZoneWhereInput | ServiceZoneWhereInput[]
+    id?: UuidFilter<"ServiceZone"> | string
+    providerId?: UuidFilter<"ServiceZone"> | string
+    zoneName?: StringFilter<"ServiceZone"> | string
+    createdAt?: DateTimeFilter<"ServiceZone"> | Date | string
+    provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
+  }
+
+  export type ServiceZoneOrderByWithRelationInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    zoneName?: SortOrder
+    createdAt?: SortOrder
+    provider?: ServiceProviderOrderByWithRelationInput
+  }
+
+  export type ServiceZoneWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ServiceZoneWhereInput | ServiceZoneWhereInput[]
+    OR?: ServiceZoneWhereInput[]
+    NOT?: ServiceZoneWhereInput | ServiceZoneWhereInput[]
+    providerId?: UuidFilter<"ServiceZone"> | string
+    zoneName?: StringFilter<"ServiceZone"> | string
+    createdAt?: DateTimeFilter<"ServiceZone"> | Date | string
+    provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
+  }, "id">
+
+  export type ServiceZoneOrderByWithAggregationInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    zoneName?: SortOrder
+    createdAt?: SortOrder
+    _count?: ServiceZoneCountOrderByAggregateInput
+    _max?: ServiceZoneMaxOrderByAggregateInput
+    _min?: ServiceZoneMinOrderByAggregateInput
+  }
+
+  export type ServiceZoneScalarWhereWithAggregatesInput = {
+    AND?: ServiceZoneScalarWhereWithAggregatesInput | ServiceZoneScalarWhereWithAggregatesInput[]
+    OR?: ServiceZoneScalarWhereWithAggregatesInput[]
+    NOT?: ServiceZoneScalarWhereWithAggregatesInput | ServiceZoneScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ServiceZone"> | string
+    providerId?: UuidWithAggregatesFilter<"ServiceZone"> | string
+    zoneName?: StringWithAggregatesFilter<"ServiceZone"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ServiceZone"> | Date | string
+  }
+
   export type AvailabilityWhereInput = {
     AND?: AvailabilityWhereInput | AvailabilityWhereInput[]
     OR?: AvailabilityWhereInput[]
@@ -10103,6 +12676,7 @@ export namespace Prisma {
     availableTo?: DateTimeNullableFilter<"Availability"> | Date | string | null
     is24_7?: BoolFilter<"Availability"> | boolean
     isAvailableNow?: BoolFilter<"Availability"> | boolean
+    nightService?: BoolFilter<"Availability"> | boolean
     updatedAt?: DateTimeFilter<"Availability"> | Date | string
     provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
   }
@@ -10115,6 +12689,7 @@ export namespace Prisma {
     availableTo?: SortOrderInput | SortOrder
     is24_7?: SortOrder
     isAvailableNow?: SortOrder
+    nightService?: SortOrder
     updatedAt?: SortOrder
     provider?: ServiceProviderOrderByWithRelationInput
   }
@@ -10130,6 +12705,7 @@ export namespace Prisma {
     availableTo?: DateTimeNullableFilter<"Availability"> | Date | string | null
     is24_7?: BoolFilter<"Availability"> | boolean
     isAvailableNow?: BoolFilter<"Availability"> | boolean
+    nightService?: BoolFilter<"Availability"> | boolean
     updatedAt?: DateTimeFilter<"Availability"> | Date | string
     provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
   }, "id" | "providerId">
@@ -10142,6 +12718,7 @@ export namespace Prisma {
     availableTo?: SortOrderInput | SortOrder
     is24_7?: SortOrder
     isAvailableNow?: SortOrder
+    nightService?: SortOrder
     updatedAt?: SortOrder
     _count?: AvailabilityCountOrderByAggregateInput
     _max?: AvailabilityMaxOrderByAggregateInput
@@ -10159,6 +12736,7 @@ export namespace Prisma {
     availableTo?: DateTimeNullableWithAggregatesFilter<"Availability"> | Date | string | null
     is24_7?: BoolWithAggregatesFilter<"Availability"> | boolean
     isAvailableNow?: BoolWithAggregatesFilter<"Availability"> | boolean
+    nightService?: BoolWithAggregatesFilter<"Availability"> | boolean
     updatedAt?: DateTimeWithAggregatesFilter<"Availability"> | Date | string
   }
 
@@ -10220,6 +12798,76 @@ export namespace Prisma {
     bucketKey?: StringWithAggregatesFilter<"VerificationDocument"> | string
     status?: EnumDocumentStatusWithAggregatesFilter<"VerificationDocument"> | $Enums.DocumentStatus
     uploadedAt?: DateTimeWithAggregatesFilter<"VerificationDocument"> | Date | string
+  }
+
+  export type ProviderAgreementWhereInput = {
+    AND?: ProviderAgreementWhereInput | ProviderAgreementWhereInput[]
+    OR?: ProviderAgreementWhereInput[]
+    NOT?: ProviderAgreementWhereInput | ProviderAgreementWhereInput[]
+    id?: UuidFilter<"ProviderAgreement"> | string
+    providerId?: UuidFilter<"ProviderAgreement"> | string
+    termsAccepted?: BoolFilter<"ProviderAgreement"> | boolean
+    termsAcceptedAt?: DateTimeNullableFilter<"ProviderAgreement"> | Date | string | null
+    commissionAccepted?: BoolFilter<"ProviderAgreement"> | boolean
+    commissionAcceptedAt?: DateTimeNullableFilter<"ProviderAgreement"> | Date | string | null
+    ipAddress?: StringNullableFilter<"ProviderAgreement"> | string | null
+    createdAt?: DateTimeFilter<"ProviderAgreement"> | Date | string
+    provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
+  }
+
+  export type ProviderAgreementOrderByWithRelationInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    termsAccepted?: SortOrder
+    termsAcceptedAt?: SortOrderInput | SortOrder
+    commissionAccepted?: SortOrder
+    commissionAcceptedAt?: SortOrderInput | SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    provider?: ServiceProviderOrderByWithRelationInput
+  }
+
+  export type ProviderAgreementWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    providerId?: string
+    AND?: ProviderAgreementWhereInput | ProviderAgreementWhereInput[]
+    OR?: ProviderAgreementWhereInput[]
+    NOT?: ProviderAgreementWhereInput | ProviderAgreementWhereInput[]
+    termsAccepted?: BoolFilter<"ProviderAgreement"> | boolean
+    termsAcceptedAt?: DateTimeNullableFilter<"ProviderAgreement"> | Date | string | null
+    commissionAccepted?: BoolFilter<"ProviderAgreement"> | boolean
+    commissionAcceptedAt?: DateTimeNullableFilter<"ProviderAgreement"> | Date | string | null
+    ipAddress?: StringNullableFilter<"ProviderAgreement"> | string | null
+    createdAt?: DateTimeFilter<"ProviderAgreement"> | Date | string
+    provider?: XOR<ServiceProviderScalarRelationFilter, ServiceProviderWhereInput>
+  }, "id" | "providerId">
+
+  export type ProviderAgreementOrderByWithAggregationInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    termsAccepted?: SortOrder
+    termsAcceptedAt?: SortOrderInput | SortOrder
+    commissionAccepted?: SortOrder
+    commissionAcceptedAt?: SortOrderInput | SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: ProviderAgreementCountOrderByAggregateInput
+    _max?: ProviderAgreementMaxOrderByAggregateInput
+    _min?: ProviderAgreementMinOrderByAggregateInput
+  }
+
+  export type ProviderAgreementScalarWhereWithAggregatesInput = {
+    AND?: ProviderAgreementScalarWhereWithAggregatesInput | ProviderAgreementScalarWhereWithAggregatesInput[]
+    OR?: ProviderAgreementScalarWhereWithAggregatesInput[]
+    NOT?: ProviderAgreementScalarWhereWithAggregatesInput | ProviderAgreementScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ProviderAgreement"> | string
+    providerId?: UuidWithAggregatesFilter<"ProviderAgreement"> | string
+    termsAccepted?: BoolWithAggregatesFilter<"ProviderAgreement"> | boolean
+    termsAcceptedAt?: DateTimeNullableWithAggregatesFilter<"ProviderAgreement"> | Date | string | null
+    commissionAccepted?: BoolWithAggregatesFilter<"ProviderAgreement"> | boolean
+    commissionAcceptedAt?: DateTimeNullableWithAggregatesFilter<"ProviderAgreement"> | Date | string | null
+    ipAddress?: StringNullableWithAggregatesFilter<"ProviderAgreement"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ProviderAgreement"> | Date | string
   }
 
   export type MainCategoryCreateInput = {
@@ -10347,12 +12995,16 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceCreateNestedManyWithoutProviderInput
     serviceAreas?: ServiceAreaCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneCreateNestedManyWithoutProviderInput
     availability?: AvailabilityCreateNestedOneWithoutProviderInput
     verificationDocuments?: VerificationDocumentCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderUncheckedCreateInput = {
@@ -10363,12 +13015,16 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceUncheckedCreateNestedManyWithoutProviderInput
     serviceAreas?: ServiceAreaUncheckedCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneUncheckedCreateNestedManyWithoutProviderInput
     availability?: AvailabilityUncheckedCreateNestedOneWithoutProviderInput
     verificationDocuments?: VerificationDocumentUncheckedCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderUpdateInput = {
@@ -10379,12 +13035,16 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUpdateManyWithoutProviderNestedInput
     serviceAreas?: ServiceAreaUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUpdateOneWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderUncheckedUpdateInput = {
@@ -10395,12 +13055,16 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput
     serviceAreas?: ServiceAreaUncheckedUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUncheckedUpdateOneWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUncheckedUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderCreateManyInput = {
@@ -10411,6 +13075,8 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
   }
@@ -10423,6 +13089,8 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10435,6 +13103,8 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10442,6 +13112,7 @@ export namespace Prisma {
   export type ProviderServiceCreateInput = {
     id?: string
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
     provider: ServiceProviderCreateNestedOneWithoutProviderServicesInput
@@ -10455,6 +13126,7 @@ export namespace Prisma {
     mainCategoryId: number
     subCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -10462,6 +13134,7 @@ export namespace Prisma {
   export type ProviderServiceUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     provider?: ServiceProviderUpdateOneRequiredWithoutProviderServicesNestedInput
@@ -10475,6 +13148,7 @@ export namespace Prisma {
     mainCategoryId?: IntFieldUpdateOperationsInput | number
     subCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10485,6 +13159,7 @@ export namespace Prisma {
     mainCategoryId: number
     subCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -10492,6 +13167,7 @@ export namespace Prisma {
   export type ProviderServiceUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10502,6 +13178,7 @@ export namespace Prisma {
     mainCategoryId?: IntFieldUpdateOperationsInput | number
     subCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -10582,6 +13259,54 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ServiceZoneCreateInput = {
+    id?: string
+    zoneName: string
+    createdAt?: Date | string
+    provider: ServiceProviderCreateNestedOneWithoutServiceZonesInput
+  }
+
+  export type ServiceZoneUncheckedCreateInput = {
+    id?: string
+    providerId: string
+    zoneName: string
+    createdAt?: Date | string
+  }
+
+  export type ServiceZoneUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    provider?: ServiceProviderUpdateOneRequiredWithoutServiceZonesNestedInput
+  }
+
+  export type ServiceZoneUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServiceZoneCreateManyInput = {
+    id?: string
+    providerId: string
+    zoneName: string
+    createdAt?: Date | string
+  }
+
+  export type ServiceZoneUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServiceZoneUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AvailabilityCreateInput = {
     id?: string
     availableDays?: string | null
@@ -10589,6 +13314,7 @@ export namespace Prisma {
     availableTo?: Date | string | null
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: Date | string
     provider: ServiceProviderCreateNestedOneWithoutAvailabilityInput
   }
@@ -10601,6 +13327,7 @@ export namespace Prisma {
     availableTo?: Date | string | null
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: Date | string
   }
 
@@ -10611,6 +13338,7 @@ export namespace Prisma {
     availableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is24_7?: BoolFieldUpdateOperationsInput | boolean
     isAvailableNow?: BoolFieldUpdateOperationsInput | boolean
+    nightService?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     provider?: ServiceProviderUpdateOneRequiredWithoutAvailabilityNestedInput
   }
@@ -10623,6 +13351,7 @@ export namespace Prisma {
     availableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is24_7?: BoolFieldUpdateOperationsInput | boolean
     isAvailableNow?: BoolFieldUpdateOperationsInput | boolean
+    nightService?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10634,6 +13363,7 @@ export namespace Prisma {
     availableTo?: Date | string | null
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: Date | string
   }
 
@@ -10644,6 +13374,7 @@ export namespace Prisma {
     availableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is24_7?: BoolFieldUpdateOperationsInput | boolean
     isAvailableNow?: BoolFieldUpdateOperationsInput | boolean
+    nightService?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10655,6 +13386,7 @@ export namespace Prisma {
     availableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is24_7?: BoolFieldUpdateOperationsInput | boolean
     isAvailableNow?: BoolFieldUpdateOperationsInput | boolean
+    nightService?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -10718,6 +13450,82 @@ export namespace Prisma {
     bucketKey?: StringFieldUpdateOperationsInput | string
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProviderAgreementCreateInput = {
+    id?: string
+    termsAccepted?: boolean
+    termsAcceptedAt?: Date | string | null
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: Date | string | null
+    ipAddress?: string | null
+    createdAt?: Date | string
+    provider: ServiceProviderCreateNestedOneWithoutAgreementInput
+  }
+
+  export type ProviderAgreementUncheckedCreateInput = {
+    id?: string
+    providerId: string
+    termsAccepted?: boolean
+    termsAcceptedAt?: Date | string | null
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: Date | string | null
+    ipAddress?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ProviderAgreementUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    termsAccepted?: BoolFieldUpdateOperationsInput | boolean
+    termsAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    commissionAccepted?: BoolFieldUpdateOperationsInput | boolean
+    commissionAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    provider?: ServiceProviderUpdateOneRequiredWithoutAgreementNestedInput
+  }
+
+  export type ProviderAgreementUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    termsAccepted?: BoolFieldUpdateOperationsInput | boolean
+    termsAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    commissionAccepted?: BoolFieldUpdateOperationsInput | boolean
+    commissionAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProviderAgreementCreateManyInput = {
+    id?: string
+    providerId: string
+    termsAccepted?: boolean
+    termsAcceptedAt?: Date | string | null
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: Date | string | null
+    ipAddress?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ProviderAgreementUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    termsAccepted?: BoolFieldUpdateOperationsInput | boolean
+    termsAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    commissionAccepted?: BoolFieldUpdateOperationsInput | boolean
+    commissionAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProviderAgreementUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    termsAccepted?: BoolFieldUpdateOperationsInput | boolean
+    termsAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    commissionAccepted?: BoolFieldUpdateOperationsInput | boolean
+    commissionAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -10965,6 +13773,12 @@ export namespace Prisma {
     none?: ServiceAreaWhereInput
   }
 
+  export type ServiceZoneListRelationFilter = {
+    every?: ServiceZoneWhereInput
+    some?: ServiceZoneWhereInput
+    none?: ServiceZoneWhereInput
+  }
+
   export type AvailabilityNullableScalarRelationFilter = {
     is?: AvailabilityWhereInput | null
     isNot?: AvailabilityWhereInput | null
@@ -10976,7 +13790,16 @@ export namespace Prisma {
     none?: VerificationDocumentWhereInput
   }
 
+  export type ProviderAgreementNullableScalarRelationFilter = {
+    is?: ProviderAgreementWhereInput | null
+    isNot?: ProviderAgreementWhereInput | null
+  }
+
   export type ServiceAreaOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ServiceZoneOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -10992,6 +13815,8 @@ export namespace Prisma {
     whatsappNumber?: SortOrder
     email?: SortOrder
     nicNumber?: SortOrder
+    province?: SortOrder
+    district?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
   }
@@ -11004,6 +13829,8 @@ export namespace Prisma {
     whatsappNumber?: SortOrder
     email?: SortOrder
     nicNumber?: SortOrder
+    province?: SortOrder
+    district?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
   }
@@ -11016,6 +13843,8 @@ export namespace Prisma {
     whatsappNumber?: SortOrder
     email?: SortOrder
     nicNumber?: SortOrder
+    province?: SortOrder
+    district?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
   }
@@ -11046,6 +13875,13 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type EnumExperienceLevelNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.ExperienceLevel | EnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumExperienceLevelNullableFilter<$PrismaModel> | $Enums.ExperienceLevel | null
+  }
+
   export type ServiceProviderScalarRelationFilter = {
     is?: ServiceProviderWhereInput
     isNot?: ServiceProviderWhereInput
@@ -11067,6 +13903,7 @@ export namespace Prisma {
     mainCategoryId?: SortOrder
     subCategoryId?: SortOrder
     experienceYears?: SortOrder
+    experienceLevel?: SortOrder
     description?: SortOrder
     createdAt?: SortOrder
   }
@@ -11083,6 +13920,7 @@ export namespace Prisma {
     mainCategoryId?: SortOrder
     subCategoryId?: SortOrder
     experienceYears?: SortOrder
+    experienceLevel?: SortOrder
     description?: SortOrder
     createdAt?: SortOrder
   }
@@ -11093,6 +13931,7 @@ export namespace Prisma {
     mainCategoryId?: SortOrder
     subCategoryId?: SortOrder
     experienceYears?: SortOrder
+    experienceLevel?: SortOrder
     description?: SortOrder
     createdAt?: SortOrder
   }
@@ -11117,6 +13956,16 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type EnumExperienceLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ExperienceLevel | EnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumExperienceLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.ExperienceLevel | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumExperienceLevelNullableFilter<$PrismaModel>
+    _max?: NestedEnumExperienceLevelNullableFilter<$PrismaModel>
   }
 
   export type DecimalNullableFilter<$PrismaModel = never> = {
@@ -11189,6 +14038,27 @@ export namespace Prisma {
     _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
+  export type ServiceZoneCountOrderByAggregateInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    zoneName?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServiceZoneMaxOrderByAggregateInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    zoneName?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServiceZoneMinOrderByAggregateInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    zoneName?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -11208,6 +14078,7 @@ export namespace Prisma {
     availableTo?: SortOrder
     is24_7?: SortOrder
     isAvailableNow?: SortOrder
+    nightService?: SortOrder
     updatedAt?: SortOrder
   }
 
@@ -11219,6 +14090,7 @@ export namespace Prisma {
     availableTo?: SortOrder
     is24_7?: SortOrder
     isAvailableNow?: SortOrder
+    nightService?: SortOrder
     updatedAt?: SortOrder
   }
 
@@ -11230,6 +14102,7 @@ export namespace Prisma {
     availableTo?: SortOrder
     is24_7?: SortOrder
     isAvailableNow?: SortOrder
+    nightService?: SortOrder
     updatedAt?: SortOrder
   }
 
@@ -11306,6 +14179,39 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumDocumentStatusFilter<$PrismaModel>
     _max?: NestedEnumDocumentStatusFilter<$PrismaModel>
+  }
+
+  export type ProviderAgreementCountOrderByAggregateInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    termsAccepted?: SortOrder
+    termsAcceptedAt?: SortOrder
+    commissionAccepted?: SortOrder
+    commissionAcceptedAt?: SortOrder
+    ipAddress?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProviderAgreementMaxOrderByAggregateInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    termsAccepted?: SortOrder
+    termsAcceptedAt?: SortOrder
+    commissionAccepted?: SortOrder
+    commissionAcceptedAt?: SortOrder
+    ipAddress?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProviderAgreementMinOrderByAggregateInput = {
+    id?: SortOrder
+    providerId?: SortOrder
+    termsAccepted?: SortOrder
+    termsAcceptedAt?: SortOrder
+    commissionAccepted?: SortOrder
+    commissionAcceptedAt?: SortOrder
+    ipAddress?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type SubCategoryCreateNestedManyWithoutMainCategoryInput = {
@@ -11486,6 +14392,13 @@ export namespace Prisma {
     connect?: ServiceAreaWhereUniqueInput | ServiceAreaWhereUniqueInput[]
   }
 
+  export type ServiceZoneCreateNestedManyWithoutProviderInput = {
+    create?: XOR<ServiceZoneCreateWithoutProviderInput, ServiceZoneUncheckedCreateWithoutProviderInput> | ServiceZoneCreateWithoutProviderInput[] | ServiceZoneUncheckedCreateWithoutProviderInput[]
+    connectOrCreate?: ServiceZoneCreateOrConnectWithoutProviderInput | ServiceZoneCreateOrConnectWithoutProviderInput[]
+    createMany?: ServiceZoneCreateManyProviderInputEnvelope
+    connect?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+  }
+
   export type AvailabilityCreateNestedOneWithoutProviderInput = {
     create?: XOR<AvailabilityCreateWithoutProviderInput, AvailabilityUncheckedCreateWithoutProviderInput>
     connectOrCreate?: AvailabilityCreateOrConnectWithoutProviderInput
@@ -11497,6 +14410,12 @@ export namespace Prisma {
     connectOrCreate?: VerificationDocumentCreateOrConnectWithoutProviderInput | VerificationDocumentCreateOrConnectWithoutProviderInput[]
     createMany?: VerificationDocumentCreateManyProviderInputEnvelope
     connect?: VerificationDocumentWhereUniqueInput | VerificationDocumentWhereUniqueInput[]
+  }
+
+  export type ProviderAgreementCreateNestedOneWithoutProviderInput = {
+    create?: XOR<ProviderAgreementCreateWithoutProviderInput, ProviderAgreementUncheckedCreateWithoutProviderInput>
+    connectOrCreate?: ProviderAgreementCreateOrConnectWithoutProviderInput
+    connect?: ProviderAgreementWhereUniqueInput
   }
 
   export type ProviderServiceUncheckedCreateNestedManyWithoutProviderInput = {
@@ -11513,6 +14432,13 @@ export namespace Prisma {
     connect?: ServiceAreaWhereUniqueInput | ServiceAreaWhereUniqueInput[]
   }
 
+  export type ServiceZoneUncheckedCreateNestedManyWithoutProviderInput = {
+    create?: XOR<ServiceZoneCreateWithoutProviderInput, ServiceZoneUncheckedCreateWithoutProviderInput> | ServiceZoneCreateWithoutProviderInput[] | ServiceZoneUncheckedCreateWithoutProviderInput[]
+    connectOrCreate?: ServiceZoneCreateOrConnectWithoutProviderInput | ServiceZoneCreateOrConnectWithoutProviderInput[]
+    createMany?: ServiceZoneCreateManyProviderInputEnvelope
+    connect?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+  }
+
   export type AvailabilityUncheckedCreateNestedOneWithoutProviderInput = {
     create?: XOR<AvailabilityCreateWithoutProviderInput, AvailabilityUncheckedCreateWithoutProviderInput>
     connectOrCreate?: AvailabilityCreateOrConnectWithoutProviderInput
@@ -11524,6 +14450,12 @@ export namespace Prisma {
     connectOrCreate?: VerificationDocumentCreateOrConnectWithoutProviderInput | VerificationDocumentCreateOrConnectWithoutProviderInput[]
     createMany?: VerificationDocumentCreateManyProviderInputEnvelope
     connect?: VerificationDocumentWhereUniqueInput | VerificationDocumentWhereUniqueInput[]
+  }
+
+  export type ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput = {
+    create?: XOR<ProviderAgreementCreateWithoutProviderInput, ProviderAgreementUncheckedCreateWithoutProviderInput>
+    connectOrCreate?: ProviderAgreementCreateOrConnectWithoutProviderInput
+    connect?: ProviderAgreementWhereUniqueInput
   }
 
   export type ProviderServiceUpdateManyWithoutProviderNestedInput = {
@@ -11554,6 +14486,20 @@ export namespace Prisma {
     deleteMany?: ServiceAreaScalarWhereInput | ServiceAreaScalarWhereInput[]
   }
 
+  export type ServiceZoneUpdateManyWithoutProviderNestedInput = {
+    create?: XOR<ServiceZoneCreateWithoutProviderInput, ServiceZoneUncheckedCreateWithoutProviderInput> | ServiceZoneCreateWithoutProviderInput[] | ServiceZoneUncheckedCreateWithoutProviderInput[]
+    connectOrCreate?: ServiceZoneCreateOrConnectWithoutProviderInput | ServiceZoneCreateOrConnectWithoutProviderInput[]
+    upsert?: ServiceZoneUpsertWithWhereUniqueWithoutProviderInput | ServiceZoneUpsertWithWhereUniqueWithoutProviderInput[]
+    createMany?: ServiceZoneCreateManyProviderInputEnvelope
+    set?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    disconnect?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    delete?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    connect?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    update?: ServiceZoneUpdateWithWhereUniqueWithoutProviderInput | ServiceZoneUpdateWithWhereUniqueWithoutProviderInput[]
+    updateMany?: ServiceZoneUpdateManyWithWhereWithoutProviderInput | ServiceZoneUpdateManyWithWhereWithoutProviderInput[]
+    deleteMany?: ServiceZoneScalarWhereInput | ServiceZoneScalarWhereInput[]
+  }
+
   export type AvailabilityUpdateOneWithoutProviderNestedInput = {
     create?: XOR<AvailabilityCreateWithoutProviderInput, AvailabilityUncheckedCreateWithoutProviderInput>
     connectOrCreate?: AvailabilityCreateOrConnectWithoutProviderInput
@@ -11576,6 +14522,16 @@ export namespace Prisma {
     update?: VerificationDocumentUpdateWithWhereUniqueWithoutProviderInput | VerificationDocumentUpdateWithWhereUniqueWithoutProviderInput[]
     updateMany?: VerificationDocumentUpdateManyWithWhereWithoutProviderInput | VerificationDocumentUpdateManyWithWhereWithoutProviderInput[]
     deleteMany?: VerificationDocumentScalarWhereInput | VerificationDocumentScalarWhereInput[]
+  }
+
+  export type ProviderAgreementUpdateOneWithoutProviderNestedInput = {
+    create?: XOR<ProviderAgreementCreateWithoutProviderInput, ProviderAgreementUncheckedCreateWithoutProviderInput>
+    connectOrCreate?: ProviderAgreementCreateOrConnectWithoutProviderInput
+    upsert?: ProviderAgreementUpsertWithoutProviderInput
+    disconnect?: ProviderAgreementWhereInput | boolean
+    delete?: ProviderAgreementWhereInput | boolean
+    connect?: ProviderAgreementWhereUniqueInput
+    update?: XOR<XOR<ProviderAgreementUpdateToOneWithWhereWithoutProviderInput, ProviderAgreementUpdateWithoutProviderInput>, ProviderAgreementUncheckedUpdateWithoutProviderInput>
   }
 
   export type ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput = {
@@ -11606,6 +14562,20 @@ export namespace Prisma {
     deleteMany?: ServiceAreaScalarWhereInput | ServiceAreaScalarWhereInput[]
   }
 
+  export type ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput = {
+    create?: XOR<ServiceZoneCreateWithoutProviderInput, ServiceZoneUncheckedCreateWithoutProviderInput> | ServiceZoneCreateWithoutProviderInput[] | ServiceZoneUncheckedCreateWithoutProviderInput[]
+    connectOrCreate?: ServiceZoneCreateOrConnectWithoutProviderInput | ServiceZoneCreateOrConnectWithoutProviderInput[]
+    upsert?: ServiceZoneUpsertWithWhereUniqueWithoutProviderInput | ServiceZoneUpsertWithWhereUniqueWithoutProviderInput[]
+    createMany?: ServiceZoneCreateManyProviderInputEnvelope
+    set?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    disconnect?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    delete?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    connect?: ServiceZoneWhereUniqueInput | ServiceZoneWhereUniqueInput[]
+    update?: ServiceZoneUpdateWithWhereUniqueWithoutProviderInput | ServiceZoneUpdateWithWhereUniqueWithoutProviderInput[]
+    updateMany?: ServiceZoneUpdateManyWithWhereWithoutProviderInput | ServiceZoneUpdateManyWithWhereWithoutProviderInput[]
+    deleteMany?: ServiceZoneScalarWhereInput | ServiceZoneScalarWhereInput[]
+  }
+
   export type AvailabilityUncheckedUpdateOneWithoutProviderNestedInput = {
     create?: XOR<AvailabilityCreateWithoutProviderInput, AvailabilityUncheckedCreateWithoutProviderInput>
     connectOrCreate?: AvailabilityCreateOrConnectWithoutProviderInput
@@ -11628,6 +14598,16 @@ export namespace Prisma {
     update?: VerificationDocumentUpdateWithWhereUniqueWithoutProviderInput | VerificationDocumentUpdateWithWhereUniqueWithoutProviderInput[]
     updateMany?: VerificationDocumentUpdateManyWithWhereWithoutProviderInput | VerificationDocumentUpdateManyWithWhereWithoutProviderInput[]
     deleteMany?: VerificationDocumentScalarWhereInput | VerificationDocumentScalarWhereInput[]
+  }
+
+  export type ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput = {
+    create?: XOR<ProviderAgreementCreateWithoutProviderInput, ProviderAgreementUncheckedCreateWithoutProviderInput>
+    connectOrCreate?: ProviderAgreementCreateOrConnectWithoutProviderInput
+    upsert?: ProviderAgreementUpsertWithoutProviderInput
+    disconnect?: ProviderAgreementWhereInput | boolean
+    delete?: ProviderAgreementWhereInput | boolean
+    connect?: ProviderAgreementWhereUniqueInput
+    update?: XOR<XOR<ProviderAgreementUpdateToOneWithWhereWithoutProviderInput, ProviderAgreementUpdateWithoutProviderInput>, ProviderAgreementUncheckedUpdateWithoutProviderInput>
   }
 
   export type ServiceProviderCreateNestedOneWithoutProviderServicesInput = {
@@ -11654,6 +14634,10 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type NullableEnumExperienceLevelFieldUpdateOperationsInput = {
+    set?: $Enums.ExperienceLevel | null
   }
 
   export type ServiceProviderUpdateOneRequiredWithoutProviderServicesNestedInput = {
@@ -11702,6 +14686,20 @@ export namespace Prisma {
     update?: XOR<XOR<ServiceProviderUpdateToOneWithWhereWithoutServiceAreasInput, ServiceProviderUpdateWithoutServiceAreasInput>, ServiceProviderUncheckedUpdateWithoutServiceAreasInput>
   }
 
+  export type ServiceProviderCreateNestedOneWithoutServiceZonesInput = {
+    create?: XOR<ServiceProviderCreateWithoutServiceZonesInput, ServiceProviderUncheckedCreateWithoutServiceZonesInput>
+    connectOrCreate?: ServiceProviderCreateOrConnectWithoutServiceZonesInput
+    connect?: ServiceProviderWhereUniqueInput
+  }
+
+  export type ServiceProviderUpdateOneRequiredWithoutServiceZonesNestedInput = {
+    create?: XOR<ServiceProviderCreateWithoutServiceZonesInput, ServiceProviderUncheckedCreateWithoutServiceZonesInput>
+    connectOrCreate?: ServiceProviderCreateOrConnectWithoutServiceZonesInput
+    upsert?: ServiceProviderUpsertWithoutServiceZonesInput
+    connect?: ServiceProviderWhereUniqueInput
+    update?: XOR<XOR<ServiceProviderUpdateToOneWithWhereWithoutServiceZonesInput, ServiceProviderUpdateWithoutServiceZonesInput>, ServiceProviderUncheckedUpdateWithoutServiceZonesInput>
+  }
+
   export type ServiceProviderCreateNestedOneWithoutAvailabilityInput = {
     create?: XOR<ServiceProviderCreateWithoutAvailabilityInput, ServiceProviderUncheckedCreateWithoutAvailabilityInput>
     connectOrCreate?: ServiceProviderCreateOrConnectWithoutAvailabilityInput
@@ -11740,6 +14738,20 @@ export namespace Prisma {
     upsert?: ServiceProviderUpsertWithoutVerificationDocumentsInput
     connect?: ServiceProviderWhereUniqueInput
     update?: XOR<XOR<ServiceProviderUpdateToOneWithWhereWithoutVerificationDocumentsInput, ServiceProviderUpdateWithoutVerificationDocumentsInput>, ServiceProviderUncheckedUpdateWithoutVerificationDocumentsInput>
+  }
+
+  export type ServiceProviderCreateNestedOneWithoutAgreementInput = {
+    create?: XOR<ServiceProviderCreateWithoutAgreementInput, ServiceProviderUncheckedCreateWithoutAgreementInput>
+    connectOrCreate?: ServiceProviderCreateOrConnectWithoutAgreementInput
+    connect?: ServiceProviderWhereUniqueInput
+  }
+
+  export type ServiceProviderUpdateOneRequiredWithoutAgreementNestedInput = {
+    create?: XOR<ServiceProviderCreateWithoutAgreementInput, ServiceProviderUncheckedCreateWithoutAgreementInput>
+    connectOrCreate?: ServiceProviderCreateOrConnectWithoutAgreementInput
+    upsert?: ServiceProviderUpsertWithoutAgreementInput
+    connect?: ServiceProviderWhereUniqueInput
+    update?: XOR<XOR<ServiceProviderUpdateToOneWithWhereWithoutAgreementInput, ServiceProviderUpdateWithoutAgreementInput>, ServiceProviderUncheckedUpdateWithoutAgreementInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -11916,6 +14928,13 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
+  export type NestedEnumExperienceLevelNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.ExperienceLevel | EnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumExperienceLevelNullableFilter<$PrismaModel> | $Enums.ExperienceLevel | null
+  }
+
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -11941,6 +14960,16 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedEnumExperienceLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ExperienceLevel | EnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    in?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.ExperienceLevel[] | ListEnumExperienceLevelFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumExperienceLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.ExperienceLevel | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumExperienceLevelNullableFilter<$PrismaModel>
+    _max?: NestedEnumExperienceLevelNullableFilter<$PrismaModel>
   }
 
   export type NestedDecimalNullableFilter<$PrismaModel = never> = {
@@ -12057,6 +15086,7 @@ export namespace Prisma {
   export type ProviderServiceCreateWithoutMainCategoryInput = {
     id?: string
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
     provider: ServiceProviderCreateNestedOneWithoutProviderServicesInput
@@ -12068,6 +15098,7 @@ export namespace Prisma {
     providerId: string
     subCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -12134,6 +15165,7 @@ export namespace Prisma {
     mainCategoryId?: IntFilter<"ProviderService"> | number
     subCategoryId?: IntFilter<"ProviderService"> | number
     experienceYears?: IntNullableFilter<"ProviderService"> | number | null
+    experienceLevel?: EnumExperienceLevelNullableFilter<"ProviderService"> | $Enums.ExperienceLevel | null
     description?: StringNullableFilter<"ProviderService"> | string | null
     createdAt?: DateTimeFilter<"ProviderService"> | Date | string
   }
@@ -12163,6 +15195,7 @@ export namespace Prisma {
   export type ProviderServiceCreateWithoutSubCategoryInput = {
     id?: string
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
     provider: ServiceProviderCreateNestedOneWithoutProviderServicesInput
@@ -12174,6 +15207,7 @@ export namespace Prisma {
     providerId: string
     mainCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -12235,6 +15269,7 @@ export namespace Prisma {
   export type ProviderServiceCreateWithoutProviderInput = {
     id?: string
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
     mainCategory: MainCategoryCreateNestedOneWithoutProviderServicesInput
@@ -12246,6 +15281,7 @@ export namespace Prisma {
     mainCategoryId: number
     subCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -12290,6 +15326,28 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ServiceZoneCreateWithoutProviderInput = {
+    id?: string
+    zoneName: string
+    createdAt?: Date | string
+  }
+
+  export type ServiceZoneUncheckedCreateWithoutProviderInput = {
+    id?: string
+    zoneName: string
+    createdAt?: Date | string
+  }
+
+  export type ServiceZoneCreateOrConnectWithoutProviderInput = {
+    where: ServiceZoneWhereUniqueInput
+    create: XOR<ServiceZoneCreateWithoutProviderInput, ServiceZoneUncheckedCreateWithoutProviderInput>
+  }
+
+  export type ServiceZoneCreateManyProviderInputEnvelope = {
+    data: ServiceZoneCreateManyProviderInput | ServiceZoneCreateManyProviderInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AvailabilityCreateWithoutProviderInput = {
     id?: string
     availableDays?: string | null
@@ -12297,6 +15355,7 @@ export namespace Prisma {
     availableTo?: Date | string | null
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: Date | string
   }
 
@@ -12307,6 +15366,7 @@ export namespace Prisma {
     availableTo?: Date | string | null
     is24_7?: boolean
     isAvailableNow?: boolean
+    nightService?: boolean
     updatedAt?: Date | string
   }
 
@@ -12339,6 +15399,31 @@ export namespace Prisma {
   export type VerificationDocumentCreateManyProviderInputEnvelope = {
     data: VerificationDocumentCreateManyProviderInput | VerificationDocumentCreateManyProviderInput[]
     skipDuplicates?: boolean
+  }
+
+  export type ProviderAgreementCreateWithoutProviderInput = {
+    id?: string
+    termsAccepted?: boolean
+    termsAcceptedAt?: Date | string | null
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: Date | string | null
+    ipAddress?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ProviderAgreementUncheckedCreateWithoutProviderInput = {
+    id?: string
+    termsAccepted?: boolean
+    termsAcceptedAt?: Date | string | null
+    commissionAccepted?: boolean
+    commissionAcceptedAt?: Date | string | null
+    ipAddress?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ProviderAgreementCreateOrConnectWithoutProviderInput = {
+    where: ProviderAgreementWhereUniqueInput
+    create: XOR<ProviderAgreementCreateWithoutProviderInput, ProviderAgreementUncheckedCreateWithoutProviderInput>
   }
 
   export type ProviderServiceUpsertWithWhereUniqueWithoutProviderInput = {
@@ -12387,6 +15472,32 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ServiceArea"> | Date | string
   }
 
+  export type ServiceZoneUpsertWithWhereUniqueWithoutProviderInput = {
+    where: ServiceZoneWhereUniqueInput
+    update: XOR<ServiceZoneUpdateWithoutProviderInput, ServiceZoneUncheckedUpdateWithoutProviderInput>
+    create: XOR<ServiceZoneCreateWithoutProviderInput, ServiceZoneUncheckedCreateWithoutProviderInput>
+  }
+
+  export type ServiceZoneUpdateWithWhereUniqueWithoutProviderInput = {
+    where: ServiceZoneWhereUniqueInput
+    data: XOR<ServiceZoneUpdateWithoutProviderInput, ServiceZoneUncheckedUpdateWithoutProviderInput>
+  }
+
+  export type ServiceZoneUpdateManyWithWhereWithoutProviderInput = {
+    where: ServiceZoneScalarWhereInput
+    data: XOR<ServiceZoneUpdateManyMutationInput, ServiceZoneUncheckedUpdateManyWithoutProviderInput>
+  }
+
+  export type ServiceZoneScalarWhereInput = {
+    AND?: ServiceZoneScalarWhereInput | ServiceZoneScalarWhereInput[]
+    OR?: ServiceZoneScalarWhereInput[]
+    NOT?: ServiceZoneScalarWhereInput | ServiceZoneScalarWhereInput[]
+    id?: UuidFilter<"ServiceZone"> | string
+    providerId?: UuidFilter<"ServiceZone"> | string
+    zoneName?: StringFilter<"ServiceZone"> | string
+    createdAt?: DateTimeFilter<"ServiceZone"> | Date | string
+  }
+
   export type AvailabilityUpsertWithoutProviderInput = {
     update: XOR<AvailabilityUpdateWithoutProviderInput, AvailabilityUncheckedUpdateWithoutProviderInput>
     create: XOR<AvailabilityCreateWithoutProviderInput, AvailabilityUncheckedCreateWithoutProviderInput>
@@ -12405,6 +15516,7 @@ export namespace Prisma {
     availableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is24_7?: BoolFieldUpdateOperationsInput | boolean
     isAvailableNow?: BoolFieldUpdateOperationsInput | boolean
+    nightService?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -12415,6 +15527,7 @@ export namespace Prisma {
     availableTo?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is24_7?: BoolFieldUpdateOperationsInput | boolean
     isAvailableNow?: BoolFieldUpdateOperationsInput | boolean
+    nightService?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -12446,6 +15559,37 @@ export namespace Prisma {
     uploadedAt?: DateTimeFilter<"VerificationDocument"> | Date | string
   }
 
+  export type ProviderAgreementUpsertWithoutProviderInput = {
+    update: XOR<ProviderAgreementUpdateWithoutProviderInput, ProviderAgreementUncheckedUpdateWithoutProviderInput>
+    create: XOR<ProviderAgreementCreateWithoutProviderInput, ProviderAgreementUncheckedCreateWithoutProviderInput>
+    where?: ProviderAgreementWhereInput
+  }
+
+  export type ProviderAgreementUpdateToOneWithWhereWithoutProviderInput = {
+    where?: ProviderAgreementWhereInput
+    data: XOR<ProviderAgreementUpdateWithoutProviderInput, ProviderAgreementUncheckedUpdateWithoutProviderInput>
+  }
+
+  export type ProviderAgreementUpdateWithoutProviderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    termsAccepted?: BoolFieldUpdateOperationsInput | boolean
+    termsAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    commissionAccepted?: BoolFieldUpdateOperationsInput | boolean
+    commissionAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProviderAgreementUncheckedUpdateWithoutProviderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    termsAccepted?: BoolFieldUpdateOperationsInput | boolean
+    termsAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    commissionAccepted?: BoolFieldUpdateOperationsInput | boolean
+    commissionAcceptedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ServiceProviderCreateWithoutProviderServicesInput = {
     id?: string
     fullName: string
@@ -12454,11 +15598,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     serviceAreas?: ServiceAreaCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneCreateNestedManyWithoutProviderInput
     availability?: AvailabilityCreateNestedOneWithoutProviderInput
     verificationDocuments?: VerificationDocumentCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderUncheckedCreateWithoutProviderServicesInput = {
@@ -12469,11 +15617,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     serviceAreas?: ServiceAreaUncheckedCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneUncheckedCreateNestedManyWithoutProviderInput
     availability?: AvailabilityUncheckedCreateNestedOneWithoutProviderInput
     verificationDocuments?: VerificationDocumentUncheckedCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderCreateOrConnectWithoutProviderServicesInput = {
@@ -12542,11 +15694,15 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     serviceAreas?: ServiceAreaUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUpdateOneWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderUncheckedUpdateWithoutProviderServicesInput = {
@@ -12557,11 +15713,15 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     serviceAreas?: ServiceAreaUncheckedUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUncheckedUpdateOneWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUncheckedUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput
   }
 
   export type MainCategoryUpsertWithoutProviderServicesInput = {
@@ -12626,11 +15786,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneCreateNestedManyWithoutProviderInput
     availability?: AvailabilityCreateNestedOneWithoutProviderInput
     verificationDocuments?: VerificationDocumentCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderUncheckedCreateWithoutServiceAreasInput = {
@@ -12641,11 +15805,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceUncheckedCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneUncheckedCreateNestedManyWithoutProviderInput
     availability?: AvailabilityUncheckedCreateNestedOneWithoutProviderInput
     verificationDocuments?: VerificationDocumentUncheckedCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderCreateOrConnectWithoutServiceAreasInput = {
@@ -12672,11 +15840,15 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUpdateOneWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderUncheckedUpdateWithoutServiceAreasInput = {
@@ -12687,11 +15859,107 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUncheckedUpdateOneWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUncheckedUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput
+  }
+
+  export type ServiceProviderCreateWithoutServiceZonesInput = {
+    id?: string
+    fullName: string
+    mobileNumber: string
+    mobileVerified?: boolean
+    whatsappNumber?: string | null
+    email?: string | null
+    nicNumber: string
+    province?: string | null
+    district?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    providerServices?: ProviderServiceCreateNestedManyWithoutProviderInput
+    serviceAreas?: ServiceAreaCreateNestedManyWithoutProviderInput
+    availability?: AvailabilityCreateNestedOneWithoutProviderInput
+    verificationDocuments?: VerificationDocumentCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementCreateNestedOneWithoutProviderInput
+  }
+
+  export type ServiceProviderUncheckedCreateWithoutServiceZonesInput = {
+    id?: string
+    fullName: string
+    mobileNumber: string
+    mobileVerified?: boolean
+    whatsappNumber?: string | null
+    email?: string | null
+    nicNumber: string
+    province?: string | null
+    district?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    providerServices?: ProviderServiceUncheckedCreateNestedManyWithoutProviderInput
+    serviceAreas?: ServiceAreaUncheckedCreateNestedManyWithoutProviderInput
+    availability?: AvailabilityUncheckedCreateNestedOneWithoutProviderInput
+    verificationDocuments?: VerificationDocumentUncheckedCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput
+  }
+
+  export type ServiceProviderCreateOrConnectWithoutServiceZonesInput = {
+    where: ServiceProviderWhereUniqueInput
+    create: XOR<ServiceProviderCreateWithoutServiceZonesInput, ServiceProviderUncheckedCreateWithoutServiceZonesInput>
+  }
+
+  export type ServiceProviderUpsertWithoutServiceZonesInput = {
+    update: XOR<ServiceProviderUpdateWithoutServiceZonesInput, ServiceProviderUncheckedUpdateWithoutServiceZonesInput>
+    create: XOR<ServiceProviderCreateWithoutServiceZonesInput, ServiceProviderUncheckedCreateWithoutServiceZonesInput>
+    where?: ServiceProviderWhereInput
+  }
+
+  export type ServiceProviderUpdateToOneWithWhereWithoutServiceZonesInput = {
+    where?: ServiceProviderWhereInput
+    data: XOR<ServiceProviderUpdateWithoutServiceZonesInput, ServiceProviderUncheckedUpdateWithoutServiceZonesInput>
+  }
+
+  export type ServiceProviderUpdateWithoutServiceZonesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    mobileNumber?: StringFieldUpdateOperationsInput | string
+    mobileVerified?: BoolFieldUpdateOperationsInput | boolean
+    whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerServices?: ProviderServiceUpdateManyWithoutProviderNestedInput
+    serviceAreas?: ServiceAreaUpdateManyWithoutProviderNestedInput
+    availability?: AvailabilityUpdateOneWithoutProviderNestedInput
+    verificationDocuments?: VerificationDocumentUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUpdateOneWithoutProviderNestedInput
+  }
+
+  export type ServiceProviderUncheckedUpdateWithoutServiceZonesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    mobileNumber?: StringFieldUpdateOperationsInput | string
+    mobileVerified?: BoolFieldUpdateOperationsInput | boolean
+    whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerServices?: ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput
+    serviceAreas?: ServiceAreaUncheckedUpdateManyWithoutProviderNestedInput
+    availability?: AvailabilityUncheckedUpdateOneWithoutProviderNestedInput
+    verificationDocuments?: VerificationDocumentUncheckedUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderCreateWithoutAvailabilityInput = {
@@ -12702,11 +15970,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceCreateNestedManyWithoutProviderInput
     serviceAreas?: ServiceAreaCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneCreateNestedManyWithoutProviderInput
     verificationDocuments?: VerificationDocumentCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderUncheckedCreateWithoutAvailabilityInput = {
@@ -12717,11 +15989,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceUncheckedCreateNestedManyWithoutProviderInput
     serviceAreas?: ServiceAreaUncheckedCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneUncheckedCreateNestedManyWithoutProviderInput
     verificationDocuments?: VerificationDocumentUncheckedCreateNestedManyWithoutProviderInput
+    agreement?: ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderCreateOrConnectWithoutAvailabilityInput = {
@@ -12748,11 +16024,15 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUpdateManyWithoutProviderNestedInput
     serviceAreas?: ServiceAreaUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUpdateManyWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderUncheckedUpdateWithoutAvailabilityInput = {
@@ -12763,11 +16043,15 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput
     serviceAreas?: ServiceAreaUncheckedUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput
     verificationDocuments?: VerificationDocumentUncheckedUpdateManyWithoutProviderNestedInput
+    agreement?: ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderCreateWithoutVerificationDocumentsInput = {
@@ -12778,11 +16062,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceCreateNestedManyWithoutProviderInput
     serviceAreas?: ServiceAreaCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneCreateNestedManyWithoutProviderInput
     availability?: AvailabilityCreateNestedOneWithoutProviderInput
+    agreement?: ProviderAgreementCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderUncheckedCreateWithoutVerificationDocumentsInput = {
@@ -12793,11 +16081,15 @@ export namespace Prisma {
     whatsappNumber?: string | null
     email?: string | null
     nicNumber: string
+    province?: string | null
+    district?: string | null
     isActive?: boolean
     createdAt?: Date | string
     providerServices?: ProviderServiceUncheckedCreateNestedManyWithoutProviderInput
     serviceAreas?: ServiceAreaUncheckedCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneUncheckedCreateNestedManyWithoutProviderInput
     availability?: AvailabilityUncheckedCreateNestedOneWithoutProviderInput
+    agreement?: ProviderAgreementUncheckedCreateNestedOneWithoutProviderInput
   }
 
   export type ServiceProviderCreateOrConnectWithoutVerificationDocumentsInput = {
@@ -12824,11 +16116,15 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUpdateManyWithoutProviderNestedInput
     serviceAreas?: ServiceAreaUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUpdateOneWithoutProviderNestedInput
+    agreement?: ProviderAgreementUpdateOneWithoutProviderNestedInput
   }
 
   export type ServiceProviderUncheckedUpdateWithoutVerificationDocumentsInput = {
@@ -12839,11 +16135,107 @@ export namespace Prisma {
     whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     providerServices?: ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput
     serviceAreas?: ServiceAreaUncheckedUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput
     availability?: AvailabilityUncheckedUpdateOneWithoutProviderNestedInput
+    agreement?: ProviderAgreementUncheckedUpdateOneWithoutProviderNestedInput
+  }
+
+  export type ServiceProviderCreateWithoutAgreementInput = {
+    id?: string
+    fullName: string
+    mobileNumber: string
+    mobileVerified?: boolean
+    whatsappNumber?: string | null
+    email?: string | null
+    nicNumber: string
+    province?: string | null
+    district?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    providerServices?: ProviderServiceCreateNestedManyWithoutProviderInput
+    serviceAreas?: ServiceAreaCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneCreateNestedManyWithoutProviderInput
+    availability?: AvailabilityCreateNestedOneWithoutProviderInput
+    verificationDocuments?: VerificationDocumentCreateNestedManyWithoutProviderInput
+  }
+
+  export type ServiceProviderUncheckedCreateWithoutAgreementInput = {
+    id?: string
+    fullName: string
+    mobileNumber: string
+    mobileVerified?: boolean
+    whatsappNumber?: string | null
+    email?: string | null
+    nicNumber: string
+    province?: string | null
+    district?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    providerServices?: ProviderServiceUncheckedCreateNestedManyWithoutProviderInput
+    serviceAreas?: ServiceAreaUncheckedCreateNestedManyWithoutProviderInput
+    serviceZones?: ServiceZoneUncheckedCreateNestedManyWithoutProviderInput
+    availability?: AvailabilityUncheckedCreateNestedOneWithoutProviderInput
+    verificationDocuments?: VerificationDocumentUncheckedCreateNestedManyWithoutProviderInput
+  }
+
+  export type ServiceProviderCreateOrConnectWithoutAgreementInput = {
+    where: ServiceProviderWhereUniqueInput
+    create: XOR<ServiceProviderCreateWithoutAgreementInput, ServiceProviderUncheckedCreateWithoutAgreementInput>
+  }
+
+  export type ServiceProviderUpsertWithoutAgreementInput = {
+    update: XOR<ServiceProviderUpdateWithoutAgreementInput, ServiceProviderUncheckedUpdateWithoutAgreementInput>
+    create: XOR<ServiceProviderCreateWithoutAgreementInput, ServiceProviderUncheckedCreateWithoutAgreementInput>
+    where?: ServiceProviderWhereInput
+  }
+
+  export type ServiceProviderUpdateToOneWithWhereWithoutAgreementInput = {
+    where?: ServiceProviderWhereInput
+    data: XOR<ServiceProviderUpdateWithoutAgreementInput, ServiceProviderUncheckedUpdateWithoutAgreementInput>
+  }
+
+  export type ServiceProviderUpdateWithoutAgreementInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    mobileNumber?: StringFieldUpdateOperationsInput | string
+    mobileVerified?: BoolFieldUpdateOperationsInput | boolean
+    whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerServices?: ProviderServiceUpdateManyWithoutProviderNestedInput
+    serviceAreas?: ServiceAreaUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUpdateManyWithoutProviderNestedInput
+    availability?: AvailabilityUpdateOneWithoutProviderNestedInput
+    verificationDocuments?: VerificationDocumentUpdateManyWithoutProviderNestedInput
+  }
+
+  export type ServiceProviderUncheckedUpdateWithoutAgreementInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    mobileNumber?: StringFieldUpdateOperationsInput | string
+    mobileVerified?: BoolFieldUpdateOperationsInput | boolean
+    whatsappNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    nicNumber?: StringFieldUpdateOperationsInput | string
+    province?: NullableStringFieldUpdateOperationsInput | string | null
+    district?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    providerServices?: ProviderServiceUncheckedUpdateManyWithoutProviderNestedInput
+    serviceAreas?: ServiceAreaUncheckedUpdateManyWithoutProviderNestedInput
+    serviceZones?: ServiceZoneUncheckedUpdateManyWithoutProviderNestedInput
+    availability?: AvailabilityUncheckedUpdateOneWithoutProviderNestedInput
+    verificationDocuments?: VerificationDocumentUncheckedUpdateManyWithoutProviderNestedInput
   }
 
   export type SubCategoryCreateManyMainCategoryInput = {
@@ -12858,6 +16250,7 @@ export namespace Prisma {
     providerId: string
     subCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -12887,6 +16280,7 @@ export namespace Prisma {
   export type ProviderServiceUpdateWithoutMainCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     provider?: ServiceProviderUpdateOneRequiredWithoutProviderServicesNestedInput
@@ -12898,6 +16292,7 @@ export namespace Prisma {
     providerId?: StringFieldUpdateOperationsInput | string
     subCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12907,6 +16302,7 @@ export namespace Prisma {
     providerId?: StringFieldUpdateOperationsInput | string
     subCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12916,6 +16312,7 @@ export namespace Prisma {
     providerId: string
     mainCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -12923,6 +16320,7 @@ export namespace Prisma {
   export type ProviderServiceUpdateWithoutSubCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     provider?: ServiceProviderUpdateOneRequiredWithoutProviderServicesNestedInput
@@ -12934,6 +16332,7 @@ export namespace Prisma {
     providerId?: StringFieldUpdateOperationsInput | string
     mainCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12943,6 +16342,7 @@ export namespace Prisma {
     providerId?: StringFieldUpdateOperationsInput | string
     mainCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12952,6 +16352,7 @@ export namespace Prisma {
     mainCategoryId: number
     subCategoryId: number
     experienceYears?: number | null
+    experienceLevel?: $Enums.ExperienceLevel | null
     description?: string | null
     createdAt?: Date | string
   }
@@ -12966,6 +16367,12 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type ServiceZoneCreateManyProviderInput = {
+    id?: string
+    zoneName: string
+    createdAt?: Date | string
+  }
+
   export type VerificationDocumentCreateManyProviderInput = {
     id?: string
     documentType: $Enums.DocumentType
@@ -12977,6 +16384,7 @@ export namespace Prisma {
   export type ProviderServiceUpdateWithoutProviderInput = {
     id?: StringFieldUpdateOperationsInput | string
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mainCategory?: MainCategoryUpdateOneRequiredWithoutProviderServicesNestedInput
@@ -12988,6 +16396,7 @@ export namespace Prisma {
     mainCategoryId?: IntFieldUpdateOperationsInput | number
     subCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12997,6 +16406,7 @@ export namespace Prisma {
     mainCategoryId?: IntFieldUpdateOperationsInput | number
     subCategoryId?: IntFieldUpdateOperationsInput | number
     experienceYears?: NullableIntFieldUpdateOperationsInput | number | null
+    experienceLevel?: NullableEnumExperienceLevelFieldUpdateOperationsInput | $Enums.ExperienceLevel | null
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13028,6 +16438,24 @@ export namespace Prisma {
     latitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     longitude?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServiceZoneUpdateWithoutProviderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServiceZoneUncheckedUpdateWithoutProviderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServiceZoneUncheckedUpdateManyWithoutProviderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zoneName?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

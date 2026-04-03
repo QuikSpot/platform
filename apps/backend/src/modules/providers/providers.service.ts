@@ -4,6 +4,8 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -170,6 +172,11 @@ export class ProvidersService {
       await this.supabase.admin.deleteUser(authUserId);
 
       this.logger.error('Provider registration DB error', dbError);
+      if (dbError instanceof Error) {
+        this.logger.error(`Error name: ${dbError.name}`);
+        this.logger.error(`Error message: ${dbError.message}`);
+        this.logger.error(`Error stack: ${dbError.stack}`);
+      }
 
       const isPrismaUniqueViolation =
         dbError instanceof Error &&

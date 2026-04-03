@@ -144,6 +144,8 @@ exports.Prisma.ServiceProviderScalarFieldEnum = {
   whatsappNumber: 'whatsappNumber',
   email: 'email',
   nicNumber: 'nicNumber',
+  province: 'province',
+  district: 'district',
   isActive: 'isActive',
   createdAt: 'createdAt'
 };
@@ -154,6 +156,7 @@ exports.Prisma.ProviderServiceScalarFieldEnum = {
   mainCategoryId: 'mainCategoryId',
   subCategoryId: 'subCategoryId',
   experienceYears: 'experienceYears',
+  experienceLevel: 'experienceLevel',
   description: 'description',
   createdAt: 'createdAt'
 };
@@ -169,6 +172,13 @@ exports.Prisma.ServiceAreaScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ServiceZoneScalarFieldEnum = {
+  id: 'id',
+  providerId: 'providerId',
+  zoneName: 'zoneName',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.AvailabilityScalarFieldEnum = {
   id: 'id',
   providerId: 'providerId',
@@ -177,6 +187,7 @@ exports.Prisma.AvailabilityScalarFieldEnum = {
   availableTo: 'availableTo',
   is24_7: 'is24_7',
   isAvailableNow: 'isAvailableNow',
+  nightService: 'nightService',
   updatedAt: 'updatedAt'
 };
 
@@ -187,6 +198,17 @@ exports.Prisma.VerificationDocumentScalarFieldEnum = {
   bucketKey: 'bucketKey',
   status: 'status',
   uploadedAt: 'uploadedAt'
+};
+
+exports.Prisma.ProviderAgreementScalarFieldEnum = {
+  id: 'id',
+  providerId: 'providerId',
+  termsAccepted: 'termsAccepted',
+  termsAcceptedAt: 'termsAcceptedAt',
+  commissionAccepted: 'commissionAccepted',
+  commissionAcceptedAt: 'commissionAcceptedAt',
+  ipAddress: 'ipAddress',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -203,8 +225,15 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.ExperienceLevel = exports.$Enums.ExperienceLevel = {
+  BEGINNER: 'BEGINNER',
+  INTERMEDIATE: 'INTERMEDIATE',
+  EXPERT: 'EXPERT'
+};
+
 exports.DocumentType = exports.$Enums.DocumentType = {
   NIC_PHOTO: 'NIC_PHOTO',
+  NIC_BACK: 'NIC_BACK',
   SELFIE: 'SELFIE',
   SERVICE_PROOF: 'SERVICE_PROOF'
 };
@@ -221,8 +250,10 @@ exports.Prisma.ModelName = {
   ServiceProvider: 'ServiceProvider',
   ProviderService: 'ProviderService',
   ServiceArea: 'ServiceArea',
+  ServiceZone: 'ServiceZone',
   Availability: 'Availability',
-  VerificationDocument: 'VerificationDocument'
+  VerificationDocument: 'VerificationDocument',
+  ProviderAgreement: 'ProviderAgreement'
 };
 
 /**
