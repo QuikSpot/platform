@@ -183,7 +183,7 @@ export default function PartnerRegistration() {
     setIsLoading(true);
     setApiError(null);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
       const res = await fetch(`${backendUrl}/api/v1/provider/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
