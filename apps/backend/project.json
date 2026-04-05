@@ -4,12 +4,29 @@
   "sourceRoot": "apps/backend/src",
   "projectType": "application",
   "targets": {
-    "build": {
+    "prisma-generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "prisma generate && nest build",
+        "command": "prisma generate",
         "cwd": "apps/backend"
       }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/apps/backend",
+        "main": "apps/backend/src/main.ts",
+        "tsConfig": "apps/backend/tsconfig.build.json",
+        "generatePackageJson": true,
+        "assets": [
+          {
+            "input": "apps/backend/src/generated",
+            "glob": "**/*",
+            "output": "src/generated"
+          }
+        ]
+      },
+      "dependsOn": ["prisma-generate"]
     },
     "dev": {
       "executor": "nx:run-commands",
@@ -23,7 +40,7 @@
       "executor": "nx:run-commands",
       "continuous": true,
       "options": {
-        "command": "node dist/apps/backend/main",
+        "command": "node dist/apps/backend/src/main",
         "cwd": "."
       },
       "dependsOn": ["build"]
