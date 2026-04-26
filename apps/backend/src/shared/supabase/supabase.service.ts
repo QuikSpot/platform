@@ -20,4 +20,15 @@ export class SupabaseService {
   get db() {
     return this.client;
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async verifyToken(token: string): Promise<Record<string, any> | null> {
+    try {
+      const { data, error } = await this.client.auth.getUser(token);
+      if (error || !data?.user) return null;
+      return data.user as Record<string, any>;
+    } catch {
+      return null;
+    }
+  }
 }

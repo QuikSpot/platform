@@ -4,9 +4,12 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
 import { RegisterProviderDto } from './dto/register-provider.dto';
+import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderRegistrationResult } from './types/provider-registration.types';
 
 @Injectable()
@@ -22,7 +25,7 @@ export class ProvidersService {
     const { data, error: authError } = await this.supabase.admin.createUser({
       email: dto.email,
       password: dto.password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: { full_name: dto.fullName },
     });
 
@@ -217,9 +220,81 @@ export class ProvidersService {
       throw new InternalServerErrorException('Registration failed');
     }
   }
+
+  async getMe(token: string) {
+    const user = await this.supabase.verifyToken(token);
+    if (!user) throw new UnauthorizedException('Invalid or expired token');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabase.db
+      .from('service_provider')
+      .select(
+        'id, full_name, mobile_number, whatsapp_number, email, nic_number, province, district, is_active, created_at',
+      )
+      .eq('id', user['id'] as string)
+      .single();
+
+    if (error || !data) throw new NotFoundException('Provider profile not found');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return toProviderProfile(data as SpRow);
+  }
+
+  async updateMe(token: string, dto: UpdateProviderDto) {
+    const user = await this.supabase.verifyToken(token);
+    if (!user) throw new UnauthorizedException('Invalid or expired token');
+
+    const updates: Record<string, unknown> = {};
+    if (dto.fullName !== undefined) updates['full_name'] = dto.fullName;
+    if (dto.mobileNumber !== undefined) updates['mobile_number'] = dto.mobileNumber;
+    if (dto.whatsappNumber !== undefined) updates['whatsapp_number'] = dto.whatsappNumber;
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabase.db
+      .from('service_provider')
+      .update(updates)
+      .eq('id', user['id'] as string)
+      .select(
+        'id, full_name, mobile_number, whatsapp_number, email, nic_number, province, district, is_active, created_at',
+      )
+      .single();
+
+    if (error || !data) throw new InternalServerErrorException('Failed to update profile');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return toProviderProfile(data as SpRow);
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+interface SpRow {
+  id: string;
+  full_name: string;
+  mobile_number: string;
+  whatsapp_number: string | null;
+  email: string;
+  nic_number: string;
+  province: string | null;
+  district: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+function toProviderProfile(row: SpRow) {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    mobileNumber: row.mobile_number,
+    whatsappNumber: row.whatsapp_number,
+    email: row.email,
+    nicNumber: row.nic_number,
+    province: row.province,
+    district: row.district,
+    isActive: row.is_active,
+    createdAt: new Date(row.created_at),
+  };
+}
 
 function parseTimeToDbTime(hhmm: string): string {
   const isValid = /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm);
