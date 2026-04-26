@@ -7,10 +7,50 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { extname } from 'path';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
 import { RegisterProviderDto } from './dto/register-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderRegistrationResult } from './types/provider-registration.types';
+
+// ── Multer file shape (memory storage) ──────────────────────────
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
+
+export type ProviderDocumentFiles = {
+  nicFrontImage?: MulterFile[];
+  nicBackImage?: MulterFile[];
+  selfieImage?: MulterFile[];
+  portfolio?: MulterFile[];
+};
+
+const DOCUMENT_KEYS: Array<{ field: keyof ProviderDocumentFiles; docType: string }> = [
+  { field: 'nicFrontImage', docType: 'nic_front' },
+  { field: 'nicBackImage', docType: 'nic_back' },
+  { field: 'selfieImage', docType: 'selfie' },
+  { field: 'portfolio', docType: 'portfolio' },
+];
+
+/*
+ * Required Supabase migration before using uploadDocuments:
+ *
+ * create table provider_document (
+ *   id           uuid primary key default gen_random_uuid(),
+ *   provider_id  uuid not null references service_provider(id) on delete cascade,
+ *   doc_type     text not null,        -- 'nic_front' | 'nic_back' | 'selfie' | 'portfolio'
+ *   storage_path text not null,        -- e.g. providers/{uuid}/nic_front.jpg
+ *   mime_type    text,
+ *   original_name text,
+ *   created_at   timestamptz default now(),
+ *   unique(provider_id, doc_type)
+ * );
+ */
 
 @Injectable()
 export class ProvidersService {
@@ -242,6 +282,75 @@ export class ProvidersService {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return toProviderProfileFull(data as unknown as SpRowFull);
+  }
+
+  async uploadDocuments(
+    providerId: string,
+    files: ProviderDocumentFiles,
+  ): Promise<{ providerId: string; uploaded: string[]; failed: string[] }> {
+    const { data: provider } = await this.supabase.db
+      .from('service_provider')
+      .select('id')
+      .eq('id', providerId)
+      .single();
+
+    if (!provider) throw new NotFoundException('Provider not found');
+
+    const bucket = 'private-documents';
+    const basePath = `providers/${providerId}`;
+    const uploaded: string[] = [];
+    const failed: string[] = [];
+    const dbRows: Array<{
+      provider_id: string;
+      doc_type: string;
+      storage_path: string;
+      mime_type: string;
+      original_name: string;
+    }> = [];
+
+    for (const { field, docType } of DOCUMENT_KEYS) {
+      const file = files[field]?.[0];
+      if (!file) continue;
+
+      const ext = extname(file.originalname).toLowerCase() || '.bin';
+      const storagePath = `${basePath}/${docType}${ext}`;
+
+      const { error: storageError } = await this.supabase.storage
+        .from(bucket)
+        .upload(storagePath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: true,
+        });
+
+      if (storageError) {
+        this.logger.error(
+          `Storage upload failed [${docType}]: ${storageError.message}`,
+        );
+        failed.push(docType);
+        continue;
+      }
+
+      uploaded.push(docType);
+      dbRows.push({
+        provider_id: providerId,
+        doc_type: docType,
+        storage_path: storagePath,
+        mime_type: file.mimetype,
+        original_name: file.originalname,
+      });
+    }
+
+    if (dbRows.length > 0) {
+      const { error: dbError } = await this.supabase.db
+        .from('provider_document')
+        .upsert(dbRows, { onConflict: 'provider_id,doc_type' });
+
+      if (dbError) {
+        this.logger.error(`Document DB persist failed: ${dbError.message}`, dbError);
+      }
+    }
+
+    return { providerId, uploaded, failed };
   }
 
   async updateMe(token: string, dto: UpdateProviderDto) {

@@ -184,47 +184,71 @@ export default function PartnerRegistration() {
     setApiError(null);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+      // ── Step 1: Register provider (JSON) ────────────────────────
       const res = await fetch(`${backendUrl}/api/v1/provider/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Personal
           fullName: form.fullName,
           mobileNumber: form.mobileNumber,
           whatsappNumber: form.whatsappNumber || undefined,
           email: form.email,
           password: form.password,
           nicNumber: form.nicNumber,
-          // Location
           province: form.province,
           district: form.district,
           serviceZones: form.serviceZones,
-          // Services / Expertise
           services: form.subCategories.map((sub) => ({
             mainCategory: form.primaryCategory,
             subCategory: sub,
             experienceLevel: mapExperienceLevel(form.experienceLevel),
             description: form.bio || undefined,
           })),
-          // Availability
           availability: {
             nightService: form.nightService,
             serviceDays: form.serviceDays.join(','),
             workStartTime: form.workStartTime,
             workEndTime: form.workEndTime,
           },
-          // Agreements
           agreements: {
             agreeTerms: form.agreeTerms,
             agreeCommission: form.agreeCommission,
           },
         }),
       });
-      const data = await res.json();
+
+      const body = await res.json();
       if (!res.ok) {
-        setApiError(data?.message ?? 'Registration failed. Please try again.');
+        setApiError(body?.message ?? 'Registration failed. Please try again.');
         return;
       }
+
+      const providerId: string = body.data.id;
+
+      // ── Step 2: Upload documents to private storage ──────────────
+      const hasFiles =
+        form.nicFrontImage || form.nicBackImage || form.selfieImage || form.portfolio;
+
+      if (hasFiles) {
+        const formData = new FormData();
+        formData.append('providerId', providerId);
+        if (form.nicFrontImage) formData.append('nicFrontImage', form.nicFrontImage);
+        if (form.nicBackImage) formData.append('nicBackImage', form.nicBackImage);
+        if (form.selfieImage) formData.append('selfieImage', form.selfieImage);
+        if (form.portfolio) formData.append('portfolio', form.portfolio);
+
+        const docRes = await fetch(`${backendUrl}/api/v1/provider/documents`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!docRes.ok) {
+          // Non-fatal: registration succeeded; documents can be re-uploaded later
+          console.warn('Document upload failed. Registration was still successful.');
+        }
+      }
+
       setSubmitted(true);
     } catch {
       setApiError('Unable to reach the server. Please try again.');
