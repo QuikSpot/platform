@@ -55,11 +55,17 @@ export class AvailabilityDto {
   /** HH:mm format */
   @IsOptional()
   @IsString()
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+    message: 'workStartTime must be in HH:mm format',
+  })
   workStartTime?: string;
 
   /** HH:mm format */
   @IsOptional()
   @IsString()
+  @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+    message: 'workEndTime must be in HH:mm format',
+  })
   workEndTime?: string;
 }
 
