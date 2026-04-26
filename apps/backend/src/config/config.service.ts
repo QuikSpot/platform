@@ -10,7 +10,7 @@ export class AppConfigService {
   }
 
   get port(): number {
-    return this.config.get<number>('PORT', 3000);
+    return this.config.get<number>('PORT', 3001);
   }
 
   get jwtSecret(): string {
