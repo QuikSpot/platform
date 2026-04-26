@@ -3,6 +3,20 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
+export interface ServiceEntry {
+  mainCategory: string;
+  subCategory: string;
+  experienceLevel: string | null;
+  description: string | null;
+}
+
+export interface AvailabilityInfo {
+  availableDays: string;
+  availableFrom: string | null;
+  availableTo: string | null;
+  nightService: boolean;
+}
+
 export interface ProviderProfile {
   id: string;
   fullName: string;
@@ -13,6 +27,9 @@ export interface ProviderProfile {
   province: string | null;
   district: string | null;
   isActive: boolean;
+  serviceZones: string[];
+  services: ServiceEntry[];
+  availability: AvailabilityInfo | null;
 }
 
 interface AuthState {
