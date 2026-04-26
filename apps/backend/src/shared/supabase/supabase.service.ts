@@ -16,4 +16,8 @@ export class SupabaseService {
   get admin() {
     return this.client.auth.admin;
   }
+
+  get db() {
+    return this.client;
+  }
 }

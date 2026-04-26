@@ -5,7 +5,6 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from '../../shared/prisma/prisma.service';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
 import { RegisterProviderDto } from './dto/register-provider.dto';
 import { ProviderRegistrationResult } from './types/provider-registration.types';
@@ -14,10 +13,7 @@ import { ProviderRegistrationResult } from './types/provider-registration.types'
 export class ProvidersService {
   private readonly logger = new Logger(ProvidersService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly supabase: SupabaseService,
-  ) {}
+  constructor(private readonly supabase: SupabaseService) {}
 
   async register(
     dto: RegisterProviderDto,
@@ -44,140 +40,172 @@ export class ProvidersService {
 
     const authUserId = data.user.id;
 
-    // ── 2. Persist everything in a single DB transaction ────────────────
+    // ── 2. Persist rows sequentially; cascade-delete sp on any failure ──
     try {
-      const provider = await this.prisma.$transaction(async (tx) => {
-        // 2a. ServiceProvider
-        const sp = await tx.serviceProvider.create({
-          data: {
-            id: authUserId,
-            fullName: dto.fullName,
-            mobileNumber: dto.mobileNumber,
-            whatsappNumber: dto.whatsappNumber ?? null,
-            email: dto.email,
-            nicNumber: dto.nicNumber,
-            province: dto.province ?? null,
-            district: dto.district ?? null,
-            isActive: false,
-          },
-          select: {
-            id: true,
-            fullName: true,
-            mobileNumber: true,
-            email: true,
-            nicNumber: true,
-            province: true,
-            district: true,
-            isActive: true,
-            createdAt: true,
-          },
-        });
+      // 2a. ServiceProvider
+      const { data: spRow, error: spError } = await this.supabase.db
+        .from('service_provider')
+        .insert({
+          id: authUserId,
+          full_name: dto.fullName,
+          mobile_number: dto.mobileNumber,
+          whatsapp_number: dto.whatsappNumber ?? null,
+          email: dto.email,
+          nic_number: dto.nicNumber,
+          province: dto.province ?? null,
+          district: dto.district ?? null,
+          is_active: false,
+        })
+        .select(
+          'id, full_name, mobile_number, email, nic_number, province, district, is_active, created_at',
+        )
+        .single();
 
-        // 2b. ServiceZones
-        if (dto.serviceZones?.length) {
-          await tx.serviceZone.createMany({
-            data: dto.serviceZones.map((zoneName) => ({
-              providerId: sp.id,
-              zoneName,
-            })),
-          });
+      if (spError) {
+        await this.supabase.admin.deleteUser(authUserId);
+        if (spError.code === '23505') {
+          throw new ConflictException(
+            'A provider with this mobile number or NIC already exists',
+          );
         }
-
-        // 2c. ProviderService (expertise / services)
-        if (dto.services?.length) {
-          for (const svc of dto.services) {
-            // Look up the main category by name
-            const mainCat = await tx.mainCategory.findFirst({
-              where: { name: svc.mainCategory },
-            });
-            if (!mainCat) {
-              this.logger.warn(
-                `Main category "${svc.mainCategory}" not found — skipping service entry`,
-              );
-              continue;
-            }
-
-            // Look up the sub category by name under that main category
-            const subCat = await tx.subCategory.findFirst({
-              where: {
-                name: svc.subCategory,
-                mainCategoryId: mainCat.id,
-              },
-            });
-            if (!subCat) {
-              this.logger.warn(
-                `Sub category "${svc.subCategory}" under "${svc.mainCategory}" not found — skipping`,
-              );
-              continue;
-            }
-
-            await tx.providerService.create({
-              data: {
-                providerId: sp.id,
-                mainCategoryId: mainCat.id,
-                subCategoryId: subCat.id,
-                experienceLevel: svc.experienceLevel ?? null,
-                description: svc.description ?? null,
-              },
-            });
-          }
-        }
-
-        // 2d. Availability
-        if (dto.availability) {
-          const av = dto.availability;
-          await tx.availability.create({
-            data: {
-              providerId: sp.id,
-              availableDays: av.serviceDays ?? null, // e.g. "MON,TUE,WED"
-              availableFrom: av.workStartTime
-                ? parseTimeToDate(av.workStartTime)
-                : null,
-              availableTo: av.workEndTime
-                ? parseTimeToDate(av.workEndTime)
-                : null,
-              nightService: av.nightService ?? false,
-              is24_7: false,
-              isAvailableNow: false,
-            },
-          });
-        }
-
-        // 2e. ProviderAgreement
-        if (dto.agreements) {
-          const ag = dto.agreements;
-          const now = new Date();
-          await tx.providerAgreement.create({
-            data: {
-              providerId: sp.id,
-              termsAccepted: ag.agreeTerms,
-              termsAcceptedAt: ag.agreeTerms ? now : null,
-              commissionAccepted: ag.agreeCommission,
-              commissionAcceptedAt: ag.agreeCommission ? now : null,
-            },
-          });
-        }
-
-        return sp;
-      });
-
-      return provider;
-    } catch (dbError: unknown) {
-      // Roll back the Supabase user so auth and DB stay in sync
-      await this.supabase.admin.deleteUser(authUserId);
-
-      this.logger.error('Provider registration DB error', dbError);
-
-      const isPrismaUniqueViolation =
-        dbError instanceof Error &&
-        dbError.message.includes('Unique constraint');
-
-      if (isPrismaUniqueViolation) {
-        throw new ConflictException(
-          'A provider with this mobile number or NIC already exists',
-        );
+        throw new InternalServerErrorException('Registration failed');
       }
 
+      const spId: string = spRow.id;
+
+      // 2b. ServiceZones
+      if (dto.serviceZones?.length) {
+        const { error: szError } = await this.supabase.db
+          .from('service_zone')
+          .insert(
+            dto.serviceZones.map((zoneName) => ({
+              provider_id: spId,
+              zone_name: zoneName,
+            })),
+          );
+
+        if (szError) {
+          await this.supabase.db.from('service_provider').delete().eq('id', spId);
+          await this.supabase.admin.deleteUser(authUserId);
+          throw new InternalServerErrorException('Registration failed');
+        }
+      }
+
+      // 2c. ProviderService (expertise / services)
+      if (dto.services?.length) {
+        for (const svc of dto.services) {
+          const { data: mainCat } = await this.supabase.db
+            .from('main_category')
+            .select('id')
+            .eq('name', svc.mainCategory)
+            .maybeSingle();
+
+          if (!mainCat) {
+            this.logger.warn(
+              `Main category "${svc.mainCategory}" not found — skipping service entry`,
+            );
+            continue;
+          }
+
+          const { data: subCat } = await this.supabase.db
+            .from('sub_category')
+            .select('id')
+            .eq('name', svc.subCategory)
+            .eq('main_category_id', mainCat.id)
+            .maybeSingle();
+
+          if (!subCat) {
+            this.logger.warn(
+              `Sub category "${svc.subCategory}" under "${svc.mainCategory}" not found — skipping`,
+            );
+            continue;
+          }
+
+          const { error: psError } = await this.supabase.db
+            .from('provider_service')
+            .insert({
+              provider_id: spId,
+              main_category_id: mainCat.id,
+              sub_category_id: subCat.id,
+              experience_level: svc.experienceLevel ?? null,
+              description: svc.description ?? null,
+            });
+
+          if (psError) {
+            await this.supabase.db.from('service_provider').delete().eq('id', spId);
+            await this.supabase.admin.deleteUser(authUserId);
+            throw new InternalServerErrorException('Registration failed');
+          }
+        }
+      }
+
+      // 2d. Availability
+      if (dto.availability) {
+        const av = dto.availability;
+        const { error: avError } = await this.supabase.db
+          .from('availability')
+          .insert({
+            provider_id: spId,
+            available_days: av.serviceDays ?? null,
+            available_from: av.workStartTime
+              ? parseTimeToIso(av.workStartTime)
+              : null,
+            available_to: av.workEndTime
+              ? parseTimeToIso(av.workEndTime)
+              : null,
+            night_service: av.nightService ?? false,
+            is_24_7: false,
+            is_available_now: false,
+          });
+
+        if (avError) {
+          await this.supabase.db.from('service_provider').delete().eq('id', spId);
+          await this.supabase.admin.deleteUser(authUserId);
+          throw new InternalServerErrorException('Registration failed');
+        }
+      }
+
+      // 2e. ProviderAgreement
+      if (dto.agreements) {
+        const ag = dto.agreements;
+        const now = new Date().toISOString();
+        const { error: agError } = await this.supabase.db
+          .from('provider_agreement')
+          .insert({
+            provider_id: spId,
+            terms_accepted: ag.agreeTerms,
+            terms_accepted_at: ag.agreeTerms ? now : null,
+            commission_accepted: ag.agreeCommission,
+            commission_accepted_at: ag.agreeCommission ? now : null,
+          });
+
+        if (agError) {
+          await this.supabase.db.from('service_provider').delete().eq('id', spId);
+          await this.supabase.admin.deleteUser(authUserId);
+          throw new InternalServerErrorException('Registration failed');
+        }
+      }
+
+      return {
+        id: spRow.id,
+        fullName: spRow.full_name,
+        mobileNumber: spRow.mobile_number,
+        email: spRow.email,
+        nicNumber: spRow.nic_number,
+        province: spRow.province,
+        district: spRow.district,
+        isActive: spRow.is_active,
+        createdAt: new Date(spRow.created_at),
+      };
+    } catch (err: unknown) {
+      this.logger.error('Provider registration error', err);
+      if (
+        err instanceof ConflictException ||
+        err instanceof InternalServerErrorException ||
+        err instanceof BadRequestException
+      ) {
+        throw err;
+      }
       throw new InternalServerErrorException('Registration failed');
     }
   }
@@ -185,13 +213,9 @@ export class ProvidersService {
 
 // ── Helpers ──────────────────────────────────────────────────────
 
-/**
- * Convert an "HH:mm" string to a Date that Prisma can store in a `@db.Time`
- * column. The date portion is set to the Unix epoch (1970-01-01).
- */
-function parseTimeToDate(hhmm: string): Date {
+function parseTimeToIso(hhmm: string): string {
   const [h, m] = hhmm.split(':').map(Number);
   const d = new Date('1970-01-01T00:00:00Z');
   d.setUTCHours(h, m, 0, 0);
-  return d;
+  return d.toISOString();
 }

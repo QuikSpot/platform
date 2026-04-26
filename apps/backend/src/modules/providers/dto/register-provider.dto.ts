@@ -14,7 +14,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-// ── Enums (mirror Prisma ExperienceLevel) ──────────────────────
+// ── Enums ──────────────────────────────────────────────────────
 
 export enum ExperienceLevelDto {
   BEGINNER = 'BEGINNER',
