@@ -21,6 +21,10 @@ export class SupabaseService {
     return this.client;
   }
 
+  get storage(): SupabaseClient['storage'] {
+    return this.client.storage;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async verifyToken(token: string): Promise<Record<string, any> | null> {
     try {
