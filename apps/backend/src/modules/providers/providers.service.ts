@@ -142,23 +142,31 @@ export class ProvidersService {
       // 2d. Availability
       if (dto.availability) {
         const av = dto.availability;
+        const normalizedDays = normalizeServiceDays(av.serviceDays);
+        const compactDays = toCompactServiceDays(normalizedDays);
+        const availabilityInsert = {
+          provider_id: spId,
+          available_days: compactDays,
+          available_from: av.workStartTime
+            ? parseTimeToDbTime(av.workStartTime)
+            : null,
+          available_to: av.workEndTime
+            ? parseTimeToDbTime(av.workEndTime)
+            : null,
+          night_service: av.nightService ?? false,
+          is_24_7: false,
+          is_available_now: false,
+        };
+
         const { error: avError } = await this.supabase.db
           .from('availability')
-          .insert({
-            provider_id: spId,
-            available_days: av.serviceDays ?? null,
-            available_from: av.workStartTime
-              ? parseTimeToIso(av.workStartTime)
-              : null,
-            available_to: av.workEndTime
-              ? parseTimeToIso(av.workEndTime)
-              : null,
-            night_service: av.nightService ?? false,
-            is_24_7: false,
-            is_available_now: false,
-          });
+          .insert(availabilityInsert);
 
         if (avError) {
+          this.logger.error(
+            `Availability insert failed: ${avError.message}`,
+            avError,
+          );
           await this.supabase.db.from('service_provider').delete().eq('id', spId);
           await this.supabase.admin.deleteUser(authUserId);
           throw new InternalServerErrorException('Registration failed');
@@ -213,9 +221,47 @@ export class ProvidersService {
 
 // ── Helpers ──────────────────────────────────────────────────────
 
-function parseTimeToIso(hhmm: string): string {
-  const [h, m] = hhmm.split(':').map(Number);
-  const d = new Date('1970-01-01T00:00:00Z');
-  d.setUTCHours(h, m, 0, 0);
-  return d.toISOString();
+function parseTimeToDbTime(hhmm: string): string {
+  const isValid = /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm);
+  if (!isValid) {
+    throw new BadRequestException('Availability times must be in HH:mm format');
+  }
+
+  return `${hhmm}:00`;
+}
+
+function normalizeServiceDays(serviceDays: string): string[] {
+  const validDays = new Set(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']);
+  const days = serviceDays
+    .split(',')
+    .map((d) => d.trim().toUpperCase())
+    .filter(Boolean);
+
+  if (!days.length) {
+    throw new BadRequestException('serviceDays must include at least one day');
+  }
+
+  for (const day of days) {
+    if (!validDays.has(day)) {
+      throw new BadRequestException(
+        'serviceDays must use comma-separated day codes (MON..SUN)',
+      );
+    }
+  }
+
+  return [...new Set(days)];
+}
+
+function toCompactServiceDays(days: string[]): string {
+  const dayMap: Record<string, string> = {
+    MON: 'MO',
+    TUE: 'TU',
+    WED: 'WE',
+    THU: 'TH',
+    FRI: 'FR',
+    SAT: 'SA',
+    SUN: 'SU',
+  };
+
+  return days.map((day) => dayMap[day]).join(',');
 }
