@@ -11,14 +11,12 @@ import { HealthModule } from './modules/health/health.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { UsersModule } from './modules/users/users.module';
 import { LoggerModule } from './shared/logger/logger.module';
-import { PrismaModule } from './shared/prisma/prisma.module';
 import { SupabaseModule } from './shared/supabase/supabase.module';
 
 @Module({
   imports: [
     ConfigModule,
     LoggerModule,
-    PrismaModule,
     SupabaseModule,
     AuthModule,
     UsersModule,
