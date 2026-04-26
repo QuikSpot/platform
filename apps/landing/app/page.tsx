@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,8 +27,11 @@ import {
   ChevronRight,
   Menu,
   X,
+  UserCircle,
+  LogOut,
 } from 'lucide-react';
 import { ChatPreviewSection } from '@/components/chat-preview-section';
+import { useAuth } from '@/context/auth-context';
 
 const services = [
   { icon: Zap,       title: 'Electricians',    description: 'Expert electrical repairs and installations' },
@@ -68,9 +72,17 @@ const navLinks = [
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const { profile, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => { setMounted(true); }, []);
+
+  function handleLogout() {
+    logout();
+    setProfileMenuOpen(false);
+  }
 
   if (!mounted) return null;
 
@@ -103,9 +115,58 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link href="/register/partner" className="hidden sm:block">
-                <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-              </Link>
+              {profile ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileMenuOpen(o => !o)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
+                      <UserCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
+                      {profile.fullName}
+                    </span>
+                  </button>
+                  <AnimatePresence>
+                    {profileMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 4 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-1.5 z-50"
+                      >
+                        <div className="px-4 py-2 border-b border-gray-100">
+                          <p className="text-xs font-semibold text-gray-900 truncate">{profile.fullName}</p>
+                          <p className="text-xs text-gray-400 truncate">{profile.email}</p>
+                        </div>
+                        <button
+                          onClick={() => { setProfileMenuOpen(false); router.push('/profile'); }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                        >
+                          <UserCircle className="w-4 h-4 text-gray-400" /> My Profile
+                        </button>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+                        >
+                          <LogOut className="w-4 h-4" /> Sign out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <>
+                  <Link href="/login" className="hidden sm:block">
+                    <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50">Sign in</Button>
+                  </Link>
+                  <Link href="/register/partner" className="hidden sm:block">
+                    <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
+                  </Link>
+                </>
+              )}
               {/* Mobile hamburger */}
               <button
                 className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
@@ -139,9 +200,27 @@ export default function Home() {
                     {l.label}
                   </a>
                 ))}
-                <Link href="/register/partner" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-                </Link>
+                {profile ? (
+                  <>
+                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
+                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors flex items-center gap-2">
+                      <UserCircle className="w-4 h-4" /> My Profile
+                    </Link>
+                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2 w-full text-left">
+                      <LogOut className="w-4 h-4" /> Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full mt-2 border-gray-200">Sign in</Button>
+                    </Link>
+                    <Link href="/register/partner" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </motion.div>
           )}

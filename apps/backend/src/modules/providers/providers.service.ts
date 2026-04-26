@@ -4,9 +4,12 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
 import { RegisterProviderDto } from './dto/register-provider.dto';
+import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderRegistrationResult } from './types/provider-registration.types';
 
 @Injectable()
@@ -22,7 +25,7 @@ export class ProvidersService {
     const { data, error: authError } = await this.supabase.admin.createUser({
       email: dto.email,
       password: dto.password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: { full_name: dto.fullName },
     });
 
@@ -217,9 +220,181 @@ export class ProvidersService {
       throw new InternalServerErrorException('Registration failed');
     }
   }
+
+  async getMe(token: string) {
+    const user = await this.supabase.verifyToken(token);
+    if (!user) throw new UnauthorizedException('Invalid or expired token');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, error } = await this.supabase.db
+      .from('service_provider')
+      .select(
+        `id, full_name, mobile_number, whatsapp_number, email, nic_number,
+        province, district, is_active, created_at,
+        service_zone(zone_name),
+        provider_service(experience_level, description, main_category(name), sub_category(name)),
+        availability(available_days, available_from, available_to, night_service)`,
+      )
+      .eq('id', user['id'] as string)
+      .single();
+
+    if (error || !data) throw new NotFoundException('Provider profile not found');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return toProviderProfileFull(data as unknown as SpRowFull);
+  }
+
+  async updateMe(token: string, dto: UpdateProviderDto) {
+    const user = await this.supabase.verifyToken(token);
+    if (!user) throw new UnauthorizedException('Invalid or expired token');
+    const userId = user['id'] as string;
+
+    // ── 1. Update service_provider row ──────────────────────────────────
+    const updates: Record<string, unknown> = {};
+    if (dto.fullName !== undefined) updates['full_name'] = dto.fullName;
+    if (dto.mobileNumber !== undefined) updates['mobile_number'] = dto.mobileNumber;
+    if (dto.whatsappNumber !== undefined) updates['whatsapp_number'] = dto.whatsappNumber;
+    if (dto.province !== undefined) updates['province'] = dto.province || null;
+    if (dto.district !== undefined) updates['district'] = dto.district || null;
+
+    if (Object.keys(updates).length > 0) {
+      const { error } = await this.supabase.db
+        .from('service_provider')
+        .update(updates)
+        .eq('id', userId);
+      if (error) throw new InternalServerErrorException('Failed to update profile');
+    }
+
+    // ── 2. Service zones ─────────────────────────────────────────────────
+    if (dto.serviceZones !== undefined) {
+      await this.supabase.db.from('service_zone').delete().eq('provider_id', userId);
+      if (dto.serviceZones.length > 0) {
+        const { error } = await this.supabase.db.from('service_zone').insert(
+          dto.serviceZones.map((zoneName) => ({ provider_id: userId, zone_name: zoneName })),
+        );
+        if (error) throw new InternalServerErrorException('Failed to update service zones');
+      }
+    }
+
+    // ── 3. Services / expertise ──────────────────────────────────────────
+    if (dto.services !== undefined) {
+      await this.supabase.db.from('provider_service').delete().eq('provider_id', userId);
+      for (const svc of dto.services) {
+        const { data: mainCat } = await this.supabase.db
+          .from('main_category').select('id').eq('name', svc.mainCategory).maybeSingle();
+        if (!mainCat) { this.logger.warn(`Main category "${svc.mainCategory}" not found — skipping`); continue; }
+
+        const { data: subCat } = await this.supabase.db
+          .from('sub_category').select('id')
+          .eq('name', svc.subCategory).eq('main_category_id', mainCat.id).maybeSingle();
+        if (!subCat) { this.logger.warn(`Sub category "${svc.subCategory}" not found — skipping`); continue; }
+
+        await this.supabase.db.from('provider_service').insert({
+          provider_id: userId,
+          main_category_id: mainCat.id,
+          sub_category_id: subCat.id,
+          experience_level: svc.experienceLevel ?? null,
+          description: svc.description ?? null,
+        });
+      }
+    }
+
+    // ── 4. Availability ──────────────────────────────────────────────────
+    if (dto.availability !== undefined) {
+      const av = dto.availability;
+      const normalizedDays = normalizeServiceDays(av.serviceDays);
+      const compactDays = toCompactServiceDays(normalizedDays);
+      const availData = {
+        available_days: compactDays,
+        available_from: av.workStartTime ? parseTimeToDbTime(av.workStartTime) : null,
+        available_to: av.workEndTime ? parseTimeToDbTime(av.workEndTime) : null,
+        night_service: av.nightService,
+      };
+
+      const { data: existing } = await this.supabase.db
+        .from('availability').select('id').eq('provider_id', userId).maybeSingle();
+
+      if (existing) {
+        await this.supabase.db.from('availability').update(availData).eq('provider_id', userId);
+      } else {
+        await this.supabase.db.from('availability').insert({
+          provider_id: userId, ...availData, is_24_7: false, is_available_now: false,
+        });
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return this.getMe(token);
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+interface SpRow {
+  id: string;
+  full_name: string;
+  mobile_number: string;
+  whatsapp_number: string | null;
+  email: string;
+  nic_number: string;
+  province: string | null;
+  district: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface SpRowFull extends SpRow {
+  service_zone: Array<{ zone_name: string }>;
+  provider_service: Array<{
+    experience_level: string | null;
+    description: string | null;
+    main_category: { name: string } | null;
+    sub_category: { name: string } | null;
+  }>;
+  availability: Array<{
+    available_days: string;
+    available_from: string | null;
+    available_to: string | null;
+    night_service: boolean;
+  }>;
+}
+
+function toProviderProfileFull(row: SpRowFull) {
+  const avRow = row.availability?.[0] ?? null;
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    mobileNumber: row.mobile_number,
+    whatsappNumber: row.whatsapp_number,
+    email: row.email,
+    nicNumber: row.nic_number,
+    province: row.province,
+    district: row.district,
+    isActive: row.is_active,
+    createdAt: new Date(row.created_at),
+    serviceZones: (row.service_zone ?? []).map((z) => z.zone_name),
+    services: (row.provider_service ?? [])
+      .filter((s) => s.main_category && s.sub_category)
+      .map((s) => ({
+        mainCategory: s.main_category!.name,
+        subCategory: s.sub_category!.name,
+        experienceLevel: s.experience_level,
+        description: s.description,
+      })),
+    availability: avRow
+      ? {
+          availableDays: avRow.available_days,
+          availableFrom: avRow.available_from
+            ? avRow.available_from.substring(0, 5)
+            : null,
+          availableTo: avRow.available_to
+            ? avRow.available_to.substring(0, 5)
+            : null,
+          nightService: avRow.night_service,
+        }
+      : null,
+  };
+}
 
 function parseTimeToDbTime(hhmm: string): string {
   const isValid = /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm);
