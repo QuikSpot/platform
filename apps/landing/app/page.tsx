@@ -1,5 +1,7 @@
 'use client';
 
+//test1
+
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -167,6 +169,12 @@ export default function Home() {
                   </Link>
                 </>
               )}
+              {/* Mobile Get Started */}
+              {!profile && (
+                <Link href="/register/partner" className="md:hidden">
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5">Get Started</Button>
+                </Link>
+              )}
               {/* Mobile hamburger */}
               <button
                 className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
@@ -212,14 +220,9 @@ export default function Home() {
                     </button>
                   </>
                 ) : (
-                  <>
-                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full mt-2 border-gray-200">Sign in</Button>
-                    </Link>
-                    <Link href="/register/partner" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-                    </Link>
-                  </>
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full mt-2 border-gray-200">Sign in</Button>
+                  </Link>
                 )}
               </div>
             </motion.div>
