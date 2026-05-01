@@ -67,12 +67,142 @@ const DISTRICTS: Record<string, string[]> = {
   'Western': ['Colombo', 'Gampaha', 'Kalutara']
 };
 const CATEGORIES_MAP: Record<string, string[]> = {
-  'Home Maintenance': ['Painting', 'Furniture Assembly', 'Roof Repair', 'Tiling', 'Carpentry', 'Masonry'],
-  'Cleaning': ['House Cleaning', 'Deep Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Upholstery Cleaning'],
-  'Electrical': ['Wiring', 'Appliance Repair', 'Lighting Installation', 'CCTV Installation', 'Solar Panel Maintenance'],
-  'Plumbing': ['Leak Repair', 'Pipe Installation', 'Drain Cleaning', 'Bathroom Fitting', 'Water Tank Cleaning'],
-  'Carpentry': ['Custom Furniture', 'Kitchen Cabinets', 'Door Repair', 'Wood Polishing', 'Deck Building'],
-  'Landscaping': ['Garden Design', 'Lawn Mowing', 'Fence Installation', 'Tree Trimming', 'Irrigation Systems']
+  'Vehicle Repairs & Services': [
+    'Car / van repairs',
+    'Motorbike repairs',
+    'Three-wheeler (tuk-tuk) repairs',
+    'Tyre fitting & puncture repair',
+    'Battery replacement',
+    'AC service & repair',
+    'Windscreen & glass repair',
+    'Vehicle electrical work',
+    'Oil change & lubrication',
+    'Vehicle body & panel work',
+    'Painting & polishing',
+    'Other – please specify'
+  ],
+  'Plumbing': [
+    'Pipe installation & repairs',
+    'Tap & valve replacement',
+    'Water tank installation',
+    'Toilet & cistern repairs',
+    'Drainage & sewage clearing',
+    'Water pump installation',
+    'Hot water system / solar heater',
+    'Overhead tank cleaning',
+    'Leak detection & fixing',
+    'Bathroom fitting',
+    'Other – please specify'
+  ],
+  'Masonry & Construction': [
+    'New house construction',
+    'Wall plastering',
+    'Brick & block laying',
+    'Tile fixing (floor & wall)',
+    'Concrete work & roof slabs',
+    'Compound wall / fencing',
+    'Waterproofing & damp proofing',
+    'Demolition work',
+    'Well construction & repair',
+    'Renovation & extension work',
+    'Other – please specify'
+  ],
+  'Carpentry & Woodwork': [
+    'Door & window frames',
+    'Custom furniture making',
+    'Roof timber work',
+    'Cabinet & wardrobe fitting',
+    'Flooring (wood / laminate)',
+    'Partition walls',
+    'Staircase construction',
+    'Wooden repair & polishing',
+    'Kitchen fitting',
+    'Other – please specify'
+  ],
+  'Electrical Work': [
+    'House wiring',
+    'Switchboard & DB installation',
+    'Lighting installation',
+    'Fan & AC wiring',
+    'Solar panel installation',
+    'Generator / inverter setup',
+    'CCTV & security systems',
+    'Home theatre & TV mounting',
+    'Electrical fault finding',
+    'Other – please specify'
+  ],
+  'Painting & Finishing': [
+    'Interior wall painting',
+    'Exterior painting',
+    'Wood & metal painting',
+    'Waterproofing coatings',
+    'Texture & decorative finishes',
+    'Anti-rust treatment',
+    'Roof painting',
+    'Whitewashing',
+    'Other – please specify'
+  ],
+  'AC & Appliance Repair': [
+    'AC installation & service',
+    'AC gas refilling',
+    'Washing machine repair',
+    'Refrigerator repair',
+    'Microwave & oven repair',
+    'Television repair',
+    'Sewing machine repair',
+    'Water purifier service',
+    'Gas cooker repair',
+    'Other – please specify'
+  ],
+  'Gardening & Landscaping': [
+    'Garden maintenance',
+    'Lawn mowing & trimming',
+    'Tree cutting & pruning',
+    'Pest control (garden)',
+    'Garden design & planting',
+    'Irrigation system setup',
+    'Outdoor paving',
+    'Other – please specify'
+  ],
+  'Cleaning Services': [
+    'Home deep cleaning',
+    'Office / commercial cleaning',
+    'Post-construction cleaning',
+    'Carpet & sofa cleaning',
+    'Water tank & sump cleaning',
+    'Pest control (home)',
+    'Septic tank cleaning',
+    'Window cleaning',
+    'Other – please specify'
+  ],
+  'Security & Safety': [
+    'CCTV installation',
+    'Electric fence installation',
+    'Alarm system setup',
+    'Fire extinguisher service',
+    'Smart lock installation',
+    'Security guard services',
+    'Other – please specify'
+  ],
+  'IT & Electronics': [
+    'Computer / laptop repair',
+    'Networking & WiFi setup',
+    'Phone screen replacement',
+    'Data recovery',
+    'Software installation',
+    'Printer repair & service',
+    'Smart home setup',
+    'Other – please specify'
+  ],
+  'Moving & Transport': [
+    'House moving services',
+    'Office relocation',
+    'Furniture delivery',
+    'Lorry / van hire',
+    'Packing & unpacking',
+    'Waste & junk removal',
+    'Other – please specify'
+  ]
 };
 const CATEGORIES = Object.keys(CATEGORIES_MAP);
 const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
@@ -515,6 +645,22 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
+              <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                <label className={labelCls}>Available Sub-Categories for {form.primaryCategory}</label>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(CATEGORIES_MAP[form.primaryCategory] ?? []).map(cat => (
+                    <button key={cat} type="button" onClick={() => toggleSubCategory(cat)}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
+                        form.subCategories.includes(cat)
+                          ? 'bg-[#1aae74] border-[#1aae74] text-white shadow-md shadow-[#1aae74]/20'
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-[#1aae74] hover:text-[#1aae74]'
+                      }`}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Selected Expertise Container */}
               <div className="mb-8">
                 <label className={labelCls}>Your Selected Expertise</label>
@@ -529,24 +675,8 @@ export default function PartnerRegistration() {
                       </span>
                     ))
                   ) : (
-                    <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories below.</p>
+                    <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories above.</p>
                   )}
-                </div>
-              </div>
-
-              <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl">
-                <label className={labelCls}>Available Sub-Categories for {form.primaryCategory}</label>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {CATEGORIES_MAP[form.primaryCategory].map(cat => (
-                    <button key={cat} type="button" onClick={() => toggleSubCategory(cat)}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
-                        form.subCategories.includes(cat)
-                          ? 'bg-[#1aae74] border-[#1aae74] text-white shadow-md shadow-[#1aae74]/20'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-[#1aae74] hover:text-[#1aae74]'
-                      }`}>
-                      {cat}
-                    </button>
-                  ))}
                 </div>
               </div>
 
