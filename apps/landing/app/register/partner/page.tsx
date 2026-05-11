@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -14,6 +14,7 @@ import {
   Upload,
   UserRound,
   CheckCircle2,
+  X,
 } from 'lucide-react';
 
 type FormData = {
@@ -42,7 +43,6 @@ type FormData = {
   portfolio: File | null;
   agreeTerms: boolean;
   agreeCommission: boolean;
-  otp: string;
 };
 
 const STEPS = [
@@ -283,13 +283,104 @@ export default function PartnerRegistration() {
     portfolio: null,
     agreeTerms: false,
     agreeCommission: false,
-    otp: '',
   });
-  const [showOtp, setShowOtp] = useState(false);
+
+  // OTP modal state
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const [zoneSearch, setZoneSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  const handleSendOtp = async () => {
+    if (!form.mobileNumber.trim()) {
+      setApiError('Please enter your mobile number first.');
+      return;
+    }
+    setSendingOtp(true);
+    setApiError(null);
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber: form.mobileNumber }),
+      });
+      if (!res.ok) {
+        const body = await res.json() as { message?: string };
+        setApiError(body?.message ?? 'Failed to send OTP. Please try again.');
+        return;
+      }
+      setOtpDigits(['', '', '', '', '', '']);
+      setOtpError(null);
+      setOtpModalOpen(true);
+      // Focus first box after modal opens
+      setTimeout(() => otpRefs.current[0]?.focus(), 50);
+    } catch {
+      setApiError('Unable to send OTP. Please check your connection.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d?$/.test(value)) return;
+    const next = [...otpDigits];
+    next[index] = value;
+    setOtpDigits(next);
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const next = [...otpDigits];
+    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i];
+    setOtpDigits(next);
+    const lastFilled = Math.min(pasted.length, 5);
+    otpRefs.current[lastFilled]?.focus();
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = otpDigits.join('');
+    if (code.length < 6) return;
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber: form.mobileNumber, code }),
+      });
+      if (!res.ok) {
+        const body = await res.json() as { message?: string };
+        setOtpError(body?.message ?? 'Invalid OTP. Please try again.');
+        return;
+      }
+      setOtpModalOpen(false);
+      setPhoneVerified(true);
+    } catch {
+      setOtpError('Unable to verify. Please try again.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
   const mapExperienceLevel = (level: string): string => {
     const map: Record<string, string> = {
@@ -313,8 +404,6 @@ export default function PartnerRegistration() {
     setIsLoading(true);
     setApiError(null);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
       // ── Step 1: Register provider (JSON) ────────────────────────
       const res = await fetch(`${backendUrl}/api/v1/provider/register`, {
         method: 'POST',
@@ -348,13 +437,13 @@ export default function PartnerRegistration() {
         }),
       });
 
-      const body = await res.json();
+      const body = await res.json() as { data?: { id: string }; message?: string };
       if (!res.ok) {
         setApiError(body?.message ?? 'Registration failed. Please try again.');
         return;
       }
 
-      const providerId: string = body.data.id;
+      const providerId: string = body.data!.id;
 
       // ── Step 2: Upload documents to private storage ──────────────
       const hasFiles =
@@ -374,7 +463,6 @@ export default function PartnerRegistration() {
         });
 
         if (!docRes.ok) {
-          // Non-fatal: registration succeeded; documents can be re-uploaded later
           console.warn('Document upload failed. Registration was still successful.');
         }
       }
@@ -411,6 +499,81 @@ export default function PartnerRegistration() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #e8f5ee 0%, #d4eddf 50%, #e8f5ee 100%)' }}>
+
+      {/* ── OTP Modal ── */}
+      {otpModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setOtpModalOpen(false)}
+          />
+          <div className="relative bg-white rounded-3xl p-8 shadow-2xl w-full max-w-sm mx-4 animate-in fade-in zoom-in duration-200">
+            {/* Close */}
+            <button
+              type="button"
+              onClick={() => setOtpModalOpen(false)}
+              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Icon */}
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
+              <ShieldCheck className="w-6 h-6 text-[#1aae74]" />
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-1">Verify your number</h3>
+            <p className="text-sm text-slate-500 mb-7">
+              We sent a 6-digit code to{' '}
+              <span className="font-semibold text-slate-700">{form.mobileNumber}</span>
+            </p>
+
+            {/* OTP digit inputs */}
+            <div className="flex gap-2 justify-center mb-6" onPaste={handleOtpPaste}>
+              {otpDigits.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={el => { otpRefs.current[i] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleOtpChange(i, e.target.value)}
+                  onKeyDown={e => handleOtpKeyDown(i, e)}
+                  className={`w-11 h-14 text-center text-xl font-bold rounded-xl border-2 transition-colors focus:outline-none focus:border-[#1aae74] ${
+                    digit ? 'border-[#1aae74] bg-emerald-50 text-[#114b2e]' : 'border-slate-200 bg-slate-50 text-slate-700'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {otpError && (
+              <p className="text-sm text-red-500 text-center mb-4">{otpError}</p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleVerifyOtp}
+              disabled={otpLoading || otpDigits.join('').length < 6}
+              className="w-full py-3.5 bg-[#1a3d2b] text-white rounded-xl font-semibold text-sm hover:bg-[#114b2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {otpLoading ? 'Verifying…' : 'Confirm & Verify'}
+            </button>
+
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={sendingOtp}
+                className="text-sm text-[#1aae74] font-medium hover:underline disabled:opacity-50"
+              >
+                {sendingOtp ? 'Sending…' : 'Resend code'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
         <span className="text-xl font-bold text-[#114b2e]">InstaFixd</span>
@@ -482,36 +645,45 @@ export default function PartnerRegistration() {
                   <input type="text" placeholder="987654321V" value={form.nicNumber}
                     onChange={e => set('nicNumber', e.target.value)} className={inputCls} />
                 </div>
+
+                {/* Mobile number with verify */}
                 <div>
                   <label className={labelCls}>Mobile Number</label>
                   <div className="flex items-center gap-2 w-full min-w-0 overflow-hidden">
-                    <input type="tel" placeholder="+94 77 123 4567" value={form.mobileNumber}
-                      onChange={e => set('mobileNumber', e.target.value)}
-                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition" />
-                    <button
-                      type="button"
-                      onClick={() => setShowOtp(true)}
-                      className="shrink-0 px-4 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap"
-                    >
-                      Verify
-                    </button>
+                    <input
+                      type="tel"
+                      placeholder="+94 77 123 4567"
+                      value={form.mobileNumber}
+                      onChange={e => {
+                        set('mobileNumber', e.target.value);
+                        if (phoneVerified) setPhoneVerified(false);
+                      }}
+                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition"
+                    />
+                    {phoneVerified ? (
+                      <div className="shrink-0 flex items-center gap-1.5 px-4 py-3 bg-emerald-50 text-[#1aae74] text-sm font-semibold rounded-xl border border-[#1aae74]/30 whitespace-nowrap">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Verified
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={sendingOtp}
+                        className="shrink-0 px-4 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap disabled:opacity-60"
+                      >
+                        {sendingOtp ? '…' : 'Verify'}
+                      </button>
+                    )}
                   </div>
-                  {showOtp ? (
-                    <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-[10px] font-bold text-[#1aae74] uppercase tracking-wider mb-1 block">Enter OTP</label>
-                      <input 
-                        type="text" 
-                        maxLength={6}
-                        placeholder="000000" 
-                        value={form.otp}
-                        onChange={e => set('otp', e.target.value)} 
-                        className="w-32 px-4 py-2 rounded-lg border border-[#1aae74] bg-emerald-50 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-[#1aae74]/20 transition" 
-                      />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400 mt-1.5">An OTP will be sent to this number.</p>
+                  <p className="text-xs text-slate-400 mt-1.5">
+                    {phoneVerified ? 'Phone number verified successfully.' : 'An OTP will be sent to this number.'}
+                  </p>
+                  {apiError && (
+                    <p className="text-xs text-red-500 mt-1">{apiError}</p>
                   )}
                 </div>
+
                 <div>
                   <label className={labelCls}>WhatsApp Number</label>
                   <input type="tel" placeholder="+94 77 123 4567" value={form.whatsappNumber}
@@ -555,12 +727,12 @@ export default function PartnerRegistration() {
                 <div>
                   <label className={labelCls}>Province</label>
                   <div className="relative">
-                    <select value={form.province} 
+                    <select value={form.province}
                       onChange={e => {
                         const p = e.target.value;
                         set('province', p);
                         set('district', DISTRICTS[p][0]);
-                      }} 
+                      }}
                       className={selectCls}>
                       {PROVINCES.map(p => <option key={p}>{p}</option>)}
                     </select>
@@ -599,21 +771,21 @@ export default function PartnerRegistration() {
               <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl relative">
                 <label className={labelCls}>Search & Select Service Zones in {form.district}</label>
                 <div className="relative mt-3">
-                  <input 
-                    type="text" 
-                    placeholder="Search for towns (e.g. Maharagama...)" 
+                  <input
+                    type="text"
+                    placeholder="Search for towns (e.g. Maharagama...)"
                     value={zoneSearch}
                     onChange={e => setZoneSearch(e.target.value)}
-                    className={inputCls} 
+                    className={inputCls}
                   />
                   {zoneSearch.trim() && (
                     <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                       {(SERVICE_ZONES_MAP[form.district] || [])
                         .filter(z => z.toLowerCase().includes(zoneSearch.toLowerCase()))
                         .map(zone => (
-                          <button 
-                            key={zone} 
-                            type="button" 
+                          <button
+                            key={zone}
+                            type="button"
                             onClick={() => {
                               toggleZone(zone);
                               setZoneSearch('');
@@ -685,7 +857,6 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              {/* Selected Expertise Container */}
               <div className="mb-8">
                 <label className={labelCls}>Your Selected Expertise</label>
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
@@ -716,7 +887,6 @@ export default function PartnerRegistration() {
           {/* ── Step 4: Availability Schedule ── */}
           {step === 4 && (
             <div className="bg-[#1a3d2b] rounded-3xl p-8 shadow-sm relative overflow-hidden">
-              {/* Watermark */}
               <div className="absolute bottom-6 right-6 opacity-[0.08]">
                 <Clock className="w-44 h-44 text-white" />
               </div>
@@ -728,7 +898,6 @@ export default function PartnerRegistration() {
                 <h2 className="text-2xl font-bold text-white">Availability Schedule</h2>
               </div>
 
-              {/* Night Service */}
               <div className="mb-6 relative z-10">
                 <div className="bg-white/10 rounded-2xl p-5">
                   <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-3">Night Service</p>
@@ -739,7 +908,6 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              {/* Service Days */}
               <div className="mb-6 relative z-10">
                 <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-4">Select Service Days</p>
                 <div className="flex gap-2 flex-wrap">
@@ -756,7 +924,6 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              {/* Work Hours */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 <div>
                   <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-2">Work Start Time</p>
@@ -801,14 +968,12 @@ export default function PartnerRegistration() {
                   <h2 className="text-2xl font-bold text-slate-900">Trust & Verification</h2>
                 </div>
 
-                {/* NIC Container Card */}
                 <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 mb-8">
                   <div className="flex items-center gap-2 mb-4">
                     <BadgeCheck className="w-4 h-4 text-[#1aae74]" />
                     <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">NIC / ID Card Verification</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Front */}
                     <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
                       <input type="file" accept="image/*" className="hidden"
                         onChange={e => set('nicFrontImage', e.target.files?.[0] ?? null)} />
@@ -820,7 +985,6 @@ export default function PartnerRegistration() {
                         </p>
                       )}
                     </label>
-                    {/* Back */}
                     <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
                       <input type="file" accept="image/*" className="hidden"
                         onChange={e => set('nicBackImage', e.target.files?.[0] ?? null)} />
@@ -835,7 +999,6 @@ export default function PartnerRegistration() {
                   </div>
                 </div>
 
-                {/* Other Uploads */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                   {[
                     { key: 'selfieImage' as const, icon: UserRound, label: 'Verification Selfie', sub: 'Holding your ID card', accept: 'image/*' },
@@ -857,7 +1020,6 @@ export default function PartnerRegistration() {
                   ))}
                 </div>
 
-                {/* Agreements */}
                 <div className="bg-slate-50 rounded-2xl p-6 space-y-5">
                   {[
                     {
@@ -887,7 +1049,6 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              {/* Submit footer */}
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl px-8 py-5 flex flex-col gap-4">
                 {apiError && (
                   <p className="text-sm text-red-600 font-medium">{apiError}</p>
