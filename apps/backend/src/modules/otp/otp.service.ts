@@ -95,7 +95,7 @@ export class OtpService {
         message: `Your Instafixd verification code is: ${code}. Valid for 5 minutes. Do not share this code.`,
       }),
     });
-
+    console.log("OTP Success", res);
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       this.logger.error(`[OTP] text.lk error ${res.status}: ${text}`);
