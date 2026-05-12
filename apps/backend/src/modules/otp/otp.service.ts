@@ -76,7 +76,7 @@ export class OtpService {
 
     if (!apiKey) {
       this.logger.warn(
-        `[OTP] TEXT_LK_API_KEY not set — skipping SMS. Code for ${recipient}: ${code}`,
+        `[OTP] TEXT_LK_API_KEY not set —  skipping SMS. Code for ${recipient}: ${code}`,
       );
       return;
     }
