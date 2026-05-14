@@ -2,21 +2,20 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   Patch,
   Post,
-  UnauthorizedException,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { UploadDocumentsDto } from './dto/upload-documents.dto';
 import { RegisterProviderDto } from './dto/register-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
+import { UploadDocumentsDto } from './dto/upload-documents.dto';
 import type { ProviderDocumentFiles } from './providers.service';
 import { ProvidersService } from './providers.service';
 
@@ -31,7 +30,6 @@ export class ProvidersController {
     return this.providersService.register(dto);
   }
 
-  @Public()
   @Post('documents')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
@@ -40,7 +38,7 @@ export class ProvidersController {
         { name: 'nicFrontImage', maxCount: 1 },
         { name: 'nicBackImage', maxCount: 1 },
         { name: 'selfieImage', maxCount: 1 },
-        { name: 'portfolio', maxCount: 1 },
+        { name: 'portfolio', maxCount: 10 },
       ],
       {
         storage: memoryStorage(),
@@ -75,25 +73,13 @@ export class ProvidersController {
     );
   }
 
-  @Public()
   @Get('me')
-  getMe(@Headers('authorization') auth: string) {
-    const token = extractBearer(auth);
-    return this.providersService.getMe(token);
+  getMe(@CurrentUser() user: { id: string }) {
+    return this.providersService.getMe(user.id);
   }
 
-  @Public()
   @Patch('me')
-  updateMe(
-    @Headers('authorization') auth: string,
-    @Body() dto: UpdateProviderDto,
-  ) {
-    const token = extractBearer(auth);
-    return this.providersService.updateMe(token, dto);
+  updateMe(@CurrentUser() user: { id: string }, @Body() dto: UpdateProviderDto) {
+    return this.providersService.updateMe(user.id, dto);
   }
-}
-
-function extractBearer(auth: string): string {
-  if (!auth?.startsWith('Bearer ')) throw new UnauthorizedException('Missing token');
-  return auth.slice(7);
 }

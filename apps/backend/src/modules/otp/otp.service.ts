@@ -4,7 +4,9 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ProvidersService } from '../providers/providers.service';
 
 interface OtpEntry {
   code: string;
@@ -20,7 +22,11 @@ export class OtpService {
   private readonly logger = new Logger(OtpService.name);
   private readonly store = new Map<string, OtpEntry>();
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly jwtService: JwtService,
+    private readonly providersService: ProvidersService,
+  ) {}
 
   async send(mobileNumber: string): Promise<void> {
     const normalized = this.normalizeMobile(mobileNumber);
@@ -35,8 +41,32 @@ export class OtpService {
     await this.callTextLk(normalized, code);
   }
 
-  verify(mobileNumber: string, code: string): void {
+  async verifyAndLogin(
+    mobileNumber: string,
+    code: string,
+  ): Promise<{ verified: boolean; accessToken?: string; providerId?: string }> {
     const normalized = this.normalizeMobile(mobileNumber);
+    this.verifyCode(normalized, code);
+
+    // Mark mobile as verified and look up the provider
+    await this.providersService.markMobileVerified(mobileNumber);
+    const provider = await this.providersService.findByMobile(mobileNumber);
+
+    if (!provider) {
+      // Phone verified but no account yet — frontend should prompt registration
+      return { verified: true };
+    }
+
+    const accessToken = this.jwtService.sign({
+      sub: provider.id,
+      mobileNumber,
+      roles: ['provider'],
+    });
+
+    return { verified: true, accessToken, providerId: provider.id };
+  }
+
+  private verifyCode(normalized: string, code: string): void {
     const entry = this.store.get(normalized);
 
     if (!entry) {
@@ -44,11 +74,15 @@ export class OtpService {
     }
     if (Date.now() > entry.expiresAt) {
       this.store.delete(normalized);
-      throw new BadRequestException('OTP has expired. Please request a new one.');
+      throw new BadRequestException(
+        'OTP has expired. Please request a new one.',
+      );
     }
     if (entry.attempts >= MAX_ATTEMPTS) {
       this.store.delete(normalized);
-      throw new BadRequestException('Too many attempts. Please request a new OTP.');
+      throw new BadRequestException(
+        'Too many attempts. Please request a new OTP.',
+      );
     }
 
     entry.attempts++;
@@ -95,7 +129,7 @@ export class OtpService {
         message: `Your Instafixd verification code is: ${code}. Valid for 5 minutes. Do not share this code.`,
       }),
     });
-    console.log("OTP Success", res);
+
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       this.logger.error(`[OTP] text.lk error ${res.status}: ${text}`);

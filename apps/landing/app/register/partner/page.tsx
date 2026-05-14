@@ -209,7 +209,7 @@ const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 yea
 
 const SERVICE_ZONES_MAP: Record<string, string[]> = {
   'Colombo': ['Maharagama', 'Kottawa', 'Pannipitiya', 'Nugegoda', 'Mount Lavinia', 'Dehiwala', 'Ratmalana', 'Battaramulla', 'Malabe', 'Kaduwela', 'Pita Kotte', 'Ethul Kotte', 'Rajagiriya'],
-  'Gampaha': ['Negombo', 'Wattala', 'Kiribathgoda', 'Kadawatha', 'Ja-Ela', 'Kelaniya', 'Minuwangoda', 'Veyangoda', 'Gampaha Town', 'Ragama'],
+  'Gampaha': ['Gampaha', 'Negombo', 'Ja-Ela', 'Wattala', 'Kadawatha', 'Kiribathgoda', 'Kelaniya', 'Ragama', 'Minuwangoda', 'Divulapitiya', 'Mirigama', 'Nittambuwa', 'Veyangoda', 'Ganemulla', 'Dompe', 'Biyagama', 'Seeduwa', 'Katunayake', 'Ekala', 'Mabole', 'Peliyagoda', 'Kandana', 'Welisara', 'Mahara', 'Delgoda', 'Pugoda', 'Yakkala', 'Udugampola', 'Attanagalla', 'Dankotuwa', 'Marandagahamula', 'Alawwa'],
   'Kalutara': ['Panadura', 'Horana', 'Wadduwa', 'Beruwala', 'Alutgama', 'Matugama', 'Kalutara Town'],
   'Kandy': ['Peradeniya', 'Katugastota', 'Gampola', 'Nawalapitiya', 'Kundasale', 'Digana', 'Gelioya'],
   'Matale': ['Matale Town', 'Dambulla', 'Sigiriya', 'Pallepola'],

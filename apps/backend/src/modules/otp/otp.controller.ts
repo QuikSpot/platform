@@ -20,7 +20,6 @@ export class OtpController {
   @Post('verify')
   @HttpCode(HttpStatus.OK)
   verify(@Body() dto: VerifyOtpDto) {
-    this.otpService.verify(dto.mobileNumber, dto.code);
-    return { message: 'Phone number verified successfully' };
+    return this.otpService.verifyAndLogin(dto.mobileNumber, dto.code);
   }
 }

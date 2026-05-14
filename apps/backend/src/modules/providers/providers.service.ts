@@ -5,7 +5,6 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { extname } from 'path';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
@@ -13,7 +12,6 @@ import { RegisterProviderDto } from './dto/register-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderRegistrationResult } from './types/provider-registration.types';
 
-// ── Multer file shape (memory storage) ──────────────────────────
 interface MulterFile {
   fieldname: string;
   originalname: string;
@@ -30,27 +28,34 @@ export type ProviderDocumentFiles = {
   portfolio?: MulterFile[];
 };
 
-const DOCUMENT_KEYS: Array<{ field: keyof ProviderDocumentFiles; docType: string }> = [
-  { field: 'nicFrontImage', docType: 'nic_front' },
-  { field: 'nicBackImage', docType: 'nic_back' },
-  { field: 'selfieImage', docType: 'selfie' },
-  { field: 'portfolio', docType: 'portfolio' },
+const VERIFICATION_FIELDS: Array<{
+  field: keyof ProviderDocumentFiles;
+  docType: string;
+}> = [
+  { field: 'nicFrontImage', docType: 'NIC_FRONT' },
+  { field: 'nicBackImage', docType: 'NIC_BACK' },
+  { field: 'selfieImage', docType: 'OTHER' },
 ];
 
-/*
- * Required Supabase migration before using uploadDocuments:
- *
- * create table provider_document (
- *   id           uuid primary key default gen_random_uuid(),
- *   provider_id  uuid not null references service_provider(id) on delete cascade,
- *   doc_type     text not null,        -- 'nic_front' | 'nic_back' | 'selfie' | 'portfolio'
- *   storage_path text not null,        -- e.g. providers/{uuid}/nic_front.jpg
- *   mime_type    text,
- *   original_name text,
- *   created_at   timestamptz default now(),
- *   unique(provider_id, doc_type)
- * );
- */
+const DAY_CODE_TO_NUM: Record<string, number> = {
+  SUN: 0,
+  MON: 1,
+  TUE: 2,
+  WED: 3,
+  THU: 4,
+  FRI: 5,
+  SAT: 6,
+};
+
+const DAY_NUM_TO_CODE: Record<number, string> = {
+  0: 'SUN',
+  1: 'MON',
+  2: 'TUE',
+  3: 'WED',
+  4: 'THU',
+  5: 'FRI',
+  6: 'SAT',
+};
 
 @Injectable()
 export class ProvidersService {
@@ -58,198 +63,67 @@ export class ProvidersService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  async register(
-    dto: RegisterProviderDto,
-  ): Promise<ProviderRegistrationResult> {
-    // ── 1. Create Supabase auth user — UUID becomes ServiceProvider PK ──
-    const { data, error: authError } = await this.supabase.admin.createUser({
-      email: dto.email,
-      password: dto.password,
-      email_confirm: true,
-      user_metadata: { full_name: dto.fullName },
-    });
+  async register(dto: RegisterProviderDto): Promise<ProviderRegistrationResult> {
+    // DB sequence auto-generates SP-XXXXX id
+    const { data: spRow, error: spError } = await this.supabase.db
+      .from('service_provider')
+      .insert({
+        full_name: dto.fullName,
+        mobile_number: dto.mobileNumber,
+        whatsapp_number: dto.whatsappNumber ?? null,
+        email: dto.email ?? null,
+        nic_number: dto.nicNumber,
+        province: dto.province ?? null,
+        district: dto.district ?? null,
+        is_active: false,
+      })
+      .select('id, full_name, mobile_number, email, nic_number, province, district, is_active, created_at')
+      .single();
 
-    if (authError) {
-      if (
-        authError.status === 422 ||
-        authError.message?.toLowerCase().includes('already')
-      ) {
+    if (spError) {
+      if (spError.code === '23505') {
         throw new ConflictException(
-          'An account with this email already exists',
+          'A provider with this mobile number, NIC or email already exists',
         );
       }
-      throw new InternalServerErrorException('Failed to create auth account');
+      this.logger.error('service_provider insert failed', spError);
+      throw new InternalServerErrorException('Registration failed');
     }
 
-    const authUserId = data.user.id;
+    const spId: string = spRow.id;
 
-    // ── 2. Persist rows sequentially; cascade-delete sp on any failure ──
     try {
-      // 2a. ServiceProvider
-      const { data: spRow, error: spError } = await this.supabase.db
-        .from('service_provider')
-        .insert({
-          id: authUserId,
-          full_name: dto.fullName,
-          mobile_number: dto.mobileNumber,
-          whatsapp_number: dto.whatsappNumber ?? null,
-          email: dto.email,
-          nic_number: dto.nicNumber,
-          province: dto.province ?? null,
-          district: dto.district ?? null,
-          is_active: false,
-        })
-        .select(
-          'id, full_name, mobile_number, email, nic_number, province, district, is_active, created_at',
-        )
-        .single();
-
-      if (spError) {
-        await this.supabase.admin.deleteUser(authUserId);
-        if (spError.code === '23505') {
-          throw new ConflictException(
-            'A provider with this mobile number or NIC already exists',
-          );
-        }
-        throw new InternalServerErrorException('Registration failed');
-      }
-
-      const spId: string = spRow.id;
-
-      // 2b. ServiceZones
       if (dto.serviceZones?.length) {
-        const { error: szError } = await this.supabase.db
-          .from('service_zone')
-          .insert(
-            dto.serviceZones.map((zoneName) => ({
-              provider_id: spId,
-              zone_name: zoneName,
-            })),
-          );
-
-        if (szError) {
-          await this.supabase.db.from('service_provider').delete().eq('id', spId);
-          await this.supabase.admin.deleteUser(authUserId);
-          throw new InternalServerErrorException('Registration failed');
-        }
+        await this.insertServiceZones(spId, dto.serviceZones);
       }
 
-      // 2c. ProviderService (expertise / services)
       if (dto.services?.length) {
-        for (const svc of dto.services) {
-          const { data: mainCat } = await this.supabase.db
-            .from('main_category')
-            .select('id')
-            .eq('name', svc.mainCategory)
-            .maybeSingle();
-
-          if (!mainCat) {
-            this.logger.warn(
-              `Main category "${svc.mainCategory}" not found — skipping service entry`,
-            );
-            continue;
-          }
-
-          const { data: subCat } = await this.supabase.db
-            .from('sub_category')
-            .select('id')
-            .eq('name', svc.subCategory)
-            .eq('main_category_id', mainCat.id)
-            .maybeSingle();
-
-          if (!subCat) {
-            this.logger.warn(
-              `Sub category "${svc.subCategory}" under "${svc.mainCategory}" not found — skipping`,
-            );
-            continue;
-          }
-
-          const { error: psError } = await this.supabase.db
-            .from('provider_service')
-            .insert({
-              provider_id: spId,
-              main_category_id: mainCat.id,
-              sub_category_id: subCat.id,
-              experience_level: svc.experienceLevel ?? null,
-              description: svc.description ?? null,
-            });
-
-          if (psError) {
-            await this.supabase.db.from('service_provider').delete().eq('id', spId);
-            await this.supabase.admin.deleteUser(authUserId);
-            throw new InternalServerErrorException('Registration failed');
-          }
-        }
+        await this.insertProviderServices(spId, dto.services);
       }
 
-      // 2d. Availability
       if (dto.availability) {
-        const av = dto.availability;
-        const normalizedDays = normalizeServiceDays(av.serviceDays);
-        const compactDays = toCompactServiceDays(normalizedDays);
-        const availabilityInsert = {
-          provider_id: spId,
-          available_days: compactDays,
-          available_from: av.workStartTime
-            ? parseTimeToDbTime(av.workStartTime)
-            : null,
-          available_to: av.workEndTime
-            ? parseTimeToDbTime(av.workEndTime)
-            : null,
-          night_service: av.nightService ?? false,
-          is_24_7: false,
-          is_available_now: false,
-        };
-
-        const { error: avError } = await this.supabase.db
-          .from('availability')
-          .insert(availabilityInsert);
-
-        if (avError) {
-          this.logger.error(
-            `Availability insert failed: ${avError.message}`,
-            avError,
-          );
-          await this.supabase.db.from('service_provider').delete().eq('id', spId);
-          await this.supabase.admin.deleteUser(authUserId);
-          throw new InternalServerErrorException('Registration failed');
-        }
+        await this.insertAvailability(spId, dto.availability);
       }
 
-      // 2e. ProviderAgreement
       if (dto.agreements) {
-        const ag = dto.agreements;
         const now = new Date().toISOString();
         const { error: agError } = await this.supabase.db
           .from('provider_agreement')
           .insert({
             provider_id: spId,
-            terms_accepted: ag.agreeTerms,
-            terms_accepted_at: ag.agreeTerms ? now : null,
-            commission_accepted: ag.agreeCommission,
-            commission_accepted_at: ag.agreeCommission ? now : null,
+            terms_accepted: dto.agreements.agreeTerms,
+            terms_accepted_at: dto.agreements.agreeTerms ? now : null,
+            commission_accepted: dto.agreements.agreeCommission,
+            commission_accepted_at: dto.agreements.agreeCommission ? now : null,
           });
 
         if (agError) {
-          await this.supabase.db.from('service_provider').delete().eq('id', spId);
-          await this.supabase.admin.deleteUser(authUserId);
+          this.logger.error('provider_agreement insert failed', agError);
           throw new InternalServerErrorException('Registration failed');
         }
       }
-
-      return {
-        id: spRow.id,
-        fullName: spRow.full_name,
-        mobileNumber: spRow.mobile_number,
-        email: spRow.email,
-        nicNumber: spRow.nic_number,
-        province: spRow.province,
-        district: spRow.district,
-        isActive: spRow.is_active,
-        createdAt: new Date(spRow.created_at),
-      };
     } catch (err: unknown) {
-      this.logger.error('Provider registration error', err);
+      await this.supabase.db.from('service_provider').delete().eq('id', spId);
       if (
         err instanceof ConflictException ||
         err instanceof InternalServerErrorException ||
@@ -259,29 +133,88 @@ export class ProvidersService {
       }
       throw new InternalServerErrorException('Registration failed');
     }
+
+    return {
+      id: spRow.id,
+      fullName: spRow.full_name,
+      mobileNumber: spRow.mobile_number,
+      email: spRow.email,
+      nicNumber: spRow.nic_number,
+      province: spRow.province,
+      district: spRow.district,
+      isActive: spRow.is_active,
+      createdAt: new Date(spRow.created_at),
+    };
   }
 
-  async getMe(token: string) {
-    const user = await this.supabase.verifyToken(token);
-    if (!user) throw new UnauthorizedException('Invalid or expired token');
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  async getMe(providerId: string) {
     const { data, error } = await this.supabase.db
       .from('service_provider')
       .select(
         `id, full_name, mobile_number, whatsapp_number, email, nic_number,
-        province, district, is_active, created_at,
-        service_zone(zone_name),
-        provider_service(experience_level, description, main_category(name), sub_category(name)),
-        availability(available_days, available_from, available_to, night_service)`,
+         province, district, is_active, created_at,
+         provider_service_zone(zone_id, service_zone(zone_name)),
+         provider_service(experience_level, description, main_category(name), sub_category(name)),
+         provider_availability(available_from, available_to, is_24_7, is_available_now, night_service),
+         provider_availability_day(day_of_week)`,
       )
-      .eq('id', user['id'] as string)
+      .eq('id', providerId)
       .single();
 
     if (error || !data) throw new NotFoundException('Provider profile not found');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return toProviderProfileFull(data as unknown as SpRowFull);
+  }
+
+  async updateMe(providerId: string, dto: UpdateProviderDto) {
+    const updates: Record<string, unknown> = {};
+    if (dto.fullName !== undefined) updates['full_name'] = dto.fullName;
+    if (dto.mobileNumber !== undefined) updates['mobile_number'] = dto.mobileNumber;
+    if (dto.whatsappNumber !== undefined) updates['whatsapp_number'] = dto.whatsappNumber;
+    if (dto.province !== undefined) updates['province'] = dto.province || null;
+    if (dto.district !== undefined) updates['district'] = dto.district || null;
+
+    if (Object.keys(updates).length > 0) {
+      const { error } = await this.supabase.db
+        .from('service_provider')
+        .update(updates)
+        .eq('id', providerId);
+      if (error) {
+        if (error.code === '23505') throw new ConflictException('Mobile number already in use');
+        throw new InternalServerErrorException('Failed to update profile');
+      }
+    }
+
+    if (dto.serviceZones !== undefined) {
+      await this.supabase.db
+        .from('provider_service_zone')
+        .delete()
+        .eq('provider_id', providerId);
+      if (dto.serviceZones.length > 0) {
+        await this.insertServiceZones(providerId, dto.serviceZones);
+      }
+    }
+
+    if (dto.services !== undefined) {
+      await this.supabase.db
+        .from('provider_service')
+        .delete()
+        .eq('provider_id', providerId);
+      if (dto.services.length > 0) {
+        await this.insertProviderServices(providerId, dto.services);
+      }
+    }
+
+    if (dto.availability !== undefined) {
+      // CASCADE on provider_availability deletes provider_availability_day rows too
+      await this.supabase.db
+        .from('provider_availability')
+        .delete()
+        .eq('provider_id', providerId);
+      await this.insertAvailability(providerId, dto.availability);
+    }
+
+    return this.getMe(providerId);
   }
 
   async uploadDocuments(
@@ -300,176 +233,242 @@ export class ProvidersService {
     const basePath = `providers/${providerId}`;
     const uploaded: string[] = [];
     const failed: string[] = [];
-    const dbRows: Array<{
-      provider_id: string;
-      doc_type: string;
-      storage_path: string;
-      mime_type: string;
-      original_name: string;
-    }> = [];
 
-    for (const { field, docType } of DOCUMENT_KEYS) {
+    // Verification docs: NIC front/back and selfie
+    for (const { field, docType } of VERIFICATION_FIELDS) {
       const file = files[field]?.[0];
       if (!file) continue;
 
       const ext = extname(file.originalname).toLowerCase() || '.bin';
-      const storagePath = `${basePath}/${docType}${ext}`;
+      const storagePath = `${basePath}/verification/${docType.toLowerCase()}${ext}`;
 
       const { error: storageError } = await this.supabase.storage
         .from(bucket)
-        .upload(storagePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: true,
-        });
+        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: true });
 
       if (storageError) {
-        this.logger.error(
-          `Storage upload failed [${docType}]: ${storageError.message}`,
-        );
+        this.logger.error(`Storage upload failed [${docType}]: ${storageError.message}`);
         failed.push(docType);
         continue;
       }
 
-      uploaded.push(docType);
-      dbRows.push({
+      const { error: dbError } = await this.supabase.db.from('verification_document').insert({
+        provider_id: providerId,
+        doc_type: docType,
+        storage_path: storagePath,
+        mime_type: file.mimetype,
+        original_name: file.originalname,
+        status: 'PENDING',
+      });
+
+      if (dbError) {
+        this.logger.error(`verification_document insert failed [${docType}]: ${dbError.message}`);
+        failed.push(docType);
+      } else {
+        uploaded.push(docType);
+      }
+    }
+
+    // Portfolio docs
+    for (const file of files.portfolio ?? []) {
+      const docType = resolvePortfolioDocType(file.mimetype);
+      const ext = extname(file.originalname).toLowerCase() || '.bin';
+      const storagePath = `${basePath}/portfolio/${Date.now()}${ext}`;
+
+      const { error: storageError } = await this.supabase.storage
+        .from(bucket)
+        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
+
+      if (storageError) {
+        this.logger.error(`Storage upload failed [portfolio]: ${storageError.message}`);
+        failed.push('portfolio');
+        continue;
+      }
+
+      const { error: dbError } = await this.supabase.db.from('portfolio_document').insert({
         provider_id: providerId,
         doc_type: docType,
         storage_path: storagePath,
         mime_type: file.mimetype,
         original_name: file.originalname,
       });
-    }
-
-    if (dbRows.length > 0) {
-      const { error: dbError } = await this.supabase.db
-        .from('provider_document')
-        .upsert(dbRows, { onConflict: 'provider_id,doc_type' });
 
       if (dbError) {
-        this.logger.error(`Document DB persist failed: ${dbError.message}`, dbError);
+        this.logger.error(`portfolio_document insert failed: ${dbError.message}`);
+        failed.push('portfolio');
+      } else {
+        uploaded.push('portfolio');
       }
     }
 
     return { providerId, uploaded, failed };
   }
 
-  async updateMe(token: string, dto: UpdateProviderDto) {
-    const user = await this.supabase.verifyToken(token);
-    if (!user) throw new UnauthorizedException('Invalid or expired token');
-    const userId = user['id'] as string;
+  async findByMobile(mobileNumber: string): Promise<{ id: string } | null> {
+    const { data } = await this.supabase.db
+      .from('service_provider')
+      .select('id')
+      .eq('mobile_number', mobileNumber)
+      .maybeSingle();
+    return data ?? null;
+  }
 
-    // ── 1. Update service_provider row ──────────────────────────────────
-    const updates: Record<string, unknown> = {};
-    if (dto.fullName !== undefined) updates['full_name'] = dto.fullName;
-    if (dto.mobileNumber !== undefined) updates['mobile_number'] = dto.mobileNumber;
-    if (dto.whatsappNumber !== undefined) updates['whatsapp_number'] = dto.whatsappNumber;
-    if (dto.province !== undefined) updates['province'] = dto.province || null;
-    if (dto.district !== undefined) updates['district'] = dto.district || null;
+  async markMobileVerified(mobileNumber: string): Promise<void> {
+    await this.supabase.db
+      .from('service_provider')
+      .update({ mobile_verified: true })
+      .eq('mobile_number', mobileNumber);
+  }
 
-    if (Object.keys(updates).length > 0) {
+  // ── Private helpers ──────────────────────────────────────────────────
+
+  private async insertServiceZones(providerId: string, zoneNames: string[]): Promise<void> {
+    for (const zoneName of zoneNames) {
+      const { data: zone } = await this.supabase.db
+        .from('service_zone')
+        .select('id')
+        .eq('zone_name', zoneName)
+        .maybeSingle();
+
+      if (!zone) {
+        this.logger.warn(`Zone "${zoneName}" not found in service_zone — skipping`);
+        continue;
+      }
+
       const { error } = await this.supabase.db
-        .from('service_provider')
-        .update(updates)
-        .eq('id', userId);
-      if (error) throw new InternalServerErrorException('Failed to update profile');
-    }
+        .from('provider_service_zone')
+        .insert({ provider_id: providerId, zone_id: zone.id });
 
-    // ── 2. Service zones ─────────────────────────────────────────────────
-    if (dto.serviceZones !== undefined) {
-      await this.supabase.db.from('service_zone').delete().eq('provider_id', userId);
-      if (dto.serviceZones.length > 0) {
-        const { error } = await this.supabase.db.from('service_zone').insert(
-          dto.serviceZones.map((zoneName) => ({ provider_id: userId, zone_name: zoneName })),
-        );
-        if (error) throw new InternalServerErrorException('Failed to update service zones');
+      if (error && error.code !== '23505') {
+        this.logger.error(`provider_service_zone insert failed: ${error.message}`);
+        throw new InternalServerErrorException('Failed to assign service zones');
       }
     }
+  }
 
-    // ── 3. Services / expertise ──────────────────────────────────────────
-    if (dto.services !== undefined) {
-      await this.supabase.db.from('provider_service').delete().eq('provider_id', userId);
-      for (const svc of dto.services) {
-        const { data: mainCat } = await this.supabase.db
-          .from('main_category').select('id').eq('name', svc.mainCategory).maybeSingle();
-        if (!mainCat) { this.logger.warn(`Main category "${svc.mainCategory}" not found — skipping`); continue; }
+  private async insertProviderServices(
+    providerId: string,
+    services: Array<{
+      mainCategory: string;
+      subCategory: string;
+      experienceLevel?: string;
+      description?: string;
+    }>,
+  ): Promise<void> {
+    for (const svc of services) {
+      const { data: mainCat } = await this.supabase.db
+        .from('main_category')
+        .select('id')
+        .eq('name', svc.mainCategory)
+        .maybeSingle();
 
-        const { data: subCat } = await this.supabase.db
-          .from('sub_category').select('id')
-          .eq('name', svc.subCategory).eq('main_category_id', mainCat.id).maybeSingle();
-        if (!subCat) { this.logger.warn(`Sub category "${svc.subCategory}" not found — skipping`); continue; }
+      if (!mainCat) {
+        this.logger.warn(`Main category "${svc.mainCategory}" not found — skipping`);
+        continue;
+      }
 
-        await this.supabase.db.from('provider_service').insert({
-          provider_id: userId,
-          main_category_id: mainCat.id,
-          sub_category_id: subCat.id,
-          experience_level: svc.experienceLevel ?? null,
-          description: svc.description ?? null,
-        });
+      const { data: subCat } = await this.supabase.db
+        .from('sub_category')
+        .select('id')
+        .eq('name', svc.subCategory)
+        .eq('main_category_id', mainCat.id)
+        .maybeSingle();
+
+      if (!subCat) {
+        this.logger.warn(`Sub category "${svc.subCategory}" not found — skipping`);
+        continue;
+      }
+
+      const { error } = await this.supabase.db.from('provider_service').insert({
+        provider_id: providerId,
+        main_category_id: mainCat.id,
+        sub_category_id: subCat.id,
+        experience_level: svc.experienceLevel ?? null,
+        description: svc.description ?? null,
+      });
+
+      if (error && error.code !== '23505') {
+        this.logger.error(`provider_service insert failed: ${error.message}`);
+        throw new InternalServerErrorException('Failed to save services');
       }
     }
+  }
 
-    // ── 4. Availability ──────────────────────────────────────────────────
-    if (dto.availability !== undefined) {
-      const av = dto.availability;
-      const normalizedDays = normalizeServiceDays(av.serviceDays);
-      const compactDays = toCompactServiceDays(normalizedDays);
-      const availData = {
-        available_days: compactDays,
-        available_from: av.workStartTime ? parseTimeToDbTime(av.workStartTime) : null,
-        available_to: av.workEndTime ? parseTimeToDbTime(av.workEndTime) : null,
-        night_service: av.nightService,
-      };
+  private async insertAvailability(
+    providerId: string,
+    av: {
+      serviceDays: string;
+      workStartTime?: string;
+      workEndTime?: string;
+      nightService: boolean;
+    },
+  ): Promise<void> {
+    const dayNumbers = parseDayNumbers(av.serviceDays);
 
-      const { data: existing } = await this.supabase.db
-        .from('availability').select('id').eq('provider_id', userId).maybeSingle();
+    const { error: avError } = await this.supabase.db.from('provider_availability').insert({
+      provider_id: providerId,
+      available_from: av.workStartTime ? `${av.workStartTime}:00` : null,
+      available_to: av.workEndTime ? `${av.workEndTime}:00` : null,
+      night_service: av.nightService ?? false,
+      is_24_7: false,
+      is_available_now: false,
+    });
 
-      if (existing) {
-        await this.supabase.db.from('availability').update(availData).eq('provider_id', userId);
-      } else {
-        await this.supabase.db.from('availability').insert({
-          provider_id: userId, ...availData, is_24_7: false, is_available_now: false,
-        });
-      }
+    if (avError) {
+      this.logger.error(`provider_availability insert failed: ${avError.message}`);
+      throw new InternalServerErrorException('Failed to save availability');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.getMe(token);
+    if (dayNumbers.length > 0) {
+      const { error: dayError } = await this.supabase.db
+        .from('provider_availability_day')
+        .insert(dayNumbers.map((d) => ({ provider_id: providerId, day_of_week: d })));
+
+      if (dayError) {
+        this.logger.error(`provider_availability_day insert failed: ${dayError.message}`);
+        throw new InternalServerErrorException('Failed to save availability days');
+      }
+    }
   }
 }
 
-// ── Helpers ──────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────
 
-interface SpRow {
+interface SpRowFull {
   id: string;
   full_name: string;
   mobile_number: string;
   whatsapp_number: string | null;
-  email: string;
+  email: string | null;
   nic_number: string;
   province: string | null;
   district: string | null;
   is_active: boolean;
   created_at: string;
-}
-
-interface SpRowFull extends SpRow {
-  service_zone: Array<{ zone_name: string }>;
+  provider_service_zone: Array<{
+    zone_id: string;
+    service_zone: { zone_name: string } | null;
+  }>;
   provider_service: Array<{
     experience_level: string | null;
     description: string | null;
     main_category: { name: string } | null;
     sub_category: { name: string } | null;
   }>;
-  availability: Array<{
-    available_days: string;
+  provider_availability: Array<{
     available_from: string | null;
     available_to: string | null;
+    is_24_7: boolean;
+    is_available_now: boolean;
     night_service: boolean;
   }>;
+  provider_availability_day: Array<{ day_of_week: number }>;
 }
 
 function toProviderProfileFull(row: SpRowFull) {
-  const avRow = row.availability?.[0] ?? null;
+  const avRow = row.provider_availability?.[0] ?? null;
+  const days = (row.provider_availability_day ?? []).map((d) => DAY_NUM_TO_CODE[d.day_of_week]);
+
   return {
     id: row.id,
     fullName: row.full_name,
@@ -481,7 +480,9 @@ function toProviderProfileFull(row: SpRowFull) {
     district: row.district,
     isActive: row.is_active,
     createdAt: new Date(row.created_at),
-    serviceZones: (row.service_zone ?? []).map((z) => z.zone_name),
+    serviceZones: (row.provider_service_zone ?? [])
+      .map((z) => z.service_zone?.zone_name)
+      .filter(Boolean),
     services: (row.provider_service ?? [])
       .filter((s) => s.main_category && s.sub_category)
       .map((s) => ({
@@ -492,30 +493,19 @@ function toProviderProfileFull(row: SpRowFull) {
       })),
     availability: avRow
       ? {
-          availableDays: avRow.available_days,
-          availableFrom: avRow.available_from
-            ? avRow.available_from.substring(0, 5)
-            : null,
-          availableTo: avRow.available_to
-            ? avRow.available_to.substring(0, 5)
-            : null,
+          availableDays: days,
+          availableFrom: avRow.available_from?.substring(0, 5) ?? null,
+          availableTo: avRow.available_to?.substring(0, 5) ?? null,
+          is24_7: avRow.is_24_7,
+          isAvailableNow: avRow.is_available_now,
           nightService: avRow.night_service,
         }
       : null,
   };
 }
 
-function parseTimeToDbTime(hhmm: string): string {
-  const isValid = /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm);
-  if (!isValid) {
-    throw new BadRequestException('Availability times must be in HH:mm format');
-  }
-
-  return `${hhmm}:00`;
-}
-
-function normalizeServiceDays(serviceDays: string): string[] {
-  const validDays = new Set(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']);
+function parseDayNumbers(serviceDays: string): number[] {
+  const validCodes = new Set(Object.keys(DAY_CODE_TO_NUM));
   const days = serviceDays
     .split(',')
     .map((d) => d.trim().toUpperCase())
@@ -526,26 +516,20 @@ function normalizeServiceDays(serviceDays: string): string[] {
   }
 
   for (const day of days) {
-    if (!validDays.has(day)) {
+    if (!validCodes.has(day)) {
       throw new BadRequestException(
-        'serviceDays must use comma-separated day codes (MON..SUN)',
+        'serviceDays must use comma-separated codes: MON, TUE, WED, THU, FRI, SAT, SUN',
       );
     }
   }
 
-  return [...new Set(days)];
+  return [...new Set(days)].map((d) => DAY_CODE_TO_NUM[d]);
 }
 
-function toCompactServiceDays(days: string[]): string {
-  const dayMap: Record<string, string> = {
-    MON: 'MO',
-    TUE: 'TU',
-    WED: 'WE',
-    THU: 'TH',
-    FRI: 'FR',
-    SAT: 'SA',
-    SUN: 'SU',
-  };
-
-  return days.map((day) => dayMap[day]).join(',');
+function resolvePortfolioDocType(mimetype: string): string {
+  if (mimetype.startsWith('image/')) return 'PROJECT_PHOTO';
+  if (mimetype === 'application/pdf') return 'PROJECT_PDF';
+  if (mimetype === 'application/zip' || mimetype === 'application/x-zip-compressed')
+    return 'PORTFOLIO_ZIP';
+  return 'OTHER';
 }
