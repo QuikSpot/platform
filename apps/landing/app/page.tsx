@@ -69,6 +69,7 @@ const navLinks = [
   { href: '#services',      label: 'Services' },
   { href: '#how-it-works',  label: 'How It Works' },
   { href: '#testimonials',  label: 'Testimonials' },
+  { href: '/agreement',     label: 'Privacy Policy' },
 ];
 
 export default function Home() {
@@ -109,11 +110,17 @@ export default function Home() {
 
             {/* Desktop links */}
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map(l => (
-                <a key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
-                  {l.label}
-                </a>
-              ))}
+              {navLinks.map(l =>
+                l.href.startsWith('/') ? (
+                  <Link key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
+                    {l.label}
+                  </Link>
+                ) : (
+                  <a key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
+                    {l.label}
+                  </a>
+                )
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -198,16 +205,27 @@ export default function Home() {
               className="md:hidden border-t border-gray-100 bg-white overflow-hidden"
             >
               <div className="px-4 py-4 flex flex-col gap-1">
-                {navLinks.map(l => (
-                  <a
-                    key={l.href}
-                    href={l.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
-                  >
-                    {l.label}
-                  </a>
-                ))}
+                {navLinks.map(l =>
+                  l.href.startsWith('/') ? (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  )
+                )}
                 {profile ? (
                   <>
                     <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
