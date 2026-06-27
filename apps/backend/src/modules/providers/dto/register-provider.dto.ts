@@ -9,6 +9,7 @@ import {
   IsString,
   Matches,
   MaxLength,
+  MinLength,
   ValidateNested,
 } from 'class-validator';
 
@@ -81,10 +82,15 @@ export class RegisterProviderDto {
   @Matches(/^07[0-9]{8}$/, { message: 'WhatsApp number must be a valid Sri Lankan number' })
   whatsappNumber?: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsEmail()
   @MaxLength(254)
-  email?: string;
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  password: string;
 
   /** Old NIC: 9 digits + V/X  |  New NIC: 12 digits */
   @IsNotEmpty()

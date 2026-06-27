@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocations } from '@/hooks/use-locations';
 import { validateStep } from '@/lib/validators/registration';
 import Link from 'next/link';
@@ -56,146 +56,13 @@ const STEPS = [
 ];
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const CATEGORIES_MAP: Record<string, string[]> = {
-  'Vehicle Repairs & Services': [
-    'Car / van repairs',
-    'Motorbike repairs',
-    'Three-wheeler (tuk-tuk) repairs',
-    'Tyre fitting & puncture repair',
-    'Battery replacement',
-    'AC service & repair',
-    'Windscreen & glass repair',
-    'Vehicle electrical work',
-    'Oil change & lubrication',
-    'Vehicle body & panel work',
-    'Painting & polishing',
-    'Other – please specify'
-  ],
-  'Plumbing': [
-    'Pipe installation & repairs',
-    'Tap & valve replacement',
-    'Water tank installation',
-    'Toilet & cistern repairs',
-    'Drainage & sewage clearing',
-    'Water pump installation',
-    'Hot water system / solar heater',
-    'Overhead tank cleaning',
-    'Leak detection & fixing',
-    'Bathroom fitting',
-    'Other – please specify'
-  ],
-  'Masonry & Construction': [
-    'New house construction',
-    'Wall plastering',
-    'Brick & block laying',
-    'Tile fixing (floor & wall)',
-    'Concrete work & roof slabs',
-    'Compound wall / fencing',
-    'Waterproofing & damp proofing',
-    'Demolition work',
-    'Well construction & repair',
-    'Renovation & extension work',
-    'Other – please specify'
-  ],
-  'Carpentry & Woodwork': [
-    'Door & window frames',
-    'Custom furniture making',
-    'Roof timber work',
-    'Cabinet & wardrobe fitting',
-    'Flooring (wood / laminate)',
-    'Partition walls',
-    'Staircase construction',
-    'Wooden repair & polishing',
-    'Kitchen fitting',
-    'Other – please specify'
-  ],
-  'Electrical Work': [
-    'House wiring',
-    'Switchboard & DB installation',
-    'Lighting installation',
-    'Fan & AC wiring',
-    'Solar panel installation',
-    'Generator / inverter setup',
-    'CCTV & security systems',
-    'Home theatre & TV mounting',
-    'Electrical fault finding',
-    'Other – please specify'
-  ],
-  'Painting & Finishing': [
-    'Interior wall painting',
-    'Exterior painting',
-    'Wood & metal painting',
-    'Waterproofing coatings',
-    'Texture & decorative finishes',
-    'Anti-rust treatment',
-    'Roof painting',
-    'Whitewashing',
-    'Other – please specify'
-  ],
-  'AC & Appliance Repair': [
-    'AC installation & service',
-    'AC gas refilling',
-    'Washing machine repair',
-    'Refrigerator repair',
-    'Microwave & oven repair',
-    'Television repair',
-    'Sewing machine repair',
-    'Water purifier service',
-    'Gas cooker repair',
-    'Other – please specify'
-  ],
-  'Gardening & Landscaping': [
-    'Garden maintenance',
-    'Lawn mowing & trimming',
-    'Tree cutting & pruning',
-    'Pest control (garden)',
-    'Garden design & planting',
-    'Irrigation system setup',
-    'Outdoor paving',
-    'Other – please specify'
-  ],
-  'Cleaning Services': [
-    'Home deep cleaning',
-    'Office / commercial cleaning',
-    'Post-construction cleaning',
-    'Carpet & sofa cleaning',
-    'Water tank & sump cleaning',
-    'Pest control (home)',
-    'Septic tank cleaning',
-    'Window cleaning',
-    'Other – please specify'
-  ],
-  'Security & Safety': [
-    'CCTV installation',
-    'Electric fence installation',
-    'Alarm system setup',
-    'Fire extinguisher service',
-    'Smart lock installation',
-    'Security guard services',
-    'Other – please specify'
-  ],
-  'IT & Electronics': [
-    'Computer / laptop repair',
-    'Networking & WiFi setup',
-    'Phone screen replacement',
-    'Data recovery',
-    'Software installation',
-    'Printer repair & service',
-    'Smart home setup',
-    'Other – please specify'
-  ],
-  'Moving & Transport': [
-    'House moving services',
-    'Office relocation',
-    'Furniture delivery',
-    'Lorry / van hire',
-    'Packing & unpacking',
-    'Waste & junk removal',
-    'Other – please specify'
-  ]
-};
-const CATEGORIES = Object.keys(CATEGORIES_MAP);
 const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
+
+interface Category {
+  id: string;
+  name: string;
+  subCategories: { id: string; name: string }[];
+}
 
 
 const SelectChevron = () => (
@@ -243,35 +110,37 @@ const Toggle = ({ on, onToggle, dark = false }: { on: boolean; onToggle: () => v
   </button>
 );
 
+const INITIAL_FORM: FormData = {
+  fullName: '',
+  nicNumber: '',
+  mobileNumber: '',
+  whatsappNumber: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  address: '',
+  province: '',
+  district: '',
+  serviceZones: [],
+  primaryCategory: '',
+  experienceLevel: 'Entry Level (1–2 years)',
+  subCategories: [],
+  bio: '',
+  nightService: false,
+  serviceDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+  workStartTime: '08:00',
+  workEndTime: '18:00',
+  nicFrontImage: null,
+  nicBackImage: null,
+  selfieImage: null,
+  portfolio: null,
+  agreeTerms: false,
+  agreeCommission: false,
+};
+
 export default function PartnerRegistration() {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormData>({
-    fullName: '',
-    nicNumber: '',
-    mobileNumber: '',
-    whatsappNumber: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    address: '',
-    province: '',
-    district: '',
-    serviceZones: [],
-    primaryCategory: 'Home Maintenance',
-    experienceLevel: 'Entry Level (1–2 years)',
-    subCategories: [],
-    bio: '',
-    nightService: false,
-    serviceDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
-    workStartTime: '08:00',
-    workEndTime: '18:00',
-    nicFrontImage: null,
-    nicBackImage: null,
-    selfieImage: null,
-    portfolio: null,
-    agreeTerms: false,
-    agreeCommission: false,
-  });
+  const [form, setForm] = useState<FormData>(INITIAL_FORM);
 
   // OTP modal state
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -288,7 +157,27 @@ export default function PartnerRegistration() {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${backendUrl}/api/v1/categories`, { signal: controller.signal })
+      .then(r => r.json())
+      .then((res: { data?: Category[] }) => {
+        const list: Category[] = res.data ?? [];
+        setCategories(list);
+        if (list.length > 0) {
+          setForm(f => f.primaryCategory ? f : { ...f, primaryCategory: list[0].name });
+        }
+      })
+      .catch(err => { if (err.name !== 'AbortError') setCategoriesLoading(false); })
+      .finally(() => setCategoriesLoading(false));
+    return () => controller.abort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { provinces, districts, zones, provincesLoading, districtsLoading, zonesLoading } =
     useLocations(form.province, form.district);
@@ -464,6 +353,12 @@ export default function PartnerRegistration() {
         }
       }
 
+      setForm(INITIAL_FORM);
+      setStep(1);
+      setErrors({});
+      setPhoneVerified(false);
+      setOtpDigits(['', '', '', '', '', '']);
+      setOtpError(null);
       setSubmitted(true);
     } catch {
       setApiError('Unable to reach the server. Please try again.');
@@ -611,6 +506,38 @@ export default function PartnerRegistration() {
       </header>
 
       <main className="flex-1 flex flex-col items-center px-6 py-10">
+
+        {/* ── Success screen ── */}
+        {submitted && (
+          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md text-center py-16">
+            <div className="w-20 h-20 rounded-full bg-[#1aae74]/15 flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-10 h-10 text-[#1aae74]" />
+            </div>
+            <h2 className="text-3xl font-extrabold text-[#114b2e] mb-3">Application Submitted!</h2>
+            <p className="text-slate-500 text-base leading-relaxed mb-8">
+              Our curation team will review your application within 48 hours and reach out to you.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="px-6 py-3 rounded-xl bg-[#1a3d2b] text-white font-semibold text-sm hover:bg-[#114b2e] transition-colors"
+              >
+                Register Another Partner
+              </button>
+              <Link
+                href="/"
+                className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── Multi-step form ── */}
+        {!submitted && (
+        <>
         {/* Hero */}
         <div className="text-center mb-10">
           <span className="inline-block px-4 py-1.5 rounded-full border border-[#1aae74]/60 bg-[#1aae74]/10 text-[#1aae74] text-xs font-bold tracking-widest uppercase mb-4">
@@ -870,8 +797,11 @@ export default function PartnerRegistration() {
                 <div>
                   <label className={labelCls}>Primary Category</label>
                   <div className="relative">
-                    <select value={form.primaryCategory} onChange={e => set('primaryCategory', e.target.value)} className={selectCls}>
-                      {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                    <select value={form.primaryCategory} onChange={e => { set('primaryCategory', e.target.value); set('subCategories', []); }} className={selectCls} disabled={categoriesLoading}>
+                      {categoriesLoading
+                        ? <option>Loading…</option>
+                        : categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)
+                      }
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
@@ -890,14 +820,14 @@ export default function PartnerRegistration() {
               <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl">
                 <label className={labelCls}>Available Sub-Categories for {form.primaryCategory}</label>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {(CATEGORIES_MAP[form.primaryCategory] ?? []).map(cat => (
-                    <button key={cat} type="button" onClick={() => toggleSubCategory(cat)}
+                  {(categories.find(c => c.name === form.primaryCategory)?.subCategories ?? []).map(sub => (
+                    <button key={sub.id} type="button" onClick={() => toggleSubCategory(sub.name)}
                       className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
-                        form.subCategories.includes(cat)
+                        form.subCategories.includes(sub.name)
                           ? 'bg-[#1aae74] border-[#1aae74] text-white shadow-md shadow-[#1aae74]/20'
                           : 'bg-white border-slate-200 text-slate-600 hover:border-[#1aae74] hover:text-[#1aae74]'
                       }`}>
-                      {cat}
+                      {sub.name}
                     </button>
                   ))}
                 </div>
@@ -1158,6 +1088,8 @@ export default function PartnerRegistration() {
             )}
           </div>
         </div>
+        </>
+        )}
       </main>
 
       {/* Footer */}
