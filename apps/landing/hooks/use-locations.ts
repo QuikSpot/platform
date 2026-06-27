@@ -42,12 +42,14 @@ export function useLocations(
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
+    const controller = new AbortController();
     setProvincesLoading(true);
-    fetch(`${backendUrl}/api/v1/locations/provinces`)
+    fetch(`${backendUrl}/api/v1/locations/provinces`, { signal: controller.signal })
       .then((r) => r.json())
       .then((body) => setProvinces(body.data ?? []))
-      .catch(() => setLocationsError('Failed to load provinces'))
+      .catch((err) => { if (err.name !== 'AbortError') setLocationsError('Failed to load provinces'); })
       .finally(() => setProvincesLoading(false));
+    return () => controller.abort();
   }, [backendUrl]);
 
   useEffect(() => {
@@ -59,14 +61,16 @@ export function useLocations(
     const province = provinces.find((p) => p.name === selectedProvinceName);
     if (!province) return;
 
+    const controller = new AbortController();
     setDistrictsLoading(true);
     setDistricts([]);
     setZones([]);
-    fetch(`${backendUrl}/api/v1/locations/provinces/${province.id}/districts`)
+    fetch(`${backendUrl}/api/v1/locations/provinces/${province.id}/districts`, { signal: controller.signal })
       .then((r) => r.json())
       .then((body) => setDistricts(body.data ?? []))
-      .catch(() => setLocationsError('Failed to load districts'))
+      .catch((err) => { if (err.name !== 'AbortError') setLocationsError('Failed to load districts'); })
       .finally(() => setDistrictsLoading(false));
+    return () => controller.abort();
   }, [selectedProvinceName, provinces, backendUrl]);
 
   useEffect(() => {
@@ -77,13 +81,15 @@ export function useLocations(
     const district = districts.find((d) => d.name === selectedDistrictName);
     if (!district) return;
 
+    const controller = new AbortController();
     setZonesLoading(true);
     setZones([]);
-    fetch(`${backendUrl}/api/v1/locations/districts/${district.id}/zones`)
+    fetch(`${backendUrl}/api/v1/locations/districts/${district.id}/zones`, { signal: controller.signal })
       .then((r) => r.json())
       .then((body) => setZones(body.data ?? []))
-      .catch(() => setLocationsError('Failed to load service zones'))
+      .catch((err) => { if (err.name !== 'AbortError') setLocationsError('Failed to load service zones'); })
       .finally(() => setZonesLoading(false));
+    return () => controller.abort();
   }, [selectedDistrictName, districts, backendUrl]);
 
   return {

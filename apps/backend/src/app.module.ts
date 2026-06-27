@@ -7,6 +7,7 @@ import { ConfigModule } from './config/config.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { HealthModule } from './modules/health/health.module';
 import { OtpModule } from './modules/otp/otp.module';
 import { LocationsModule } from './modules/locations/locations.module';
@@ -23,6 +24,7 @@ import { SupabaseModule } from './shared/supabase/supabase.module';
     AuthModule,
     UsersModule,
     HealthModule,
+    CategoriesModule,
     ProvidersModule,
     LocationsModule,
     OtpModule,

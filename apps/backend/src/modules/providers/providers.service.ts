@@ -64,14 +64,31 @@ export class ProvidersService {
   constructor(private readonly supabase: SupabaseService) {}
 
   async register(dto: RegisterProviderDto): Promise<ProviderRegistrationResult> {
-    // DB sequence auto-generates SP-XXXXX id
+    // ── 1. Create Supabase Auth user ─────────────────────────────────
+    const { data: authData, error: authError } = await this.supabase.admin.createUser({
+      email: dto.email,
+      password: dto.password,
+      email_confirm: true, // mobile OTP already verified the user
+    });
+
+    if (authError) {
+      if (authError.message.toLowerCase().includes('already registered')) {
+        throw new ConflictException('An account with this email already exists');
+      }
+      this.logger.error('Supabase auth user creation failed', authError);
+      throw new InternalServerErrorException('Registration failed');
+    }
+
+    const authUserId: string = authData.user.id;
+
+    // ── 2. Insert service_provider row ───────────────────────────────
     const { data: spRow, error: spError } = await this.supabase.db
       .from('service_provider')
       .insert({
         full_name: dto.fullName,
         mobile_number: dto.mobileNumber,
         whatsapp_number: dto.whatsappNumber ?? null,
-        email: dto.email ?? null,
+        email: dto.email,
         nic_number: dto.nicNumber,
         province: dto.province ?? null,
         district: dto.district ?? null,
@@ -81,6 +98,7 @@ export class ProvidersService {
       .single();
 
     if (spError) {
+      await this.supabase.admin.deleteUser(authUserId);
       if (spError.code === '23505') {
         throw new ConflictException(
           'A provider with this mobile number, NIC or email already exists',
@@ -92,6 +110,7 @@ export class ProvidersService {
 
     const spId: string = spRow.id;
 
+    // ── 3. Insert related rows ───────────────────────────────────────
     try {
       if (dto.serviceZones?.length) {
         await this.insertServiceZones(spId, dto.serviceZones);
@@ -124,6 +143,7 @@ export class ProvidersService {
       }
     } catch (err: unknown) {
       await this.supabase.db.from('service_provider').delete().eq('id', spId);
+      await this.supabase.admin.deleteUser(authUserId);
       if (
         err instanceof ConflictException ||
         err instanceof InternalServerErrorException ||
@@ -132,6 +152,15 @@ export class ProvidersService {
         throw err;
       }
       throw new InternalServerErrorException('Registration failed');
+    }
+
+    // ── 4. Link provider ID into Supabase app_metadata ───────────────
+    // Best-effort: allows the login flow to resolve SP-XXXXX from the auth token.
+    const { error: metaError } = await this.supabase.admin.updateUserById(authUserId, {
+      app_metadata: { provider_id: spId },
+    });
+    if (metaError) {
+      this.logger.warn(`Failed to set app_metadata for auth user ${authUserId}: ${metaError.message}`);
     }
 
     return {

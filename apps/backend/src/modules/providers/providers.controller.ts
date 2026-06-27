@@ -30,6 +30,7 @@ export class ProvidersController {
     return this.providersService.register(dto);
   }
 
+  @Public()
   @Post('documents')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
