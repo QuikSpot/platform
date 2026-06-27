@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useLocations } from '@/hooks/use-locations';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -54,18 +55,6 @@ const STEPS = [
 ];
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const PROVINCES = ['Central', 'Eastern', 'North Central', 'Northern', 'North Western', 'Sabaragamuwa', 'Southern', 'Uva', 'Western'];
-const DISTRICTS: Record<string, string[]> = {
-  'Central': ['Kandy', 'Matale', 'Nuwara Eliya'],
-  'Eastern': ['Ampara', 'Batticaloa', 'Trincomalee'],
-  'North Central': ['Anuradhapura', 'Polonnaruwa'],
-  'Northern': ['Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya'],
-  'North Western': ['Kurunegala', 'Puttalam'],
-  'Sabaragamuwa': ['Kegalle', 'Ratnapura'],
-  'Southern': ['Galle', 'Hambantota', 'Matara'],
-  'Uva': ['Badulla', 'Moneragala'],
-  'Western': ['Colombo', 'Gampaha', 'Kalutara']
-};
 const CATEGORIES_MAP: Record<string, string[]> = {
   'Vehicle Repairs & Services': [
     'Car / van repairs',
@@ -207,33 +196,6 @@ const CATEGORIES_MAP: Record<string, string[]> = {
 const CATEGORIES = Object.keys(CATEGORIES_MAP);
 const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
 
-const SERVICE_ZONES_MAP: Record<string, string[]> = {
-  'Colombo': ['Maharagama', 'Kottawa', 'Pannipitiya', 'Nugegoda', 'Mount Lavinia', 'Dehiwala', 'Ratmalana', 'Battaramulla', 'Malabe', 'Kaduwela', 'Pita Kotte', 'Ethul Kotte', 'Rajagiriya'],
-  'Gampaha': ['Gampaha', 'Negombo', 'Ja-Ela', 'Wattala', 'Kadawatha', 'Kiribathgoda', 'Kelaniya', 'Ragama', 'Minuwangoda', 'Divulapitiya', 'Mirigama', 'Nittambuwa', 'Veyangoda', 'Ganemulla', 'Dompe', 'Biyagama', 'Seeduwa', 'Katunayake', 'Ekala', 'Mabole', 'Peliyagoda', 'Kandana', 'Welisara', 'Mahara', 'Delgoda', 'Pugoda', 'Yakkala', 'Udugampola', 'Attanagalla', 'Dankotuwa', 'Marandagahamula', 'Alawwa'],
-  'Kalutara': ['Panadura', 'Horana', 'Wadduwa', 'Beruwala', 'Alutgama', 'Matugama', 'Kalutara Town'],
-  'Kandy': ['Peradeniya', 'Katugastota', 'Gampola', 'Nawalapitiya', 'Kundasale', 'Digana', 'Gelioya'],
-  'Matale': ['Matale Town', 'Dambulla', 'Sigiriya', 'Pallepola'],
-  'Nuwara Eliya': ['Nuwara Eliya Town', 'Talawakele', 'Hatton', 'Walapane'],
-  'Galle': ['Galle Fort', 'Hikkaduwa', 'Karapitiya', 'Unawatuna', 'Ambalangoda', 'Baddegama'],
-  'Matara': ['Matara Town', 'Weligama', 'Mirissa', 'Dikwella', 'Akuressa', 'Deniyaya'],
-  'Hambantota': ['Hambantota Town', 'Tangalle', 'Beliatta', 'Ambalantota', 'Tissamaharama'],
-  'Jaffna': ['Jaffna Town', 'Chavakachcheri', 'Point Pedro', 'Kopay'],
-  'Kilinochchi': ['Kilinochchi Town', 'Pooneryn'],
-  'Mannar': ['Mannar Town', 'Nanattan'],
-  'Mullaitivu': ['Mullaitivu Town', 'Oddusuddan'],
-  'Vavuniya': ['Vavuniya Town', 'Cheddikulam'],
-  'Anuradhapura': ['Anuradhapura Town', 'Eppawala', 'Medawachchiya', 'Kebithigollewa', 'Thambuttegama'],
-  'Polonnaruwa': ['Polonnaruwa Town', 'Hingurakgoda', 'Medirigiriya'],
-  'Kurunegala': ['Kurunegala Town', 'Kuliyapitiya', 'Narammala', 'Wariyapola', 'Pannala'],
-  'Puttalam': ['Puttalam Town', 'Chilaw', 'Marawila', 'Wennappuwa', 'Dankotuwa'],
-  'Badulla': ['Badulla Town', 'Bandarawela', 'Haputale', 'Diyatalawa', 'Ella', 'Mahiyanganaya'],
-  'Moneragala': ['Moneragala Town', 'Wellawaya', 'Buttala', 'Kataragama'],
-  'Ratnapura': ['Ratnapura Town', 'Balangoda', 'Eheliyagoda', 'Pelmadulla', 'Embilipitiya'],
-  'Kegalle': ['Kegalle Town', 'Mawanella', 'Warakapola', 'Rambukkana', 'Dehiowita'],
-  'Ampara': ['Ampara Town', 'Samanthurai', 'Kalmunai', 'Akkaraipattu'],
-  'Batticaloa': ['Batticaloa Town', 'Eravur', 'Kattankudy', 'Valaichchenai'],
-  'Trincomalee': ['Trincomalee Town', 'Kinniya', 'Muttur', 'Kantale']
-};
 
 const SelectChevron = () => (
   <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,8 +228,8 @@ export default function PartnerRegistration() {
     password: '',
     confirmPassword: '',
     address: '',
-    province: 'Western',
-    district: 'Colombo',
+    province: '',
+    district: '',
     serviceZones: [],
     primaryCategory: 'Home Maintenance',
     experienceLevel: 'Entry Level (1–2 years)',
@@ -300,6 +262,9 @@ export default function PartnerRegistration() {
   const [submitted, setSubmitted] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  const { provinces, districts, zones, provincesLoading, districtsLoading, zonesLoading } =
+    useLocations(form.province, form.district);
 
   const handleSendOtp = async () => {
     if (!form.mobileNumber.trim()) {
@@ -729,12 +694,14 @@ export default function PartnerRegistration() {
                   <div className="relative">
                     <select value={form.province}
                       onChange={e => {
-                        const p = e.target.value;
-                        set('province', p);
-                        set('district', DISTRICTS[p][0]);
+                        set('province', e.target.value);
+                        set('district', '');
+                        set('serviceZones', []);
                       }}
-                      className={selectCls}>
-                      {PROVINCES.map(p => <option key={p}>{p}</option>)}
+                      disabled={provincesLoading}
+                      className={`${selectCls} disabled:opacity-50`}>
+                      <option value="">{provincesLoading ? 'Loading…' : 'Select province'}</option>
+                      {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
@@ -742,8 +709,12 @@ export default function PartnerRegistration() {
                 <div>
                   <label className={labelCls}>District</label>
                   <div className="relative">
-                    <select value={form.district} onChange={e => set('district', e.target.value)} className={selectCls}>
-                      {DISTRICTS[form.province].map(d => <option key={d}>{d}</option>)}
+                    <select value={form.district}
+                      onChange={e => { set('district', e.target.value); set('serviceZones', []); }}
+                      disabled={!form.province || districtsLoading}
+                      className={`${selectCls} disabled:opacity-50`}>
+                      <option value="">{districtsLoading ? 'Loading…' : 'Select district'}</option>
+                      {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
@@ -778,30 +749,31 @@ export default function PartnerRegistration() {
                     onChange={e => setZoneSearch(e.target.value)}
                     className={inputCls}
                   />
-                  {zoneSearch.trim() && (
+                  {zonesLoading && (
+                    <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl px-4 py-3 text-xs text-slate-400 italic">
+                      Loading zones…
+                    </div>
+                  )}
+                  {!zonesLoading && zoneSearch.trim() && (
                     <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                      {(SERVICE_ZONES_MAP[form.district] || [])
-                        .filter(z => z.toLowerCase().includes(zoneSearch.toLowerCase()))
-                        .map(zone => (
+                      {zones
+                        .filter(z => z.zone_name.toLowerCase().includes(zoneSearch.toLowerCase()))
+                        .map(z => (
                           <button
-                            key={zone}
+                            key={z.id}
                             type="button"
-                            onClick={() => {
-                              toggleZone(zone);
-                              setZoneSearch('');
-                            }}
+                            onClick={() => { toggleZone(z.zone_name); setZoneSearch(''); }}
                             className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-emerald-50 transition-colors ${
-                              form.serviceZones.includes(zone) ? 'bg-emerald-50/50 text-[#1aae74] font-semibold' : 'text-slate-600'
+                              form.serviceZones.includes(z.zone_name) ? 'bg-emerald-50/50 text-[#1aae74] font-semibold' : 'text-slate-600'
                             }`}
                           >
-                            {zone}
-                            {form.serviceZones.includes(zone) && <CheckCircle2 className="w-4 h-4" />}
+                            {z.zone_name}
+                            {form.serviceZones.includes(z.zone_name) && <CheckCircle2 className="w-4 h-4" />}
                           </button>
                         ))}
-                      {(SERVICE_ZONES_MAP[form.district] || [])
-                        .filter(z => z.toLowerCase().includes(zoneSearch.toLowerCase())).length === 0 && (
-                          <div className="px-4 py-3 text-xs text-slate-400 italic">No matching zones found in this district.</div>
-                        )}
+                      {zones.filter(z => z.zone_name.toLowerCase().includes(zoneSearch.toLowerCase())).length === 0 && (
+                        <div className="px-4 py-3 text-xs text-slate-400 italic">No matching zones found in this district.</div>
+                      )}
                     </div>
                   )}
                 </div>

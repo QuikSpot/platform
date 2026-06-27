@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { HealthModule } from './modules/health/health.module';
 import { OtpModule } from './modules/otp/otp.module';
+import { LocationsModule } from './modules/locations/locations.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { UsersModule } from './modules/users/users.module';
 import { LoggerModule } from './shared/logger/logger.module';
@@ -23,6 +24,7 @@ import { SupabaseModule } from './shared/supabase/supabase.module';
     UsersModule,
     HealthModule,
     ProvidersModule,
+    LocationsModule,
     OtpModule,
   ],
   providers: [

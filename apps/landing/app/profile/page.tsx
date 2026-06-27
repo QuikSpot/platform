@@ -8,53 +8,7 @@ import {
   MapPin, Clock, BadgeCheck,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
-
-// ── Static data (mirrors registration form) ────────────────────────────────
-
-const PROVINCES = [
-  'Central', 'Eastern', 'North Central', 'Northern',
-  'North Western', 'Sabaragamuwa', 'Southern', 'Uva', 'Western',
-];
-
-const DISTRICTS: Record<string, string[]> = {
-  Central: ['Kandy', 'Matale', 'Nuwara Eliya'],
-  Eastern: ['Ampara', 'Batticaloa', 'Trincomalee'],
-  'North Central': ['Anuradhapura', 'Polonnaruwa'],
-  Northern: ['Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya'],
-  'North Western': ['Kurunegala', 'Puttalam'],
-  Sabaragamuwa: ['Kegalle', 'Ratnapura'],
-  Southern: ['Galle', 'Hambantota', 'Matara'],
-  Uva: ['Badulla', 'Moneragala'],
-  Western: ['Colombo', 'Gampaha', 'Kalutara'],
-};
-
-const SERVICE_ZONES_MAP: Record<string, string[]> = {
-  Colombo: ['Maharagama', 'Kottawa', 'Pannipitiya', 'Nugegoda', 'Mount Lavinia', 'Dehiwala', 'Ratmalana', 'Battaramulla', 'Malabe', 'Kaduwela', 'Pita Kotte', 'Ethul Kotte', 'Rajagiriya'],
-  Gampaha: ['Negombo', 'Wattala', 'Kiribathgoda', 'Kadawatha', 'Ja-Ela', 'Kelaniya', 'Minuwangoda', 'Veyangoda', 'Gampaha Town', 'Ragama'],
-  Kalutara: ['Panadura', 'Horana', 'Wadduwa', 'Beruwala', 'Alutgama', 'Matugama', 'Kalutara Town'],
-  Kandy: ['Peradeniya', 'Katugastota', 'Gampola', 'Nawalapitiya', 'Kundasale', 'Digana', 'Gelioya'],
-  Matale: ['Matale Town', 'Dambulla', 'Sigiriya', 'Pallepola'],
-  'Nuwara Eliya': ['Nuwara Eliya Town', 'Talawakele', 'Hatton', 'Walapane'],
-  Galle: ['Galle Fort', 'Hikkaduwa', 'Karapitiya', 'Unawatuna', 'Ambalangoda', 'Baddegama'],
-  Matara: ['Matara Town', 'Weligama', 'Mirissa', 'Dikwella', 'Akuressa', 'Deniyaya'],
-  Hambantota: ['Hambantota Town', 'Tangalle', 'Beliatta', 'Ambalantota', 'Tissamaharama'],
-  Jaffna: ['Jaffna Town', 'Chavakachcheri', 'Point Pedro', 'Kopay'],
-  Kilinochchi: ['Kilinochchi Town', 'Pooneryn'],
-  Mannar: ['Mannar Town', 'Nanattan'],
-  Mullaitivu: ['Mullaitivu Town', 'Oddusuddan'],
-  Vavuniya: ['Vavuniya Town', 'Cheddikulam'],
-  Anuradhapura: ['Anuradhapura Town', 'Eppawala', 'Medawachchiya', 'Kebithigollewa', 'Thambuttegama'],
-  Polonnaruwa: ['Polonnaruwa Town', 'Hingurakgoda', 'Medirigiriya'],
-  Kurunegala: ['Kurunegala Town', 'Kuliyapitiya', 'Narammala', 'Wariyapola', 'Pannala'],
-  Puttalam: ['Puttalam Town', 'Chilaw', 'Marawila', 'Wennappuwa', 'Dankotuwa'],
-  Badulla: ['Badulla Town', 'Bandarawela', 'Haputale', 'Diyatalawa', 'Ella', 'Mahiyanganaya'],
-  Moneragala: ['Moneragala Town', 'Wellawaya', 'Buttala', 'Kataragama'],
-  Ratnapura: ['Ratnapura Town', 'Balangoda', 'Eheliyagoda', 'Pelmadulla', 'Embilipitiya'],
-  Kegalle: ['Kegalle Town', 'Mawanella', 'Warakapola', 'Rambukkana', 'Dehiowita'],
-  Ampara: ['Ampara Town', 'Samanthurai', 'Kalmunai', 'Akkaraipattu'],
-  Batticaloa: ['Batticaloa Town', 'Eravur', 'Kattankudy', 'Valaichchenai'],
-  Trincomalee: ['Trincomalee Town', 'Kinniya', 'Muttur', 'Kantale'],
-};
+import { useLocations } from '@/hooks/use-locations';
 
 const CATEGORIES_MAP: Record<string, string[]> = {
   'Home Maintenance': ['Painting', 'Furniture Assembly', 'Roof Repair', 'Tiling', 'Carpentry', 'Masonry'],
@@ -146,6 +100,9 @@ export default function ProfilePage() {
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+  const { provinces, districts, zones, provincesLoading, districtsLoading, zonesLoading, locationsError } =
+    useLocations(province, district);
+
   useEffect(() => {
     if (!loading && !profile) router.push('/login');
   }, [loading, profile, router]);
@@ -175,9 +132,6 @@ export default function ProfilePage() {
       setNightService(profile.availability.nightService);
     }
   }, [profile]);
-
-  const districtList = DISTRICTS[province] ?? [];
-  const zoneList = SERVICE_ZONES_MAP[district] ?? [];
 
   function handleProvinceChange(val: string) {
     setProvince(val);
@@ -374,16 +328,16 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>Province</label>
-                      <select value={province} onChange={(e) => handleProvinceChange(e.target.value)} className={selectCls}>
-                        <option value="">Select province</option>
-                        {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                      <select value={province} onChange={(e) => handleProvinceChange(e.target.value)} disabled={provincesLoading} className={`${selectCls} disabled:opacity-50`}>
+                        <option value="">{provincesLoading ? 'Loading…' : 'Select province'}</option>
+                        {provinces.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className={labelCls}>District</label>
-                      <select value={district} onChange={(e) => handleDistrictChange(e.target.value)} disabled={!province} className={`${selectCls} disabled:opacity-50`}>
-                        <option value="">Select district</option>
-                        {districtList.map((d) => <option key={d} value={d}>{d}</option>)}
+                      <select value={district} onChange={(e) => handleDistrictChange(e.target.value)} disabled={!province || districtsLoading} className={`${selectCls} disabled:opacity-50`}>
+                        <option value="">{districtsLoading ? 'Loading…' : 'Select district'}</option>
+                        {districts.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
                       </select>
                     </div>
                   </div>
@@ -413,18 +367,23 @@ export default function ProfilePage() {
                         onChange={(e) => setZoneSearch(e.target.value)}
                         className={inputCls}
                       />
-                      {zoneSearch.trim() && (
+                      {zonesLoading && (
+                        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl px-4 py-3 text-xs text-gray-400 italic">
+                          Loading zones…
+                        </div>
+                      )}
+                      {!zonesLoading && zoneSearch.trim() && (
                         <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                          {zoneList.filter((z) => z.toLowerCase().includes(zoneSearch.toLowerCase())).map((zone) => (
-                            <button key={zone} type="button"
-                              onClick={() => { toggleZone(zone); setZoneSearch(''); }}
-                              className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-green-50 transition-colors ${serviceZones.includes(zone) ? 'text-[#1aae74] font-semibold' : 'text-gray-600'}`}
+                          {zones.filter((z) => z.zone_name.toLowerCase().includes(zoneSearch.toLowerCase())).map((z) => (
+                            <button key={z.id} type="button"
+                              onClick={() => { toggleZone(z.zone_name); setZoneSearch(''); }}
+                              className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between hover:bg-green-50 transition-colors ${serviceZones.includes(z.zone_name) ? 'text-[#1aae74] font-semibold' : 'text-gray-600'}`}
                             >
-                              {zone}
-                              {serviceZones.includes(zone) && <CheckCircle2 className="w-4 h-4" />}
+                              {z.zone_name}
+                              {serviceZones.includes(z.zone_name) && <CheckCircle2 className="w-4 h-4" />}
                             </button>
                           ))}
-                          {zoneList.filter((z) => z.toLowerCase().includes(zoneSearch.toLowerCase())).length === 0 && (
+                          {zones.filter((z) => z.zone_name.toLowerCase().includes(zoneSearch.toLowerCase())).length === 0 && (
                             <div className="px-4 py-3 text-xs text-gray-400 italic">No zones found.</div>
                           )}
                         </div>
@@ -551,8 +510,8 @@ export default function ProfilePage() {
 
             {/* Footer */}
             <div className={`px-8 py-5 border-t space-y-3 ${tab === 'availability' ? 'bg-[#1a3d2b] border-white/10' : 'bg-white border-gray-100'}`}>
-              {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
+              {(error || locationsError) && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error ?? locationsError}</p>
               )}
               {saved && (
                 <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
