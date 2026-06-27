@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useLocations } from '@/hooks/use-locations';
+import { validateStep } from '@/lib/validators/registration';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -205,6 +206,31 @@ const SelectChevron = () => (
 
 const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
+const PASSWORD_RULES = [
+  { label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
+  { label: 'One uppercase letter (A–Z)', test: (p: string) => /[A-Z]/.test(p) },
+  { label: 'One number (0–9)', test: (p: string) => /[0-9]/.test(p) },
+  { label: 'One special character (e.g. !@#$)', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+];
+
+function PasswordChecklist({ password }: { password: string }) {
+  return (
+    <ul className="mt-2 space-y-1.5">
+      {PASSWORD_RULES.map(rule => {
+        const ok = rule.test(password);
+        return (
+          <li key={rule.label} className={`flex items-center gap-2 text-xs transition-colors ${ok ? 'text-[#1aae74]' : 'text-slate-400'}`}>
+            {ok
+              ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+              : <X className="w-3.5 h-3.5 flex-shrink-0 text-slate-300" />}
+            {rule.label}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 const Toggle = ({ on, onToggle, dark = false }: { on: boolean; onToggle: () => void; dark?: boolean }) => (
   <button
     type="button"
@@ -260,6 +286,7 @@ export default function PartnerRegistration() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -340,6 +367,7 @@ export default function PartnerRegistration() {
       }
       setOtpModalOpen(false);
       setPhoneVerified(true);
+      setErrors(prev => { const e = { ...prev }; delete e.mobileNumber; return e; });
     } catch {
       setOtpError('Unable to verify. Please try again.');
     } finally {
@@ -358,12 +386,16 @@ export default function PartnerRegistration() {
   };
 
   const handleSubmit = async () => {
-    if (form.password !== form.confirmPassword) {
-      setApiError('Passwords do not match');
-      return;
-    }
-    if (!form.agreeTerms || !form.agreeCommission) {
-      setApiError('You must accept the terms and commission agreement');
+    const s5Errors = validateStep(5, {
+      nicFrontImage: form.nicFrontImage,
+      nicBackImage: form.nicBackImage,
+      selfieImage: form.selfieImage,
+      portfolio: form.portfolio,
+      agreeTerms: form.agreeTerms,
+      agreeCommission: form.agreeCommission,
+    });
+    if (Object.keys(s5Errors).length > 0) {
+      setErrors(s5Errors);
       return;
     }
     setIsLoading(true);
@@ -445,8 +477,10 @@ export default function PartnerRegistration() {
       ? form.serviceZones.filter(z => z !== zone)
       : [...form.serviceZones, zone]);
 
-  const set = <K extends keyof FormData>(key: K, value: FormData[K]) =>
+  const set = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm(f => ({ ...f, [key]: value }));
+    setErrors(prev => { const e = { ...prev }; delete e[key as string]; return e; });
+  };
 
   const toggleSubCategory = (cat: string) =>
     set('subCategories', form.subCategories.includes(cat)
@@ -458,9 +492,38 @@ export default function PartnerRegistration() {
       ? form.serviceDays.filter(d => d !== day)
       : [...form.serviceDays, day]);
 
+  const getStepData = (s: number) => {
+    if (s === 1) return { fullName: form.fullName, nicNumber: form.nicNumber, mobileNumber: form.mobileNumber, whatsappNumber: form.whatsappNumber, address: form.address, email: form.email, password: form.password, confirmPassword: form.confirmPassword };
+    if (s === 2) return { province: form.province, district: form.district, serviceZones: form.serviceZones };
+    if (s === 3) return { primaryCategory: form.primaryCategory, experienceLevel: form.experienceLevel, subCategories: form.subCategories, bio: form.bio };
+    if (s === 4) return { nightService: form.nightService, serviceDays: form.serviceDays, workStartTime: form.workStartTime, workEndTime: form.workEndTime };
+    return { nicFrontImage: form.nicFrontImage, nicBackImage: form.nicBackImage, selfieImage: form.selfieImage, portfolio: form.portfolio, agreeTerms: form.agreeTerms, agreeCommission: form.agreeCommission };
+  };
+
+  const handleNext = () => {
+    const newErrors = validateStep(step, getStepData(step));
+    if (step === 1 && !phoneVerified && !newErrors.mobileNumber) {
+      newErrors.mobileNumber = 'Please verify your mobile number first';
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
+    setStep(s => s + 1);
+  };
+
   const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition';
   const selectCls = `${inputCls} appearance-none`;
   const labelCls = 'block text-xs font-semibold text-slate-500 tracking-widest uppercase mb-2';
+
+  const fic = (field: string) =>
+    `w-full px-4 py-3 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-slate-200'} bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition`;
+  const fsc = (field: string) => `${fic(field)} appearance-none`;
+  const err = (field: string) =>
+    errors[field] ? <p className="text-xs text-red-500 mt-1.5">{errors[field]}</p> : null;
+  const errDark = (field: string) =>
+    errors[field] ? <p className="text-xs text-red-300 mt-1.5">{errors[field]}</p> : null;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #e8f5ee 0%, #d4eddf 50%, #e8f5ee 100%)' }}>
@@ -603,12 +666,14 @@ export default function PartnerRegistration() {
                 <div>
                   <label className={labelCls}>Full Name</label>
                   <input type="text" placeholder="Johnathan Doe" value={form.fullName}
-                    onChange={e => set('fullName', e.target.value)} className={inputCls} />
+                    onChange={e => set('fullName', e.target.value)} className={fic('fullName')} />
+                  {err('fullName')}
                 </div>
                 <div>
                   <label className={labelCls}>NIC / ID Number</label>
                   <input type="text" placeholder="987654321V" value={form.nicNumber}
-                    onChange={e => set('nicNumber', e.target.value)} className={inputCls} />
+                    onChange={e => set('nicNumber', e.target.value)} className={fic('nicNumber')} />
+                  {err('nicNumber')}
                 </div>
 
                 {/* Mobile number with verify */}
@@ -623,7 +688,7 @@ export default function PartnerRegistration() {
                         set('mobileNumber', e.target.value);
                         if (phoneVerified) setPhoneVerified(false);
                       }}
-                      className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition"
+                      className={`flex-1 min-w-0 px-4 py-3 rounded-xl border ${errors.mobileNumber ? 'border-red-400' : 'border-slate-200'} bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition`}
                     />
                     {phoneVerified ? (
                       <div className="shrink-0 flex items-center gap-1.5 px-4 py-3 bg-emerald-50 text-[#1aae74] text-sm font-semibold rounded-xl border border-[#1aae74]/30 whitespace-nowrap">
@@ -644,35 +709,41 @@ export default function PartnerRegistration() {
                   <p className="text-xs text-slate-400 mt-1.5">
                     {phoneVerified ? 'Phone number verified successfully.' : 'An OTP will be sent to this number.'}
                   </p>
+                  {err('mobileNumber')}
                   {apiError && (
                     <p className="text-xs text-red-500 mt-1">{apiError}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className={labelCls}>WhatsApp Number</label>
+                  <label className={labelCls}>WhatsApp Number <span className="text-slate-400 normal-case font-normal tracking-normal">(optional)</span></label>
                   <input type="tel" placeholder="+94 77 123 4567" value={form.whatsappNumber}
-                    onChange={e => set('whatsappNumber', e.target.value)} className={inputCls} />
+                    onChange={e => set('whatsappNumber', e.target.value)} className={fic('whatsappNumber')} />
+                  {err('whatsappNumber')}
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelCls}>Permanent Address</label>
                   <input type="text" placeholder="123, Lush Lane, Garden City" value={form.address}
-                    onChange={e => set('address', e.target.value)} className={inputCls} />
+                    onChange={e => set('address', e.target.value)} className={fic('address')} />
+                  {err('address')}
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelCls}>Email Address</label>
                   <input type="email" placeholder="johnathan@instafixd.com" value={form.email}
-                    onChange={e => set('email', e.target.value)} className={inputCls} />
+                    onChange={e => set('email', e.target.value)} className={fic('email')} />
+                  {err('email')}
                 </div>
                 <div>
                   <label className={labelCls}>Password</label>
                   <input type="password" placeholder="Min. 8 characters" value={form.password}
-                    onChange={e => set('password', e.target.value)} className={inputCls} />
+                    onChange={e => set('password', e.target.value)} className={fic('password')} />
+                  {(form.password.length > 0 || errors.password) && <PasswordChecklist password={form.password} />}
                 </div>
                 <div>
                   <label className={labelCls}>Confirm Password</label>
                   <input type="password" placeholder="Re-enter your password" value={form.confirmPassword}
-                    onChange={e => set('confirmPassword', e.target.value)} className={inputCls} />
+                    onChange={e => set('confirmPassword', e.target.value)} className={fic('confirmPassword')} />
+                  {err('confirmPassword')}
                 </div>
               </div>
             </div>
@@ -699,12 +770,13 @@ export default function PartnerRegistration() {
                         set('serviceZones', []);
                       }}
                       disabled={provincesLoading}
-                      className={`${selectCls} disabled:opacity-50`}>
+                      className={`${fsc('province')} disabled:opacity-50`}>
                       <option value="">{provincesLoading ? 'Loading…' : 'Select province'}</option>
                       {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
+                  {err('province')}
                 </div>
                 <div>
                   <label className={labelCls}>District</label>
@@ -712,18 +784,19 @@ export default function PartnerRegistration() {
                     <select value={form.district}
                       onChange={e => { set('district', e.target.value); set('serviceZones', []); }}
                       disabled={!form.province || districtsLoading}
-                      className={`${selectCls} disabled:opacity-50`}>
+                      className={`${fsc('district')} disabled:opacity-50`}>
                       <option value="">{districtsLoading ? 'Loading…' : 'Select district'}</option>
                       {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
                   </div>
+                  {err('district')}
                 </div>
               </div>
 
               <div className="mb-8">
                 <label className={labelCls}>Your Selected Service Zones</label>
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
+                <div className={`bg-slate-50 border ${errors.serviceZones ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all`}>
                   {form.serviceZones.length > 0 ? (
                     form.serviceZones.map(zone => (
                       <span key={zone} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#114b2e] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
@@ -737,6 +810,7 @@ export default function PartnerRegistration() {
                     <p className="text-xs text-slate-400 italic">No zones selected yet. Select from the available towns in {form.district}.</p>
                   )}
                 </div>
+                {err('serviceZones')}
               </div>
 
               <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl relative">
@@ -845,13 +919,20 @@ export default function PartnerRegistration() {
                     <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories above.</p>
                   )}
                 </div>
+                {err('subCategories')}
               </div>
 
               <div>
                 <label className={labelCls}>Professional Bio</label>
                 <textarea placeholder="Tell customers about your craftsmanship and values..." value={form.bio}
                   onChange={e => set('bio', e.target.value)} rows={5}
-                  className={`${inputCls} resize-none`} />
+                  className={`${fic('bio')} resize-none`} />
+                <div className="flex items-center justify-between mt-1.5">
+                  {err('bio')}
+                  <p className={`text-xs ml-auto ${form.bio.length > 500 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {form.bio.length}/500
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -894,6 +975,7 @@ export default function PartnerRegistration() {
                     </button>
                   ))}
                 </div>
+                {errDark('serviceDays')}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
@@ -924,6 +1006,7 @@ export default function PartnerRegistration() {
                       </svg>
                     </div>
                   </div>
+                  {errDark('workEndTime')}
                 </div>
               </div>
             </div>
@@ -946,28 +1029,34 @@ export default function PartnerRegistration() {
                     <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">NIC / ID Card Verification</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
-                      <input type="file" accept="image/*" className="hidden"
-                        onChange={e => set('nicFrontImage', e.target.files?.[0] ?? null)} />
-                      <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
-                      <p className="font-semibold text-slate-700 text-xs text-center">NIC Front Side</p>
-                      {form.nicFrontImage && (
-                        <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
-                          {form.nicFrontImage.name}
-                        </p>
-                      )}
-                    </label>
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
-                      <input type="file" accept="image/*" className="hidden"
-                        onChange={e => set('nicBackImage', e.target.files?.[0] ?? null)} />
-                      <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
-                      <p className="font-semibold text-slate-700 text-xs text-center">NIC Back Side</p>
-                      {form.nicBackImage && (
-                        <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
-                          {form.nicBackImage.name}
-                        </p>
-                      )}
-                    </label>
+                    <div>
+                      <label className={`flex flex-col items-center justify-center border-2 border-dashed ${errors.nicFrontImage ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white`}>
+                        <input type="file" accept="image/*" className="hidden"
+                          onChange={e => set('nicFrontImage', e.target.files?.[0] ?? null)} />
+                        <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
+                        <p className="font-semibold text-slate-700 text-xs text-center">NIC Front Side</p>
+                        {form.nicFrontImage && (
+                          <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
+                            {form.nicFrontImage.name}
+                          </p>
+                        )}
+                      </label>
+                      {err('nicFrontImage')}
+                    </div>
+                    <div>
+                      <label className={`flex flex-col items-center justify-center border-2 border-dashed ${errors.nicBackImage ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white`}>
+                        <input type="file" accept="image/*" className="hidden"
+                          onChange={e => set('nicBackImage', e.target.files?.[0] ?? null)} />
+                        <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
+                        <p className="font-semibold text-slate-700 text-xs text-center">NIC Back Side</p>
+                        {form.nicBackImage && (
+                          <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
+                            {form.nicBackImage.name}
+                          </p>
+                        )}
+                      </label>
+                      {err('nicBackImage')}
+                    </div>
                   </div>
                 </div>
 
@@ -976,19 +1065,22 @@ export default function PartnerRegistration() {
                     { key: 'selfieImage' as const, icon: UserRound, label: 'Verification Selfie', sub: 'Holding your ID card', accept: 'image/*' },
                     { key: 'portfolio' as const, icon: Upload, label: 'Portfolio / Work', sub: 'Past project photos (ZIP/PDF)', accept: '.zip,.pdf,image/*' },
                   ].map(({ key, icon: Icon, label, sub, accept }) => (
-                    <label key={key}
-                      className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-8 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white">
-                      <input type="file" accept={accept} className="hidden"
-                        onChange={e => set(key, e.target.files?.[0] ?? null)} />
-                      <Icon className="w-8 h-8 text-slate-300 group-hover:text-[#1aae74] mb-3 transition-colors" />
-                      <p className="font-semibold text-slate-700 text-sm text-center">{label}</p>
-                      <p className="text-xs text-slate-400 text-center mt-1">{sub}</p>
-                      {form[key] && (
-                        <p className="text-xs text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
-                          {(form[key] as File).name}
-                        </p>
-                      )}
-                    </label>
+                    <div key={key}>
+                      <label
+                        className={`flex flex-col items-center justify-center border-2 border-dashed ${errors[key] ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-8 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white`}>
+                        <input type="file" accept={accept} className="hidden"
+                          onChange={e => set(key, e.target.files?.[0] ?? null)} />
+                        <Icon className="w-8 h-8 text-slate-300 group-hover:text-[#1aae74] mb-3 transition-colors" />
+                        <p className="font-semibold text-slate-700 text-sm text-center">{label}</p>
+                        <p className="text-xs text-slate-400 text-center mt-1">{sub}</p>
+                        {form[key] && (
+                          <p className="text-xs text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
+                            {(form[key] as File).name}
+                          </p>
+                        )}
+                      </label>
+                      {err(key)}
+                    </div>
                   ))}
                 </div>
 
@@ -1005,18 +1097,21 @@ export default function PartnerRegistration() {
                       desc: 'InstaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
                     },
                   ].map(({ key, title, desc }) => (
-                    <button key={key} type="button" onClick={() => set(key, !form[key])}
-                      className="flex items-start gap-4 w-full text-left">
-                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center ${
-                        form[key] ? 'bg-[#1aae74] border-[#1aae74]' : 'border-slate-300'
-                      }`}>
-                        {form[key] && <div className="w-2 h-2 rounded-full bg-white" />}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800 text-sm">{title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
-                      </div>
-                    </button>
+                    <div key={key}>
+                      <button type="button" onClick={() => set(key, !form[key])}
+                        className="flex items-start gap-4 w-full text-left">
+                        <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center ${
+                          form[key] ? 'bg-[#1aae74] border-[#1aae74]' : errors[key] ? 'border-red-400' : 'border-slate-300'
+                        }`}>
+                          {form[key] && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800 text-sm">{title}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
+                        </div>
+                      </button>
+                      {err(key)}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -1056,7 +1151,7 @@ export default function PartnerRegistration() {
               </button>
             ) : <div />}
             {step < 5 && (
-              <button type="button" onClick={() => setStep(s => s + 1)}
+              <button type="button" onClick={handleNext}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1aae74] text-white text-sm font-semibold hover:bg-[#159e67] transition-colors">
                 Continue <ArrowRight className="w-4 h-4" />
               </button>
