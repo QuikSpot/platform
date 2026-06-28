@@ -20,7 +20,17 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  app.enableCors({
+    origin: [
+      'https://www.instafixd.com',
+      'https://instafixd.com',
+      'https://dev.instafixd.com',
+      'http://localhost:3000'
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   app.setGlobalPrefix('api/v1');
 
   const port = config.port;
