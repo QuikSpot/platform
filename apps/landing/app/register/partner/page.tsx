@@ -16,6 +16,7 @@ import {
   Upload,
   UserRound,
   CheckCircle2,
+  Sparkles,
   X,
 } from 'lucide-react';
 
@@ -160,6 +161,11 @@ export default function PartnerRegistration() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
+  const [enhancingBio, setEnhancingBio] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
+  const [predictingCategory, setPredictingCategory] = useState(false);
+  const lastPredictedBio = useRef('');
+
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
@@ -261,6 +267,74 @@ export default function PartnerRegistration() {
       setOtpError('Unable to verify. Please try again.');
     } finally {
       setOtpLoading(false);
+    }
+  };
+
+  const applyPredictedCategories = (predictions: { main_category_name: string; sub_category_name: string }[]) => {
+    if (predictions.length === 0) return;
+    const mainCategory = predictions[0].main_category_name;
+    const predictedSubs = predictions.map(p => p.sub_category_name);
+
+    setForm(f => ({
+      ...f,
+      // Only set the primary category if the user hasn't already picked one manually.
+      primaryCategory: f.primaryCategory ? f.primaryCategory : (categories.some(c => c.name === mainCategory) ? mainCategory : f.primaryCategory),
+      // Merge with whatever is already selected (manual or previously predicted) — never drop existing entries.
+      subCategories: Array.from(new Set([...f.subCategories, ...predictedSubs])),
+    }));
+  };
+
+  const predictCategoryFromBio = async (bioText: string) => {
+    if (!bioText.trim() || bioText === lastPredictedBio.current) return;
+    lastPredictedBio.current = bioText;
+    setPredictingCategory(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/ai/predict-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: bioText }),
+      });
+      if (!res.ok) return;
+      const body = await res.json() as { data?: { main_category_name: string; sub_category_name: string }[] };
+      applyPredictedCategories(body.data ?? []);
+    } catch {
+      // Silent — category prediction is a background convenience, not a blocking action.
+    } finally {
+      setPredictingCategory(false);
+    }
+  };
+
+  const handleBioBlur = () => {
+    void predictCategoryFromBio(form.bio);
+  };
+
+  const handleEnhanceBio = async () => {
+    if (!form.bio.trim()) {
+      setBioError('Write a short bio first, then enhance it.');
+      return;
+    }
+    setEnhancingBio(true);
+    setBioError(null);
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/ai/improve-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: form.bio }),
+      });
+      if (!res.ok) {
+        setBioError('Unable to enhance your bio right now. Please try again.');
+        return;
+      }
+      const body = await res.json() as { data?: { improved?: string } };
+      const enhanced = body.data?.improved;
+      if (enhanced) {
+        set('bio', enhanced);
+        await predictCategoryFromBio(enhanced);
+      }
+    } catch {
+      setBioError('Unable to reach the enhancement service. Please try again.');
+    } finally {
+      setEnhancingBio(false);
     }
   };
 
@@ -793,6 +867,30 @@ export default function PartnerRegistration() {
                 <h2 className="text-2xl font-bold text-slate-900">Expertise</h2>
               </div>
 
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <label className={labelCls}>Professional Bio</label>
+                  <button
+                    type="button"
+                    onClick={handleEnhanceBio}
+                    disabled={enhancingBio || !form.bio.trim()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-[#1aae74] hover:bg-emerald-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {enhancingBio ? 'Enhancing…' : 'Enhance'}
+                  </button>
+                </div>
+                <textarea placeholder="Tell customers about your craftsmanship and values..." value={form.bio}
+                  onChange={e => set('bio', e.target.value)} onBlur={handleBioBlur} rows={5}
+                  className={`${fic('bio')} resize-none`} />
+                <div className="flex items-center justify-between mt-1.5">
+                  {err('bio') ?? (bioError ? <p className="text-xs text-red-500">{bioError}</p> : null)}
+                  <p className={`text-xs ml-auto ${form.bio.length > 500 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {form.bio.length}/500
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 <div>
                   <label className={labelCls}>Primary Category</label>
@@ -833,36 +931,27 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              <div className="mb-8">
+              <div>
                 <label className={labelCls}>Your Selected Expertise</label>
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
-                  {form.subCategories.length > 0 ? (
-                    form.subCategories.map(cat => (
-                      <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a3d2b] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
-                        {cat}
-                        <button type="button" onClick={() => toggleSubCategory(cat)} className="hover:text-emerald-300 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      </span>
-                    ))
-                  ) : (
+                  {form.subCategories.length === 0 && !predictingCategory && (
                     <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories above.</p>
+                  )}
+                  {form.subCategories.map(cat => (
+                    <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a3d2b] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
+                      {cat}
+                      <button type="button" onClick={() => toggleSubCategory(cat)} className="hover:text-emerald-300 transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </span>
+                  ))}
+                  {predictingCategory && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 text-transparent text-xs font-semibold animate-pulse w-24">
+                      loading
+                    </span>
                   )}
                 </div>
                 {err('subCategories')}
-              </div>
-
-              <div>
-                <label className={labelCls}>Professional Bio</label>
-                <textarea placeholder="Tell customers about your craftsmanship and values..." value={form.bio}
-                  onChange={e => set('bio', e.target.value)} rows={5}
-                  className={`${fic('bio')} resize-none`} />
-                <div className="flex items-center justify-between mt-1.5">
-                  {err('bio')}
-                  <p className={`text-xs ml-auto ${form.bio.length > 500 ? 'text-red-500' : 'text-slate-400'}`}>
-                    {form.bio.length}/500
-                  </p>
-                </div>
               </div>
             </div>
           )}

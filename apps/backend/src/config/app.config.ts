@@ -8,4 +8,5 @@ export const appConfigSchema = Joi.object({
   JWT_SECRET: Joi.string().required(),
   JWT_EXPIRES_IN: Joi.string().default('7d'),
   APP_NAME: Joi.string().default('InstaFixd'),
+  AI_API_URL: Joi.string().uri().required(),
 });
