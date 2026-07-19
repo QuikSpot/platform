@@ -1,68 +1,105 @@
 'use client';
 
-//test1
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
   Wrench,
-  Zap,
-  Droplet,
-  Wind,
-  BookOpen,
-  Sparkles,
   MessageCircle,
-  CheckCircle2,
+  BadgeCheck,
+  Search,
+  MessageSquare,
+  Sparkles,
+  ShieldCheck,
   ArrowRight,
-  Play,
-  Shield,
-  Clock,
+  ArrowUpRight,
+  Zap,
+  Smartphone,
   Star,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Send,
   Linkedin,
   Facebook,
   Instagram,
-  Twitter,
-  ChevronLeft,
-  ChevronRight,
   Menu,
   X,
   UserCircle,
   LogOut,
 } from 'lucide-react';
-import { ChatPreviewSection } from '@/components/chat-preview-section';
 import { useAuth } from '@/context/auth-context';
 
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
+const headline = jakarta.className;
+
 const services = [
-  { icon: Zap,       title: 'Electricians',    description: 'Expert electrical repairs and installations' },
-  { icon: Droplet,   title: 'Plumbers',        description: 'Professional plumbing solutions' },
-  { icon: Wind,      title: 'AC Repair',       description: 'Climate control experts' },
-  { icon: Sparkles,  title: 'Cleaners',        description: 'Home & office cleaning services' },
-  { icon: BookOpen,  title: 'Tutors',          description: 'Professional tutoring services' },
-  { icon: Wrench,    title: 'General Repairs', description: 'All-round maintenance services' },
+  {
+    title: 'AC Repair',
+    description: 'Deep cleaning, gas refill, and expert troubleshooting.',
+    price: 'Starts at $49',
+    bestseller: true,
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4S584jMua-4eVrCWvJXOtxGxHUYQWpwM1_c2O7JTEgO3S3TOu7wyxw_RKyH9m2eBBCgfKTPoKi_hkfruQP4DVaZDa4xMGKuqtIeljv5x7dN2QabUBzlTycc4hRgL4Cy3DLoAwxYBI0H1I0wO-nnAQQoHu9doqrsG3ryE8ZoxbxBKL_De2SHYBYxRoI_ILv5zNftLTXVoq4ZH9dmOjuBaYbO3K8Lxr8k4Hyk1t1tGTIjkaNbV4Xikd9uKJwPJfm8ryBS567MTsvBQ',
+    alt: 'Air conditioner being repaired',
+  },
+  {
+    title: 'Plumbing',
+    description: 'Leak detection, pipe repairs, and fixture installations.',
+    price: 'Starts at $35',
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp5YJfi4KMMlZ_Lu3Vqz1hglYW2bCLmVagJDlNDtNqEatmCX81j-5ry1Ps3kh3QVRqODCVWQ4laoaYMcsCEy31qJ3fremcuZYQrZG-JLky0lH4QiYmXVhCCIvODf9eEgLp010VJzlJCja47A4QdGRg8fjIHxSOaADF090KAJLaivz8OfGpK3QGL8eYgApJzWxHRA7Y3HX49VAEl_2LcKyJC6Sdr5wGkpYOKTDoMJmTg_HwCpJZ2X8yMtxRX7ah09dGlPoDWUS_1hI',
+    alt: 'Plumber fixing a sink',
+  },
+  {
+    title: 'Electrical',
+    description: 'Safe wiring, switch repairs, and full home electrical audits.',
+    price: 'Starts at $40',
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOnhTi-8YZ-Duc74xjrs8_opuQgU9V8fqkPVsCN1lcl3MNnAlBuV0bYHrV0TUxkms0Omn_1q9cTtXpDu2L9_piBhJFrdhlasFIpgkTtcZIvla5kvkMV1uI2X79waNCOsuEe2UkP6hvIwuPQhdo2jmxZPdhT_1-noueqaG0OJY0w9P6lFEfbaSLURe-LLGtxA8TJSKeBU-I9G8-o-iH7zyxfG9zg30LkpPeUCFooZ0qHp8NHOJ1RoM9QP3vxJqzDPUlQFDHqAI_TLM',
+    alt: 'Electrician working',
+  },
+  {
+    title: 'Home Cleaning',
+    description: 'Deep cleaning, sanitization, and eco-friendly products.',
+    price: 'Starts at $60',
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3W0DxbQ8YmzW4daTEgJ3IUMvOocSDaWB2NaXotfmxXfMlhdIaATaGzpkf0iIBnt8aI117caYEe1-ryeRK0pvcJiGSIN6T1Ln3RyrhDFEhG77F2syzrmsaYIhHaKXfpBOqLa1ahSBuV246O3HGWB6tDySnf4Jfvn_ScY3A7O599M4NVHUdcKtofS-Lbge28N2zM8RdxIadewMLQNj-LaNyS-EI_AvfYkNoa8XFqLBcw7n-As8QK3vlw356QmSWP2L5lnLqM4o6wnQ',
+    alt: 'Home cleaning professional',
+  },
+  {
+    title: 'Pest Control',
+    description: 'Eco-safe pest removal and preventive treatments.',
+    price: 'Starts at $75',
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBi37AzXR_sJ2w7N4WGMYq2BrsNHLYe6H1GlVm3Ox_p_YLSiDForqEctdLKNXc18ty6FpjhNqLaTEa8DCu55bkSm808g6QUDAimtwcOmrp1muKE_beJQ7HljowtRRIvM461AvtBwztgJKIS1e7wuW4DWPS1uEv-ftvnpjgXCp0xYtGRzl4h2DNkjAG5kNWCu8aCX-HUYZYFgb2JEUBXM-dtib_0hQWnrU_3Grg_e8k6tmM6a49o2HKLNxwn6dNDGC8RL7PketL4okI',
+    alt: 'Pest control',
+  },
+  {
+    title: 'Painting',
+    description: 'Interior/exterior painting with premium finish.',
+    price: 'Starts at $199',
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2xmI2AaDo-2WQrAtDtzpsrSovKwQbJYuTuEHwSMzHpoTrdU-tcc1Ek59PqVed5A42-GD9U105oLpOFdHxNGJK2b-sqgckJa1ldCoDm7KxrpeEahKq5I6zYrsUudMqPsPil2_0LVmTgvtSWW3kubztA1kU8sdm-9J3WoeZDKWkpeWflTCrrm-OQn5Y_4Qf1hp11iUwFfkpiwFdN5AKGYpp-aPY7IE_kGu700-i234T0r2ASvqh3CKG8hhQu5yI-j8mxpiJqRGlA-w',
+    alt: 'Painting',
+  },
 ];
 
 const steps = [
-  { number: '1', title: 'Message InstaFixd Bot', description: 'Start a WhatsApp conversation and describe your problem' },
-  { number: '2', title: 'AI Analysis',           description: 'Our AI analyzes your needs and identifies the right provider' },
-  { number: '3', title: 'Instant Matching',      description: 'Get matched with the best available service provider' },
-  { number: '4', title: 'Confirmation',          description: 'Receive booking confirmation directly on WhatsApp' },
+  { icon: MessageSquare, title: '1. Say Hello', description: 'Send a simple message on WhatsApp describing what you need help with.' },
+  { icon: Sparkles, title: '2. Curator Matches', description: 'Our AI-driven curator matches you with the perfect available professional in seconds.' },
+  { icon: ShieldCheck, title: '3. Service Done', description: 'Your professional arrives, does the job, and you pay securely via WhatsApp link.' },
+];
+
+const whyChooseUs = [
+  { icon: Zap, title: 'Unmatched Speed', description: 'Our WhatsApp bot finds matches in under 60 seconds. No browsing through hundreds of profiles.' },
+  { icon: BadgeCheck, title: 'Strict Verification', description: 'Every InstaFixd pro undergoes background checks and quality audits every 30 days.' },
+  { icon: Smartphone, title: 'WhatsApp Native', description: 'Book, track, chat, and pay without ever leaving your favorite messaging app.' },
 ];
 
 const testimonials = [
-  { name: 'Ravi Kumar',  role: 'Homeowner',      text: 'InstaFixd fixed my AC in hours! The WhatsApp integration made everything so convenient.',                        rating: 5 },
-  { name: 'Priya Silva', role: 'Business Owner', text: 'Reliable, fast, and professional. All my property maintenance is now handled through InstaFixd.',               rating: 5 },
-  { name: 'Anil Perera', role: 'Homeowner',      text: 'The AI bot understood exactly what I needed. Found the perfect plumber in minutes!',                            rating: 5 },
-];
-
-const featureCards = [
-  { type: 'image', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop', label: 'Analytics and Reports' },
-  { type: 'image', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop',  label: 'Multiple Job Types' },
-  { type: 'text',  label: 'Bidding Module', desc: 'The bidding module allows professionals to send detailed bids and proposals for biddable jobs, giving service seekers more options and price quotations.' },
-  { type: 'image', img: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800&auto=format&fit=crop',     label: 'Advanced Search' },
-  { type: 'image', img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop',  label: 'Real-time Tracking' },
+  { name: 'Sarah Jenkins', role: 'Homeowner', text: '"I was skeptical about booking a plumber on WhatsApp, but InstaFixd made it so easy. Found someone in 5 minutes!"' },
+  { name: 'Michael Chen', role: 'Tech Manager', text: '"The quality of the AC repair was outstanding. The professional was verified and clearly knew their craft."' },
+  { name: 'Jessica Drew', role: 'Startup Founder', text: '"Payment through WhatsApp was seamless. I love that I don\'t need another app on my phone."' },
 ];
 
 const navLinks = [
@@ -72,11 +109,12 @@ const navLinks = [
   { href: '/agreement',     label: 'Privacy Policy' },
 ];
 
+const whatsappGradient = 'bg-[linear-gradient(135deg,#006d2f_0%,#25d366_100%)]';
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
   const { profile, logout } = useAuth();
   const router = useRouter();
 
@@ -89,12 +127,8 @@ export default function Home() {
 
   if (!mounted) return null;
 
-  const scrollCarousel = (dir: 'left' | 'right') => {
-    carouselRef.current?.scrollBy({ left: dir === 'right' ? 448 : -448, behavior: 'smooth' });
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className={`min-h-screen bg-[#f8f9fa] text-[#191c1d] overflow-x-hidden ${inter.className}`}>
 
       {/* ── Navigation ── */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
@@ -248,389 +282,280 @@ export default function Home() {
         </AnimatePresence>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-white">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-green-200/40 rounded-full opacity-50 blur-[100px] -z-10" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-emerald-100/40 rounded-full opacity-50 blur-[100px] -z-10" />
+      <main className="pt-16">
 
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 mb-8 px-5 py-2.5 bg-white rounded-full shadow-sm border border-green-100/50"
-          >
-            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium text-green-800 tracking-wide uppercase">Now Launching in Sri Lanka</span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 leading-[1.1]"
-          >
-            Your Local Service
-            <br />
-            <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-800 bg-clip-text text-transparent pr-4">
-              Marketplace
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
-          >
-            Connect instantly with trusted service providers. Describe your problem on WhatsApp, let our AI find the perfect match, and get it done seamlessly.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
-          >
-            <Button size="lg" className="bg-green-700 hover:bg-green-800 text-white text-lg h-14 px-8 rounded-full shadow-lg shadow-green-900/20 transition-all hover:scale-105">
-              <MessageCircle className="w-5 h-5 mr-2" /> Chat on WhatsApp
-            </Button>
-            <Button size="lg" variant="outline" className="text-slate-700 border-slate-200 hover:bg-slate-50 text-lg h-14 px-8 rounded-full transition-all hover:scale-105">
-              <Play className="w-5 h-5 mr-2" /> Watch Demo
-            </Button>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }}
-            className="flex flex-wrap justify-center gap-4 md:gap-8"
-          >
-            {[
-              { icon: CheckCircle2, label: 'Verified Providers' },
-              { icon: Clock,        label: 'Same-Day Service' },
-              { icon: Shield,       label: 'Secure & Guaranteed' },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/40 text-sm font-medium text-slate-600">
-                <Icon className="w-4 h-4 text-green-600 shrink-0" />
-                <span>{label}</span>
+        {/* ── Hero ── */}
+        <section className="relative min-h-[870px] flex items-center overflow-hidden px-6 md:px-12">
+          <div className="absolute inset-0 z-0">
+            <img
+              alt="Professional electrician working on a circuit breaker"
+              className="w-full h-full object-cover opacity-20"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6JOzLFnFEBV1PkdJbu2OcVewIp375ylsULNC0ZwxZ5OreXm4HUr5du9rndOsc0BxMx7xceqBPnfbHPF_aD23E6eL3B9Qw7HjMmtbW40AC5w7StWARHrMKU6SF40xjgclDwbXB6JFC_E3D0suiKttA52JIvuxkIMzDf3hJ_CwzFwnKjzVW0AomS33P40DY0iEN5g8Ftjxij7mONPPvX58DLDZWJ7PS21m-afnBWogy73ZyOlCF93FwQ8iFbNWs9FjDDIThIqX90lA"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#f8f9fa] via-[#f8f9fa]/90 to-transparent" />
+          </div>
+          <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25d366]/20 text-[#006d2f] font-bold text-sm tracking-wide uppercase">
+                <BadgeCheck className="w-4 h-4" /> Verified Experts Only
               </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Feature cards */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto relative z-10">
-          {[
-            { icon: '⚡', title: 'Quick Booking',  desc: 'Book trusted services in seconds',            bg: 'bg-amber-100/60',  hover: 'group-hover:border-amber-300' },
-            { icon: '🤖', title: 'AI Powered',     desc: 'Smart matching with top professionals',       bg: 'bg-blue-100/60',   hover: 'group-hover:border-blue-300' },
-            { icon: '💬', title: 'WhatsApp Chat',  desc: 'No apps needed, entirely conversational',     bg: 'bg-emerald-100/60',hover: 'group-hover:border-emerald-300' },
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 * (i + 1) }}
-              className={`group relative bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 ${item.hover} hover:shadow-xl overflow-hidden cursor-pointer`}
-            >
-              <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full ${item.bg} opacity-0 group-hover:opacity-100 group-hover:scale-[2.5] transition-all duration-700 ease-out blur-3xl`} />
-              <div className={`relative w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center text-3xl mb-5 transform group-hover:scale-110 transition-all duration-300`}>
-                {item.icon}
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Services ── */}
-      <section id="services" className="py-24 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900">Expert Services Available</h2>
-            <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-              From emergency repairs to regular home care, find the right verified professional for any job instantly.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service, i) => {
-              const Icon = service.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}
-                  className="group relative bg-white rounded-[2rem] p-8 hover:bg-slate-50 transition-colors duration-300 border border-slate-100 shadow-sm hover:shadow-xl"
-                >
-                  <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-green-100">
-                    <Icon className="w-7 h-7 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{service.title}</h3>
-                  <p className="text-slate-500 text-sm">{service.description}</p>
-                  <div className="mt-5 flex items-center text-green-600 font-semibold text-sm opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                    Learn more <ArrowRight className="w-4 h-4 ml-1" />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How It Works ── */}
-      <section id="how-it-works" className="py-20 px-4 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">How InstaFixd Works</h2>
-            <p className="text-xl text-gray-500">Smart AI matching powered by WhatsApp</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((step, i) => (
-              <div key={i} className="relative">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="bg-white rounded-2xl p-7 text-center border-2 border-green-100 hover:border-green-400 transition-colors h-full shadow-sm"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg shadow-md shadow-green-500/20">
-                    {step.number}
-                  </div>
-                  <h3 className="text-base font-bold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{step.description}</p>
-                </motion.div>
-                {i < steps.length - 1 && (
-                  <div className="hidden lg:flex absolute top-1/2 -right-3.5 -translate-y-1/2 z-10">
-                    <ArrowRight className="w-5 h-5 text-green-300" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WhatsApp Chat Preview ── */}
-      <ChatPreviewSection />
-
-      {/* ── Features Carousel ── */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-slate-900 leading-tight">
-                Features Built for<br />Modern Service Businesses
-              </h2>
-              <p className="text-lg text-slate-500 leading-relaxed">
-                A powerful suite of tools to manage, grow, and scale your professional services — all in one place.
+              <h1 className={`${headline} text-6xl md:text-7xl font-extrabold text-[#191c1d] leading-[1.1] tracking-tight`}>
+                Service Anytime, <br /><span className="text-[#006d2f]">Anywhere.</span><br />Just WhatsApp.
+              </h1>
+              <p className="text-lg md:text-xl text-[#5f5e5e] max-w-lg font-medium leading-relaxed">
+                Skip the forms and the wait. Connect with top-rated local professionals through our intelligent WhatsApp assistant.
               </p>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <button className={`${whatsappGradient} text-white px-8 py-4 rounded-full font-extrabold text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#006d2f]/20 hover:scale-105 transition-all`}>
+                  <MessageCircle className="w-6 h-6 fill-white" />
+                  Book on WhatsApp
+                </button>
+                <a href="#services" className="bg-[#e7e8e9] text-[#191c1d] px-8 py-4 rounded-full font-bold text-lg text-center hover:bg-[#e1e3e4] transition-all">
+                  Browse Services
+                </a>
+              </div>
             </div>
-            <div className="flex gap-3 shrink-0">
-              <button
-                onClick={() => scrollCarousel('left')}
-                className="w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scrollCarousel('right')}
-                className="w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Carousel — no overflow-hidden on parent so scroll works */}
-          <div
-            ref={carouselRef}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {featureCards.map((card, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="min-w-[300px] md:min-w-[380px] shrink-0 snap-start rounded-3xl overflow-hidden h-[420px] flex flex-col"
-              >
-                {card.type === 'image' ? (
-                  <>
-                    <div className="flex-1 overflow-hidden bg-slate-100">
-                      <img
-                        src={card.img}
-                        alt={card.label}
-                        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                      />
-                    </div>
-                    <div className="bg-[#f4f4f5] px-6 py-5 flex items-center justify-between shrink-0">
-                      <h3 className="text-base font-bold text-slate-900">{card.label}</h3>
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                        <ArrowRight className="w-4 h-4 text-slate-600" />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 bg-[#1aae74] p-10 flex flex-col justify-center hover:bg-[#159362] transition-colors">
-                    <div className="w-10 h-0.5 bg-white/30 rounded-full mb-8" />
-                    <h3 className="text-2xl font-bold text-white mb-4">{card.label}</h3>
-                    <p className="text-emerald-50/90 leading-relaxed text-sm">{card.desc}</p>
-                    <div className="mt-8 inline-flex items-center gap-2 text-white/80 text-sm font-medium hover:text-white transition-colors cursor-pointer">
-                      Learn more <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section id="testimonials" className="py-24 px-4 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900">Loved by Sri Lankans</h2>
-            <p className="text-xl text-slate-500">Don't just take our word for it — see what our community says</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.6 }}
-                className="bg-white rounded-3xl p-8 relative border border-slate-100 shadow-sm hover:shadow-lg transition-shadow"
-              >
-                <div className="absolute top-4 right-8 text-6xl font-serif text-green-200 leading-none select-none">"</div>
-                <div className="flex gap-1 mb-5">
-                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                </div>
-                <p className="text-slate-700 mb-6 text-base leading-relaxed relative z-10">{t.text}</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-base shrink-0">
-                    {t.name.charAt(0)}
+            {/* Floating interactive elements */}
+            <div className="hidden lg:block relative">
+              <div className="bg-white p-6 rounded-xl shadow-2xl shadow-black/5 border border-[#bbcbb9]/10 max-w-sm absolute -top-20 right-0 animate-float-up">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#3de273] flex items-center justify-center">
+                    <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-slate-500">{t.role}</p>
+                    <p className="font-bold text-[#191c1d]">Alex, Master Plumber</p>
+                    <p className="text-sm text-[#5f5e5e]">Arriving in 15 mins</p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+                <div className="h-2 w-full bg-[#edeeef] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#006d2f] w-3/4" />
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl shadow-xl absolute top-40 -left-10 max-w-[240px]">
+                <div className="flex gap-2 items-start">
+                  <MessageCircle className="w-6 h-6 text-[#006d2f] shrink-0" />
+                  <p className="text-sm font-medium">"I need an electrician for my living room lights."</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Footer ── */}
-      <footer className="bg-emerald-50 py-16 px-4">
-        <div className="max-w-7xl mx-auto bg-white border border-emerald-900 rounded-2xl overflow-hidden shadow-2xl">
+        {/* ── Search Bar ── */}
+        <section className="max-w-4xl mx-auto -mt-12 relative z-20 px-6">
+          <div className="bg-white rounded-2xl shadow-2xl p-2 flex items-center gap-4 group focus-within:ring-2 ring-[#006d2f] transition-all">
+            <div className="pl-6 text-[#5f5e5e] group-focus-within:text-[#006d2f] transition-colors">
+              <Search className="w-8 h-8" />
+            </div>
+            <input
+              className="w-full py-6 text-xl bg-transparent border-none focus:ring-0 focus:outline-none placeholder:text-[#c8c6c5] font-medium text-[#191c1d]"
+              placeholder="What do you need help with today?"
+              type="text"
+            />
+            <button className="bg-[#006d2f] text-white px-10 py-5 rounded-xl font-bold text-lg hover:opacity-90 transition-all shrink-0">
+              Find Pro
+            </button>
+          </div>
+        </section>
 
-          {/* Top section */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-12 p-10 md:p-14">
-            {/* Left CTA */}
-            <div>
-              <div className="flex -space-x-3 mb-8">
-                {[11,12,13,14].map(n => (
-                  <div key={n} className="w-11 h-11 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?img=${n}`} alt="User" loading="lazy" />
+        {/* ── How It Works ── */}
+        <section id="how-it-works" className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-20 space-y-4">
+              <h2 className={`${headline} text-4xl md:text-5xl font-extrabold tracking-tight`}>
+                Just text us, <span className="text-[#006d2f]">we'll find your pro.</span>
+              </h2>
+              <p className="text-[#5f5e5e] text-lg max-w-2xl mx-auto">Experience the most seamless booking journey ever created for local services.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+              {steps.map(({ icon: Icon, title, description }) => (
+                <div key={title} className="flex flex-col items-center text-center space-y-6 group">
+                  <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:bg-[#006d2f] transition-colors duration-500">
+                    <Icon className="w-10 h-10 text-[#006d2f] group-hover:text-white transition-colors" />
+                  </div>
+                  <h3 className={`${headline} text-2xl font-bold`}>{title}</h3>
+                  <p className="text-[#5f5e5e] leading-relaxed">{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Popular Services ── */}
+        <section id="services" className="py-24 px-6 md:px-12 bg-[#f3f4f5]">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-end mb-12">
+              <div className="space-y-4">
+                <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>Popular Services</h2>
+                <p className="text-[#5f5e5e] text-lg">Trusted by thousands of homeowners every day.</p>
+              </div>
+              <button className="hidden md:flex items-center gap-2 text-[#006d2f] font-bold hover:underline">
+                View All Services <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {services.map(service => (
+                <div key={service.title} className="bg-white rounded-xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300">
+                  <div className="h-56 relative overflow-hidden">
+                    <img
+                      alt={service.alt}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      src={service.img}
+                    />
+                    {service.bestseller && (
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#006d2f]">BESTSELLER</div>
+                    )}
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <h3 className={`${headline} text-2xl font-bold`}>{service.title}</h3>
+                    <p className="text-[#5f5e5e] text-sm">{service.description}</p>
+                    <div className="flex items-center justify-between pt-4">
+                      <span className="text-[#006d2f] font-bold">{service.price}</span>
+                      <button className="text-[#191c1d] font-bold flex items-center gap-1 hover:text-[#006d2f] transition-colors">
+                        Book <ArrowUpRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Why Choose Us ── */}
+        <section className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div className="relative">
+              <div className="aspect-square bg-[#edeeef] rounded-3xl overflow-hidden">
+                <img
+                  alt="Trustworthy service professional"
+                  className="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWX8QTnCjHZa1A8Q8_tpRKMYsJwbgX6ACVhECjdRx61sLK3NjNtjDTH_aELC9F8EavtdP_ykKow211fDoFLqoGUxX29wa-RdP6E8JEPldvNkKYM94ozxiq4We4dmhWDESeZgllBQ3PbLF01wDpnmIXHWUiO-mUKEXe9jvrjUp2Li5QKNWgno2Uq7quGMBr-UIehjazItxJJuE6kjHWNoCyA8BSJGwmoe_iDp11S8aVc2U3_fxDXStF-LJHPvwmRMANkb-hd3e0_0"
+                />
+              </div>
+              <div className="absolute -bottom-10 right-0 lg:-right-10 bg-[#006d2f] p-8 rounded-2xl text-white shadow-2xl max-w-xs">
+                <p className={`${headline} text-4xl font-extrabold mb-2`}>100%</p>
+                <p className="font-bold opacity-90">Satisfaction Guaranteed or your money back.</p>
+              </div>
+            </div>
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>
+                  The Modern Standard for <span className="text-[#006d2f]">Local Expertise.</span>
+                </h2>
+                <p className="text-[#5f5e5e] text-lg">We didn't just build a marketplace; we built a curation engine that values your time.</p>
+              </div>
+              <div className="space-y-8">
+                {whyChooseUs.map(({ icon: Icon, title, description }) => (
+                  <div key={title} className="flex gap-6 items-start">
+                    <div className="w-14 h-14 shrink-0 rounded-full bg-[#25d366]/20 flex items-center justify-center text-[#006d2f]">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className={`${headline} text-xl font-bold mb-2`}>{title}</h4>
+                      <p className="text-[#5f5e5e]">{description}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <p className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">Build your</p>
-              <p className="text-4xl md:text-5xl font-serif italic text-emerald-600 leading-tight">Dream Service</p>
-              <p className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight mb-8">Marketplace.</p>
-              <Button className="bg-[#114b2e] hover:bg-[#0d3b23] text-white rounded-xl px-7 h-12 text-base w-fit transition-transform hover:scale-105">
-                Get In Touch <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-
-            {/* Right links — clean 4-column layout */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:ml-6">
-              {/* Col 1 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Services</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  <li><a href="#" className="hover:text-emerald-700 transition-colors font-medium">Home Services App</a></li>
-                  <li><a href="#" className="hover:text-emerald-700 transition-colors font-medium">Enterprise</a></li>
-                </ul>
-                <h4 className="font-bold text-emerald-800 mt-8 mb-5 uppercase text-xs tracking-wider">Case Studies</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  <li><a href="#" className="hover:text-emerald-700 transition-colors font-medium">Impact Maker</a></li>
-                </ul>
-              </div>
-
-              {/* Col 2 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Platforms</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Freelancer', 'Taskrabbit', 'Airtasker', 'Thumbtack', 'Voice123', 'Handy'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 3 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Categories</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Laundry', 'Babysitters', 'Mechanic', 'Plumbers', 'Car Wash', 'Beauty', 'Massage'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 4 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Company</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Demo', 'Pricing', 'Clients'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-                <h4 className="font-bold text-emerald-800 mt-8 mb-5 uppercase text-xs tracking-wider">Resources</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Features', 'Resource Center', 'FAQs'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
             </div>
           </div>
+        </section>
 
-          {/* Bottom section */}
-          <div className="border-t border-emerald-900">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end p-10 md:p-14">
-              <div>
-                <h1 className="text-5xl sm:text-7xl md:text-[8rem] font-black text-[#114b2e] tracking-tighter leading-none break-words">
-                  InstaFixd
-                </h1>
-              </div>
-              <div className="flex flex-col md:items-end gap-6">
-                {/* Social icons */}
-                <div className="flex gap-3">
-                  {[
-                    { Icon: Linkedin,  label: 'LinkedIn' },
-                    { Icon: Facebook,  label: 'Facebook' },
-                    { Icon: Twitter,   label: 'Twitter' },
-                    { Icon: Instagram, label: 'Instagram' },
-                  ].map(({ Icon, label }) => (
-                    <button key={label} aria-label={label} className="w-10 h-10 bg-slate-900 rounded text-white flex items-center justify-center hover:bg-emerald-800 transition-colors">
-                      <Icon className="w-4 h-4" />
-                    </button>
-                  ))}
+        {/* ── Testimonials ── */}
+        <section id="testimonials" className="py-24 px-6 md:px-12 bg-[#f3f4f5] overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>What our users say</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map(t => (
+                <div key={t.name} className="bg-white p-8 rounded-2xl space-y-6 shadow-sm">
+                  <div className="flex gap-0.5 text-[#006d2f]">
+                    {[...Array(5)].map((_, j) => <Star key={j} className="w-5 h-5 fill-[#006d2f]" />)}
+                  </div>
+                  <p className="text-[#191c1d] font-medium italic">{t.text}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#edeeef]" />
+                    <div>
+                      <p className="font-bold">{t.name}</p>
+                      <p className="text-xs text-[#5f5e5e]">{t.role}</p>
+                    </div>
+                  </div>
                 </div>
-                {/* Contact */}
-                <div className="text-slate-900 font-semibold md:text-right space-y-1 text-sm">
-                  <p>+94 11 234 5678</p>
-                  <a href="mailto:sales@instafixd.lk" className="underline underline-offset-4 decoration-2 hover:text-emerald-700 transition-colors">
-                    sales@instafixd.lk
-                  </a>
-                </div>
-                {/* Legal links */}
-                <div className="text-xs font-semibold text-slate-500 flex gap-4">
-                  <a href="#" className="hover:text-slate-800 transition-colors hover:underline">Server Requirement</a>
-                  <span>|</span>
-                  <a href="#" className="hover:text-slate-800 transition-colors hover:underline">Sitemap</a>
-                </div>
-              </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Final CTA ── */}
+        <section className="py-24 px-6 md:px-12 bg-[#191c1d] text-[#f8f9fa] text-center">
+          <div className="max-w-4xl mx-auto space-y-12">
+            <h2 className={`${headline} text-5xl md:text-6xl font-extrabold tracking-tighter`}>
+              Experience the Future of Local Services. <br />Start a chat today.
+            </h2>
+            <div className="flex justify-center pt-6">
+              <button className={`${whatsappGradient} text-white px-12 py-6 rounded-full font-black text-2xl flex items-center gap-4 hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-[#006d2f]/30`}>
+                <MessageCircle className="w-9 h-9 fill-white" />
+                Chat with InstaFixd
+              </button>
+            </div>
+            <div className="flex flex-wrap justify-center gap-8 opacity-60">
+              <span className="font-black text-xl italic tracking-widest">VISA</span>
+              <span className="font-black text-xl italic tracking-widest">MasterCard</span>
+              <span className="font-black text-xl italic tracking-widest">Apple Pay</span>
+              <span className="font-black text-xl italic tracking-widest">G-Pay</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="bg-slate-50 w-full py-16 px-6 md:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 max-w-7xl mx-auto">
+          <div className="space-y-6">
+            <div className={`${headline} text-xl font-extrabold text-slate-900`}>InstaFixd</div>
+            <p className="text-slate-500 text-sm leading-relaxed">The premium marketplace for verified local service professionals, delivered exclusively via WhatsApp.</p>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Quick Links</h4>
+            <ul className="space-y-4 text-sm text-slate-500">
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#">About Us</a></li>
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#services">Services</a></li>
+              <li><Link className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="/register/partner">Partner with Us</Link></li>
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#">Careers</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Contact Info</h4>
+            <ul className="space-y-4 text-sm text-slate-500">
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> support@instafixd.lk</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +94 11 234 5678</li>
+              <li className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Colombo, Sri Lanka</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Newsletter</h4>
+            <p className="text-xs text-slate-500 mb-4">Get the latest updates and service deals.</p>
+            <div className="flex gap-2">
+              <input
+                className="bg-white border-none text-sm rounded-lg w-full px-3 focus:ring-1 focus:outline-none ring-[#006d2f]"
+                placeholder="Email address"
+                type="email"
+              />
+              <button className="bg-[#006d2f] text-white p-2 rounded-lg" aria-label="Subscribe">
+                <Send className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="text-center mt-8 text-sm font-medium text-slate-500">
-          © {new Date().getFullYear()} InstaFixd — A product of{' '}
-          <span className="underline decoration-slate-300 underline-offset-4">InstaFixd Technologies</span>.
+        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-slate-400 text-xs">© {new Date().getFullYear()} InstaFixd. All rights reserved.</p>
+          <div className="flex gap-6">
+            <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="LinkedIn"><Linkedin className="w-5 h-5" /></a>
+            <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="Facebook"><Facebook className="w-5 h-5" /></a>
+            <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="Instagram"><Instagram className="w-5 h-5" /></a>
+          </div>
         </div>
       </footer>
     </div>
