@@ -2,12 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import {
-  Wrench,
   MessageCircle,
   BadgeCheck,
   Search,
@@ -27,12 +23,8 @@ import {
   Linkedin,
   Facebook,
   Instagram,
-  Menu,
-  X,
-  UserCircle,
-  LogOut,
 } from 'lucide-react';
-import { useAuth } from '@/context/auth-context';
+import { Navbar } from '@/components/navbar';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
@@ -102,187 +94,21 @@ const testimonials = [
   { name: 'Jessica Drew', role: 'Startup Founder', text: '"Payment through WhatsApp was seamless. I love that I don\'t need another app on my phone."' },
 ];
 
-const navLinks = [
-  { href: '#services',      label: 'Services' },
-  { href: '#how-it-works',  label: 'How It Works' },
-  { href: '#testimonials',  label: 'Testimonials' },
-  { href: '/agreement',     label: 'Privacy Policy' },
-];
-
 const whatsappGradient = 'bg-[linear-gradient(135deg,#006d2f_0%,#25d366_100%)]';
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const { profile, logout } = useAuth();
-  const router = useRouter();
 
   useEffect(() => { setMounted(true); }, []);
-
-  function handleLogout() {
-    logout();
-    setProfileMenuOpen(false);
-  }
 
   if (!mounted) return null;
 
   return (
     <div className={`min-h-screen bg-[#f8f9fa] text-[#191c1d] overflow-x-hidden ${inter.className}`}>
 
-      {/* ── Navigation ── */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">InstaFixd</span>
-            </div>
+      <Navbar />
 
-            {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-8">
-              {navLinks.map(l =>
-                l.href.startsWith('/') ? (
-                  <Link key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
-                    {l.label}
-                  </Link>
-                ) : (
-                  <a key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
-                    {l.label}
-                  </a>
-                )
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {profile ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setProfileMenuOpen(o => !o)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
-                      <UserCircle className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
-                      {profile.fullName}
-                    </span>
-                  </button>
-                  <AnimatePresence>
-                    {profileMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 4 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-1.5 z-50"
-                      >
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="text-xs font-semibold text-gray-900 truncate">{profile.fullName}</p>
-                          <p className="text-xs text-gray-400 truncate">{profile.email}</p>
-                        </div>
-                        <button
-                          onClick={() => { setProfileMenuOpen(false); router.push('/profile'); }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-                        >
-                          <UserCircle className="w-4 h-4 text-gray-400" /> My Profile
-                        </button>
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
-                        >
-                          <LogOut className="w-4 h-4" /> Sign out
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <>
-                  <Link href="/login" className="hidden sm:block">
-                    <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50">Sign in</Button>
-                  </Link>
-                  <Link href="/register/partner" className="hidden sm:block">
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-                  </Link>
-                </>
-              )}
-              {/* Mobile Get Started */}
-              {!profile && (
-                <Link href="/register/partner" className="md:hidden">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5">Get Started</Button>
-                </Link>
-              )}
-              {/* Mobile hamburger */}
-              <button
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                onClick={() => setMobileMenuOpen(o => !o)}
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile menu dropdown */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden border-t border-gray-100 bg-white overflow-hidden"
-            >
-              <div className="px-4 py-4 flex flex-col gap-1">
-                {navLinks.map(l =>
-                  l.href.startsWith('/') ? (
-                    <Link
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
-                    >
-                      {l.label}
-                    </Link>
-                  ) : (
-                    <a
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
-                    >
-                      {l.label}
-                    </a>
-                  )
-                )}
-                {profile ? (
-                  <>
-                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors flex items-center gap-2">
-                      <UserCircle className="w-4 h-4" /> My Profile
-                    </Link>
-                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2 w-full text-left">
-                      <LogOut className="w-4 h-4" /> Sign out
-                    </button>
-                  </>
-                ) : (
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full mt-2 border-gray-200">Sign in</Button>
-                  </Link>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      <main className="pt-16">
+      <main>
 
         {/* ── Hero ── */}
         <section className="relative min-h-[870px] flex items-center overflow-hidden px-6 md:px-12">
