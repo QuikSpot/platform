@@ -25,56 +25,14 @@ import {
   Instagram,
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
+import { WhatsAppChatPreview } from '@/components/whatsapp-chat-preview';
+import { services } from '@/lib/services-data';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
 const headline = jakarta.className;
 
-const services = [
-  {
-    title: 'AC Repair',
-    description: 'Deep cleaning, gas refill, and expert troubleshooting.',
-    price: 'Starts at $49',
-    bestseller: true,
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4S584jMua-4eVrCWvJXOtxGxHUYQWpwM1_c2O7JTEgO3S3TOu7wyxw_RKyH9m2eBBCgfKTPoKi_hkfruQP4DVaZDa4xMGKuqtIeljv5x7dN2QabUBzlTycc4hRgL4Cy3DLoAwxYBI0H1I0wO-nnAQQoHu9doqrsG3ryE8ZoxbxBKL_De2SHYBYxRoI_ILv5zNftLTXVoq4ZH9dmOjuBaYbO3K8Lxr8k4Hyk1t1tGTIjkaNbV4Xikd9uKJwPJfm8ryBS567MTsvBQ',
-    alt: 'Air conditioner being repaired',
-  },
-  {
-    title: 'Plumbing',
-    description: 'Leak detection, pipe repairs, and fixture installations.',
-    price: 'Starts at $35',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp5YJfi4KMMlZ_Lu3Vqz1hglYW2bCLmVagJDlNDtNqEatmCX81j-5ry1Ps3kh3QVRqODCVWQ4laoaYMcsCEy31qJ3fremcuZYQrZG-JLky0lH4QiYmXVhCCIvODf9eEgLp010VJzlJCja47A4QdGRg8fjIHxSOaADF090KAJLaivz8OfGpK3QGL8eYgApJzWxHRA7Y3HX49VAEl_2LcKyJC6Sdr5wGkpYOKTDoMJmTg_HwCpJZ2X8yMtxRX7ah09dGlPoDWUS_1hI',
-    alt: 'Plumber fixing a sink',
-  },
-  {
-    title: 'Electrical',
-    description: 'Safe wiring, switch repairs, and full home electrical audits.',
-    price: 'Starts at $40',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOnhTi-8YZ-Duc74xjrs8_opuQgU9V8fqkPVsCN1lcl3MNnAlBuV0bYHrV0TUxkms0Omn_1q9cTtXpDu2L9_piBhJFrdhlasFIpgkTtcZIvla5kvkMV1uI2X79waNCOsuEe2UkP6hvIwuPQhdo2jmxZPdhT_1-noueqaG0OJY0w9P6lFEfbaSLURe-LLGtxA8TJSKeBU-I9G8-o-iH7zyxfG9zg30LkpPeUCFooZ0qHp8NHOJ1RoM9QP3vxJqzDPUlQFDHqAI_TLM',
-    alt: 'Electrician working',
-  },
-  {
-    title: 'Home Cleaning',
-    description: 'Deep cleaning, sanitization, and eco-friendly products.',
-    price: 'Starts at $60',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB3W0DxbQ8YmzW4daTEgJ3IUMvOocSDaWB2NaXotfmxXfMlhdIaATaGzpkf0iIBnt8aI117caYEe1-ryeRK0pvcJiGSIN6T1Ln3RyrhDFEhG77F2syzrmsaYIhHaKXfpBOqLa1ahSBuV246O3HGWB6tDySnf4Jfvn_ScY3A7O599M4NVHUdcKtofS-Lbge28N2zM8RdxIadewMLQNj-LaNyS-EI_AvfYkNoa8XFqLBcw7n-As8QK3vlw356QmSWP2L5lnLqM4o6wnQ',
-    alt: 'Home cleaning professional',
-  },
-  {
-    title: 'Pest Control',
-    description: 'Eco-safe pest removal and preventive treatments.',
-    price: 'Starts at $75',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBi37AzXR_sJ2w7N4WGMYq2BrsNHLYe6H1GlVm3Ox_p_YLSiDForqEctdLKNXc18ty6FpjhNqLaTEa8DCu55bkSm808g6QUDAimtwcOmrp1muKE_beJQ7HljowtRRIvM461AvtBwztgJKIS1e7wuW4DWPS1uEv-ftvnpjgXCp0xYtGRzl4h2DNkjAG5kNWCu8aCX-HUYZYFgb2JEUBXM-dtib_0hQWnrU_3Grg_e8k6tmM6a49o2HKLNxwn6dNDGC8RL7PketL4okI',
-    alt: 'Pest control',
-  },
-  {
-    title: 'Painting',
-    description: 'Interior/exterior painting with premium finish.',
-    price: 'Starts at $199',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2xmI2AaDo-2WQrAtDtzpsrSovKwQbJYuTuEHwSMzHpoTrdU-tcc1Ek59PqVed5A42-GD9U105oLpOFdHxNGJK2b-sqgckJa1ldCoDm7KxrpeEahKq5I6zYrsUudMqPsPil2_0LVmTgvtSWW3kubztA1kU8sdm-9J3WoeZDKWkpeWflTCrrm-OQn5Y_4Qf1hp11iUwFfkpiwFdN5AKGYpp-aPY7IE_kGu700-i234T0r2ASvqh3CKG8hhQu5yI-j8mxpiJqRGlA-w',
-    alt: 'Painting',
-  },
-];
+const featuredServices = services.slice(0, 6);
 
 const steps = [
   { icon: MessageSquare, title: '1. Say Hello', description: 'Send a simple message on WhatsApp describing what you need help with.' },
@@ -84,7 +42,7 @@ const steps = [
 
 const whyChooseUs = [
   { icon: Zap, title: 'Unmatched Speed', description: 'Our WhatsApp bot finds matches in under 60 seconds. No browsing through hundreds of profiles.' },
-  { icon: BadgeCheck, title: 'Strict Verification', description: 'Every InstaFixd pro undergoes background checks and quality audits every 30 days.' },
+  { icon: BadgeCheck, title: 'Verified Professionals', description: 'Every InstaFixd pro is identity-verified before they can accept a single job.' },
   { icon: Smartphone, title: 'WhatsApp Native', description: 'Book, track, chat, and pay without ever leaving your favorite messaging app.' },
 ];
 
@@ -215,35 +173,39 @@ export default function Home() {
                 <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>Popular Services</h2>
                 <p className="text-[#5f5e5e] text-lg">Trusted by thousands of homeowners every day.</p>
               </div>
-              <button className="hidden md:flex items-center gap-2 text-[#006d2f] font-bold hover:underline">
+              <Link href="/services" className="hidden md:flex items-center gap-2 text-[#006d2f] font-bold hover:underline">
                 View All Services <ArrowRight className="w-5 h-5" />
-              </button>
+              </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {services.map(service => (
-                <div key={service.title} className="bg-white rounded-xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300">
+              {featuredServices.map(service => (
+                <Link key={service.title} href="/services" className="bg-white rounded-xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300 block">
                   <div className="h-56 relative overflow-hidden">
                     <img
                       alt={service.alt}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src={service.img}
                     />
-                    {service.bestseller && (
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#006d2f]">BESTSELLER</div>
+                    {service.popular && (
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#006d2f]">POPULAR</div>
                     )}
                   </div>
                   <div className="p-8 space-y-4">
                     <h3 className={`${headline} text-2xl font-bold`}>{service.title}</h3>
                     <p className="text-[#5f5e5e] text-sm">{service.description}</p>
-                    <div className="flex items-center justify-between pt-4">
-                      <span className="text-[#006d2f] font-bold">{service.price}</span>
-                      <button className="text-[#191c1d] font-bold flex items-center gap-1 hover:text-[#006d2f] transition-colors">
-                        Book <ArrowUpRight className="w-4 h-4" />
-                      </button>
+                    <div className="flex items-center justify-end pt-4">
+                      <span className="text-[#191c1d] font-bold flex items-center gap-1 group-hover:text-[#006d2f] transition-colors">
+                        Explore <ArrowUpRight className="w-4 h-4" />
+                      </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
+            </div>
+            <div className="mt-10 flex md:hidden justify-center">
+              <Link href="/services" className="flex items-center gap-2 text-[#006d2f] font-bold hover:underline">
+                View All Services <ArrowRight className="w-5 h-5" />
+              </Link>
             </div>
           </div>
         </section>
@@ -251,25 +213,19 @@ export default function Home() {
         {/* ── Why Choose Us ── */}
         <section className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <div className="relative">
-              <div className="aspect-square bg-[#edeeef] rounded-3xl overflow-hidden">
-                <img
-                  alt="Trustworthy service professional"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWX8QTnCjHZa1A8Q8_tpRKMYsJwbgX6ACVhECjdRx61sLK3NjNtjDTH_aELC9F8EavtdP_ykKow211fDoFLqoGUxX29wa-RdP6E8JEPldvNkKYM94ozxiq4We4dmhWDESeZgllBQ3PbLF01wDpnmIXHWUiO-mUKEXe9jvrjUp2Li5QKNWgno2Uq7quGMBr-UIehjazItxJJuE6kjHWNoCyA8BSJGwmoe_iDp11S8aVc2U3_fxDXStF-LJHPvwmRMANkb-hd3e0_0"
-                />
-              </div>
+            <div className="relative flex justify-center py-6">
+              <WhatsAppChatPreview />
               <div className="absolute -bottom-10 right-0 lg:-right-10 bg-[#006d2f] p-8 rounded-2xl text-white shadow-2xl max-w-xs">
                 <p className={`${headline} text-4xl font-extrabold mb-2`}>100%</p>
-                <p className="font-bold opacity-90">Satisfaction Guaranteed or your money back.</p>
+                <p className="font-bold opacity-90">Verified professionals, every time.</p>
               </div>
             </div>
             <div className="space-y-12">
               <div className="space-y-4">
                 <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>
-                  The Modern Standard for <span className="text-[#006d2f]">Local Expertise.</span>
+                  No more guessing games. <span className="text-[#006d2f]">Just message us on WhatsApp.</span>
                 </h2>
-                <p className="text-[#5f5e5e] text-lg">We didn't just build a marketplace; we built a curation engine that values your time.</p>
+                <p className="text-[#5f5e5e] text-lg">The modern standard for local expertise — get matched with a trusted pro in seconds.</p>
               </div>
               <div className="space-y-8">
                 {whyChooseUs.map(({ icon: Icon, title, description }) => (

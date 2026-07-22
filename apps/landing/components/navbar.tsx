@@ -10,9 +10,9 @@ import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: '#services', label: 'Services' },
-  { href: '#how-it-works', label: 'How It Works' },
-  { href: '#testimonials', label: 'Testimonials' },
+  { href: '/', label: 'Home' },
+  { href: '/#services', label: 'Services' },
+  { href: '/#how-it-works', label: 'How It Works' },
   { href: '/agreement', label: 'Privacy Policy' },
 ];
 
@@ -50,13 +50,31 @@ export function Navbar() {
         layout
         transition={{ duration: 0.55, ease: EASE }}
         className={cn(
-          'pointer-events-auto w-full flex items-center justify-between gap-x-4 border backdrop-saturate-150',
+          'pointer-events-auto relative w-full flex items-center justify-between gap-x-4 border backdrop-saturate-150 overflow-hidden isolate',
           'transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
           scrolled
-            ? 'mt-3 max-w-5xl rounded-full px-6 py-2.5 gap-x-8 bg-white/70 backdrop-blur-2xl border-white/60 shadow-[0_8px_32px_-4px_rgba(15,23,42,0.16),inset_0_1px_0_rgba(255,255,255,0.7)]'
+            ? 'mt-3 max-w-5xl rounded-full px-6 py-2.5 gap-x-8 bg-white/60 backdrop-blur-2xl border-white/60 shadow-[0_8px_32px_-4px_rgba(15,23,42,0.16),inset_0_1px_0_rgba(255,255,255,0.7)]'
             : 'mt-0 max-w-7xl rounded-b-2xl px-4 py-4 sm:px-6 gap-x-6 bg-white/25 backdrop-blur-md border-transparent shadow-none'
         )}
       >
+        {/* Liquid-glass sheen */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 opacity-70 mix-blend-overlay"
+          style={{
+            background:
+              'linear-gradient(115deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.05) 22%, rgba(255,255,255,0) 45%, rgba(255,255,255,0.12) 68%, rgba(255,255,255,0.55) 100%)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-1/2 left-0 h-[200%] w-2/5 -z-10 opacity-50 blur-2xl animate-liquid-sheen"
+          style={{
+            background:
+              'radial-gradient(closest-side, rgba(255,255,255,0.9), rgba(255,255,255,0) 70%)',
+          }}
+        />
+
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <motion.div
