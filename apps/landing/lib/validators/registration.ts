@@ -5,7 +5,14 @@ const NIC_PATTERN = /^(\d{9}[VXvx]|\d{12})$/;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PORTFOLIO_BYTES = 10 * 1024 * 1024;
 
-export const step1Schema = z
+export const phoneSchema = z.object({
+  mobileNumber: z
+    .string()
+    .min(1, 'Mobile number is required')
+    .regex(SL_PHONE, 'Enter a valid Sri Lankan mobile number (e.g. +94771234567)'),
+});
+
+export const accountSchema = z
   .object({
     fullName: z
       .string()
@@ -15,15 +22,6 @@ export const step1Schema = z
       .string()
       .min(1, 'NIC number is required')
       .regex(NIC_PATTERN, 'Enter a valid NIC (e.g. 987654321V or 200012345678)'),
-    mobileNumber: z
-      .string()
-      .min(1, 'Mobile number is required')
-      .regex(SL_PHONE, 'Enter a valid Sri Lankan mobile number (e.g. +94771234567)'),
-    whatsappNumber: z.union([
-      z.string().regex(SL_PHONE, 'Enter a valid Sri Lankan mobile number'),
-      z.literal(''),
-    ]),
-    address: z.string().min(10, 'Address must be at least 10 characters'),
     email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
     password: z
       .string()
@@ -38,23 +36,34 @@ export const step1Schema = z
     path: ['confirmPassword'],
   });
 
-export const step2Schema = z.object({
+export const addressSchema = z.object({
+  address: z.string().min(10, 'Address must be at least 10 characters'),
+  whatsappNumber: z.union([
+    z.string().regex(SL_PHONE, 'Enter a valid Sri Lankan mobile number'),
+    z.literal(''),
+  ]),
+});
+
+export const locationSchema = z.object({
   province: z.string().min(1, 'Please select a province'),
   district: z.string().min(1, 'Please select a district'),
   serviceZones: z.array(z.string()).min(1, 'Select at least one service zone'),
 });
 
-export const step3Schema = z.object({
-  primaryCategory: z.string().min(1, 'Please select a primary category'),
+export const tradeSchema = z.object({
+  primaryCategory: z.string().min(1, 'Please select your primary trade'),
+});
+
+export const specializationSchema = z.object({
   experienceLevel: z.string().min(1, 'Please select your experience level'),
-  subCategories: z.array(z.string()).min(1, 'Select at least one sub-category'),
+  subCategories: z.array(z.string()).min(1, 'Select at least one specialization'),
   bio: z
     .string()
     .min(50, 'Bio must be at least 50 characters')
     .max(500, 'Bio must be under 500 characters'),
 });
 
-export const step4Schema = z
+export const availabilitySchema = z
   .object({
     nightService: z.boolean(),
     serviceDays: z.array(z.string()).min(1, 'Select at least one service day'),
@@ -66,16 +75,12 @@ export const step4Schema = z
     path: ['workEndTime'],
   });
 
-export const step5Schema = z
+export const documentsSchema = z
   .object({
     nicFrontImage: z.instanceof(File, { message: 'NIC front image is required' }),
     nicBackImage: z.instanceof(File, { message: 'NIC back image is required' }),
     selfieImage: z.instanceof(File, { message: 'Verification selfie is required' }),
     portfolio: z.instanceof(File).nullable().optional(),
-    agreeTerms: z.boolean().refine(v => v, 'You must agree to the Terms & Conditions'),
-    agreeCommission: z
-      .boolean()
-      .refine(v => v, 'You must acknowledge the platform commission'),
   })
   .superRefine((d, ctx) => {
     if (d.nicFrontImage instanceof File && d.nicFrontImage.size > MAX_IMAGE_BYTES)
@@ -104,10 +109,27 @@ export const step5Schema = z
       });
   });
 
-const STEP_SCHEMAS = [step1Schema, step2Schema, step3Schema, step4Schema, step5Schema];
+export const agreementsSchema = z.object({
+  agreeTerms: z.boolean().refine(v => v, 'You must agree to the Terms & Conditions'),
+  agreeCommission: z
+    .boolean()
+    .refine(v => v, 'You must acknowledge the platform commission'),
+});
 
-export function validateStep(stepNumber: number, data: unknown): Record<string, string> {
-  const schema = STEP_SCHEMAS[stepNumber - 1];
+const MICRO_STEP_SCHEMAS: Record<string, z.ZodTypeAny> = {
+  phone: phoneSchema,
+  account: accountSchema,
+  address: addressSchema,
+  location: locationSchema,
+  trade: tradeSchema,
+  specializations: specializationSchema,
+  availability: availabilitySchema,
+  documents: documentsSchema,
+  review: agreementsSchema,
+};
+
+export function validateMicroStep(id: string, data: unknown): Record<string, string> {
+  const schema = MICRO_STEP_SCHEMAS[id];
   if (!schema) return {};
   const result = schema.safeParse(data);
   if (result.success) return {};
