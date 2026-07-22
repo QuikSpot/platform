@@ -25,6 +25,7 @@ import {
   Instagram,
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
+import { WhatsAppChatPreview } from '@/components/whatsapp-chat-preview';
 import { services } from '@/lib/services-data';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
@@ -41,7 +42,7 @@ const steps = [
 
 const whyChooseUs = [
   { icon: Zap, title: 'Unmatched Speed', description: 'Our WhatsApp bot finds matches in under 60 seconds. No browsing through hundreds of profiles.' },
-  { icon: BadgeCheck, title: 'Strict Verification', description: 'Every InstaFixd pro undergoes background checks and quality audits every 30 days.' },
+  { icon: BadgeCheck, title: 'Verified Professionals', description: 'Every InstaFixd pro is identity-verified before they can accept a single job.' },
   { icon: Smartphone, title: 'WhatsApp Native', description: 'Book, track, chat, and pay without ever leaving your favorite messaging app.' },
 ];
 
@@ -212,25 +213,19 @@ export default function Home() {
         {/* ── Why Choose Us ── */}
         <section className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <div className="relative">
-              <div className="aspect-square bg-[#edeeef] rounded-3xl overflow-hidden">
-                <img
-                  alt="Trustworthy service professional"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxWX8QTnCjHZa1A8Q8_tpRKMYsJwbgX6ACVhECjdRx61sLK3NjNtjDTH_aELC9F8EavtdP_ykKow211fDoFLqoGUxX29wa-RdP6E8JEPldvNkKYM94ozxiq4We4dmhWDESeZgllBQ3PbLF01wDpnmIXHWUiO-mUKEXe9jvrjUp2Li5QKNWgno2Uq7quGMBr-UIehjazItxJJuE6kjHWNoCyA8BSJGwmoe_iDp11S8aVc2U3_fxDXStF-LJHPvwmRMANkb-hd3e0_0"
-                />
-              </div>
+            <div className="relative flex justify-center py-6">
+              <WhatsAppChatPreview />
               <div className="absolute -bottom-10 right-0 lg:-right-10 bg-[#006d2f] p-8 rounded-2xl text-white shadow-2xl max-w-xs">
                 <p className={`${headline} text-4xl font-extrabold mb-2`}>100%</p>
-                <p className="font-bold opacity-90">Satisfaction Guaranteed or your money back.</p>
+                <p className="font-bold opacity-90">Verified professionals, every time.</p>
               </div>
             </div>
             <div className="space-y-12">
               <div className="space-y-4">
                 <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>
-                  The Modern Standard for <span className="text-[#006d2f]">Local Expertise.</span>
+                  No more guessing games. <span className="text-[#006d2f]">Just message us on WhatsApp.</span>
                 </h2>
-                <p className="text-[#5f5e5e] text-lg">We didn't just build a marketplace; we built a curation engine that values your time.</p>
+                <p className="text-[#5f5e5e] text-lg">The modern standard for local expertise — get matched with a trusted pro in seconds.</p>
               </div>
               <div className="space-y-8">
                 {whyChooseUs.map(({ icon: Icon, title, description }) => (

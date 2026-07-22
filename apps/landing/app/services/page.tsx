@@ -30,13 +30,13 @@ export default function ServicesPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
               {services.map(service => {
                 const isOpen = expanded === service.title;
                 return (
                   <div
                     key={service.title}
-                    className="bg-white rounded-xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300"
+                    className="bg-white rounded-xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300 self-start"
                   >
                     <div className="h-56 relative overflow-hidden">
                       <img
