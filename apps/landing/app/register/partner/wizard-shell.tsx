@@ -82,11 +82,17 @@ export function WizardShell({
 
           {children}
 
+          {primaryDisabled && !primaryLoading && (
+            <p className="text-xs text-slate-400 italic text-center mt-6">
+              Complete all required fields to continue.
+            </p>
+          )}
+
           <button
             type="button"
             onClick={onPrimary}
             disabled={primaryDisabled || primaryLoading}
-            className="w-full inline-flex items-center justify-center gap-2 mt-8 px-6 py-3.5 rounded-xl bg-[#1a3d2b] text-white text-sm font-semibold hover:bg-[#114b2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full inline-flex items-center justify-center gap-2 mt-3 px-6 py-3.5 rounded-xl bg-[#1a3d2b] text-white text-sm font-semibold hover:bg-[#114b2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {primaryLoading ? 'Please wait…' : primaryLabel}
             {!primaryLoading && <ArrowRight className="w-4 h-4" />}

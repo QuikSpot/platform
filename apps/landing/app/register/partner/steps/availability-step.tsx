@@ -64,7 +64,11 @@ export function AvailabilityStep({ form, set, errors }: BaseStepProps) {
           >
             {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
-          {errors.workEndTime && <p className="text-xs text-red-500 mt-1.5">{errors.workEndTime}</p>}
+          {errors.workEndTime
+            ? <p className="text-xs text-red-500 mt-1.5">{errors.workEndTime}</p>
+            : !form.nightService && form.workEndTime <= form.workStartTime && (
+              <p className="text-xs text-slate-400 mt-1.5">End time must be after start time, or enable 24/7 night service.</p>
+            )}
         </div>
       </div>
     </div>

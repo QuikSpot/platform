@@ -83,6 +83,9 @@ export default function PartnerRegistration() {
   const [microStepIndex, setMicroStepIndex] = useState(0);
   const [form, setForm] = useState<RegistrationFormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Set when the user clicks an Edit link on the Review step; while true,
+  // Continue on the visited step jumps straight back to Review.
+  const [returnToReview, setReturnToReview] = useState(false);
 
   const [otpValue, setOtpValue] = useState('');
   const [phoneVerified, setPhoneVerified] = useState(false);
@@ -294,10 +297,21 @@ export default function PartnerRegistration() {
       return;
     }
     setErrors({});
+    if (returnToReview) {
+      // User came here via Edit from Review; bypass remaining steps and
+      // jump directly back to Review.
+      const reviewIdx = MICRO_STEPS.indexOf('review');
+      setReturnToReview(false);
+      setMicroStepIndex(reviewIdx);
+      return;
+    }
     setMicroStepIndex(i => i + 1);
   };
 
-  const goBack = () => setMicroStepIndex(i => Math.max(0, i - 1));
+  const goBack = () => {
+    setReturnToReview(false);
+    setMicroStepIndex(i => Math.max(0, i - 1));
+  };
 
   const goToStep = (id: string) => {
     const idx = MICRO_STEPS.indexOf(id as MicroStepId);
@@ -305,6 +319,26 @@ export default function PartnerRegistration() {
       setErrors({});
       setMicroStepIndex(idx);
     }
+  };
+
+  // Used by the Review step's Edit buttons: jump to a step and mark that
+  // the next Continue should return to Review.
+  const editStep = (id: string) => {
+    const idx = MICRO_STEPS.indexOf(id as MicroStepId);
+    if (idx < 0) return;
+    setErrors({});
+    setReturnToReview(true);
+    // If the user is editing the specializations step (bio), reset the
+    // bio prediction cache so the AI category prediction re-runs.
+    if (id === 'specializations') lastPredictedBio.current = '';
+    setMicroStepIndex(idx);
+  };
+
+  // Secondary-action "Back to review" affordance on edit-visited steps.
+  const backToReview = () => {
+    setErrors({});
+    setReturnToReview(false);
+    setMicroStepIndex(MICRO_STEPS.indexOf('review'));
   };
 
   const handleSubmit = async () => {
@@ -433,6 +467,14 @@ export default function PartnerRegistration() {
   let secondaryAction: ReactNode = null;
   let maxWidth: 'md' | 'lg' | 'xl' | '2xl' = 'md';
 
+  // If the user reached this step via Edit from Review, change the primary
+  // button copy and add a "Back to review" secondary action so they can
+  // return without walking through every step.
+  const onEditReturn = returnToReview && stepId !== 'review';
+  if (onEditReturn) {
+    primaryLabel = 'Save & return to review';
+  }
+
   switch (stepId) {
     case 'phone':
       primaryLabel = 'Send code';
@@ -492,6 +534,25 @@ export default function PartnerRegistration() {
       break;
   }
 
+  // If the user reached this step via Edit from Review (and is not on the
+  // review step itself), add a "Back to review" affordance under the
+  // primary button. For the OTP step, secondaryAction is already set to
+  // the Resend control — append the back link below it.
+  if (onEditReturn && stepId !== 'otp') {
+    secondaryAction = (
+      <button
+        type="button"
+        onClick={backToReview}
+        className="text-sm text-slate-500 hover:text-[#114b2e] font-medium"
+      >
+        Back to review
+      </button>
+    );
+  } else if (onEditReturn && stepId === 'otp') {
+    // OTP is not reachable from Edit, but keep this branch defensive.
+    secondaryAction = null;
+  }
+
   function renderStep() {
     switch (stepId) {
       case 'phone':
@@ -530,7 +591,7 @@ export default function PartnerRegistration() {
       case 'documents':
         return <DocumentsStep form={form} set={set} errors={errors} />;
       case 'review':
-        return <ReviewStep form={form} set={set} errors={errors} phoneVerified={phoneVerified} apiError={apiError} onEdit={goToStep} />;
+        return <ReviewStep form={form} set={set} errors={errors} phoneVerified={phoneVerified} apiError={apiError} onEdit={editStep} />;
       default:
         return null;
     }

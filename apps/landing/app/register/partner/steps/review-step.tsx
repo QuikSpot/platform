@@ -48,6 +48,11 @@ const AGREEMENTS = [
   },
 ];
 
+function formatDays(days: string[]): string {
+  if (days.length === 0) return '—';
+  return days.map(d => d.charAt(0) + d.charAt(1).toLowerCase()).join(', ');
+}
+
 export function ReviewStep({ form, set, errors, phoneVerified, apiError, onEdit }: ReviewStepProps) {
   return (
     <div>
@@ -66,6 +71,14 @@ export function ReviewStep({ form, set, errors, phoneVerified, apiError, onEdit 
           ]}
         />
         <SummaryGroup
+          title="Address"
+          onEdit={() => onEdit('address')}
+          rows={[
+            { label: 'Home address', value: form.address || '—' },
+            { label: 'WhatsApp', value: form.whatsappNumber || 'Not provided' },
+          ]}
+        />
+        <SummaryGroup
           title="Location"
           onEdit={() => onEdit('location')}
           rows={[
@@ -75,7 +88,7 @@ export function ReviewStep({ form, set, errors, phoneVerified, apiError, onEdit 
         />
         <SummaryGroup
           title="Expertise"
-          onEdit={() => onEdit('trade')}
+          onEdit={() => onEdit('specializations')}
           rows={[
             { label: 'Trade', value: form.primaryCategory || '—' },
             { label: 'Specializations', value: form.subCategories.length ? form.subCategories.join(', ') : '—' },
@@ -86,7 +99,7 @@ export function ReviewStep({ form, set, errors, phoneVerified, apiError, onEdit 
           title="Availability"
           onEdit={() => onEdit('availability')}
           rows={[
-            { label: 'Days', value: form.serviceDays.join(', ') || '—' },
+            { label: 'Days', value: formatDays(form.serviceDays) },
             { label: 'Hours', value: `${form.workStartTime} – ${form.workEndTime}` },
             { label: 'Night service', value: form.nightService ? 'Yes' : 'No' },
           ]}
