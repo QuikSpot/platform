@@ -34,8 +34,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "../../dist/apps/landing/types/**/*.ts",
-    "../../dist/apps/landing/dev/types/**/*.ts"
+    "dist/types/**/*.ts",
+    "dist/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
