@@ -8,9 +8,6 @@ import {
   MessageCircle,
   BadgeCheck,
   Search,
-  MessageSquare,
-  Sparkles,
-  ShieldCheck,
   ArrowRight,
   ArrowUpRight,
   Zap,
@@ -27,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { WhatsAppChatPreview } from '@/components/whatsapp-chat-preview';
+import { HowItWorksInteractive } from '@/components/how-it-works';
 import { services } from '@/lib/services-data';
 import { WHATSAPP_BOT_LINK } from '@/lib/whatsapp';
 
@@ -36,12 +34,6 @@ const caveat = Caveat({ subsets: ['latin'], weight: ['600', '700'] });
 const headline = jakarta.className;
 
 const featuredServices = services.slice(0, 6);
-
-const steps = [
-  { icon: MessageSquare, title: '1. Say Hello', description: 'Send a simple message on WhatsApp describing what you need help with.' },
-  { icon: Sparkles, title: '2. Curator Matches', description: 'Our AI-driven curator matches you with the perfect available professional in seconds.' },
-  { icon: ShieldCheck, title: '3. Service Done', description: 'Your professional arrives, does the job, and you pay securely via WhatsApp link.' },
-];
 
 const whyChooseUs = [
   { icon: Zap, title: 'Unmatched Speed', description: 'Our WhatsApp bot finds matches in under 60 seconds. No browsing through hundreds of profiles.' },
@@ -214,23 +206,16 @@ export default function Home() {
         {/* ── How It Works ── */}
         <section id="how-it-works" className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-20 space-y-4">
+            <div className="text-center mb-16 space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25d366]/20 text-[#006d2f] font-bold text-sm tracking-wide uppercase">
+                <Zap className="w-4 h-4" /> How It Works
+              </div>
               <h2 className={`${headline} text-4xl md:text-5xl font-extrabold tracking-tight`}>
-                Just text us, <span className="text-[#006d2f]">we'll find your pro.</span>
+                Four taps from problem <br className="hidden md:block" /><span className="text-[#006d2f]">to a pro at your door.</span>
               </h2>
-              <p className="text-[#5f5e5e] text-lg max-w-2xl mx-auto">Experience the most seamless booking journey ever created for local services.</p>
+              <p className="text-[#5f5e5e] text-lg max-w-2xl mx-auto">Watch the journey unfold — the most seamless booking experience ever built for local services.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-              {steps.map(({ icon: Icon, title, description }) => (
-                <div key={title} className="flex flex-col items-center text-center space-y-6 group">
-                  <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:bg-[#006d2f] transition-colors duration-500">
-                    <Icon className="w-10 h-10 text-[#006d2f] group-hover:text-white transition-colors" />
-                  </div>
-                  <h3 className={`${headline} text-2xl font-bold`}>{title}</h3>
-                  <p className="text-[#5f5e5e] leading-relaxed">{description}</p>
-                </div>
-              ))}
-            </div>
+            <HowItWorksInteractive />
           </div>
         </section>
 
