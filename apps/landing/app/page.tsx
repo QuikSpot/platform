@@ -10,8 +10,6 @@ import {
   Search,
   ArrowRight,
   ArrowUpRight,
-  Zap,
-  Smartphone,
   Star,
   User,
   Mail,
@@ -23,7 +21,6 @@ import {
   Instagram,
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
-import { WhatsAppChatPreview } from '@/components/whatsapp-chat-preview';
 import { HowItWorksInteractive } from '@/components/how-it-works';
 import { services } from '@/lib/services-data';
 import { WHATSAPP_BOT_LINK } from '@/lib/whatsapp';
@@ -34,12 +31,6 @@ const caveat = Caveat({ subsets: ['latin'], weight: ['600', '700'] });
 const headline = jakarta.className;
 
 const featuredServices = services.slice(0, 6);
-
-const whyChooseUs = [
-  { icon: Zap, title: 'Unmatched Speed', description: 'Our WhatsApp bot finds matches in under 60 seconds. No browsing through hundreds of profiles.' },
-  { icon: BadgeCheck, title: 'Verified Professionals', description: 'Every InstaFixd pro is identity-verified before they can accept a single job.' },
-  { icon: Smartphone, title: 'WhatsApp Native', description: 'Book, track, chat, and pay without ever leaving your favorite messaging app.' },
-];
 
 const testimonials = [
   { name: 'Sarah Jenkins', role: 'Homeowner', text: '"I was skeptical about booking a plumber on WhatsApp, but InstaFixd made it so easy. Found someone in 5 minutes!"' },
@@ -206,15 +197,6 @@ export default function Home() {
         {/* ── How It Works ── */}
         <section id="how-it-works" className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16 space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25d366]/20 text-[#006d2f] font-bold text-sm tracking-wide uppercase">
-                <Zap className="w-4 h-4" /> How It Works
-              </div>
-              <h2 className={`${headline} text-4xl md:text-5xl font-extrabold tracking-tight`}>
-                Four taps from problem <br className="hidden md:block" /><span className="text-[#006d2f]">to a pro at your door.</span>
-              </h2>
-              <p className="text-[#5f5e5e] text-lg max-w-2xl mx-auto">Watch the journey unfold — the most seamless booking experience ever built for local services.</p>
-            </div>
             <HowItWorksInteractive />
           </div>
         </section>
@@ -264,39 +246,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Why Choose Us ── */}
-        <section className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <div className="relative flex justify-center py-6">
-              <WhatsAppChatPreview />
-              <div className="absolute -bottom-10 right-0 lg:-right-10 bg-[#006d2f] p-8 rounded-2xl text-white shadow-2xl max-w-xs">
-                <p className={`${headline} text-4xl font-extrabold mb-2`}>100%</p>
-                <p className="font-bold opacity-90">Verified professionals, every time.</p>
-              </div>
-            </div>
-            <div className="space-y-12">
-              <div className="space-y-4">
-                <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>
-                  No more guessing games. <span className="text-[#006d2f]">Just message us on WhatsApp.</span>
-                </h2>
-                <p className="text-[#5f5e5e] text-lg">The modern standard for local expertise — get matched with a trusted pro in seconds.</p>
-              </div>
-              <div className="space-y-8">
-                {whyChooseUs.map(({ icon: Icon, title, description }) => (
-                  <div key={title} className="flex gap-6 items-start">
-                    <div className="w-14 h-14 shrink-0 rounded-full bg-[#25d366]/20 flex items-center justify-center text-[#006d2f]">
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className={`${headline} text-xl font-bold mb-2`}>{title}</h4>
-                      <p className="text-[#5f5e5e]">{description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* ── Testimonials ── */}
         <section id="testimonials" className="py-24 px-6 md:px-12 bg-[#f3f4f5] overflow-hidden">

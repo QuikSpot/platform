@@ -16,7 +16,9 @@ import {
   MessageCircle,
 } from 'lucide-react';
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['600', '700', '800'] });
+// Same headline font as the rest of the landing page (see app/page.tsx).
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
+const headline = jakarta.className;
 
 const whatsappGradient = 'bg-[linear-gradient(135deg,#006d2f_0%,#25d366_100%)]';
 
@@ -62,8 +64,6 @@ export function HowItWorksInteractive() {
     const el = scrollRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [active]);
-
-  const progress = (active / (steps.length - 1)) * 100;
 
   // Conversation revealed progressively — each entry appears once its step is reached.
   const messages: { key: string; step: number; from: 'user' | 'bot'; body: ReactNode }[] = [
@@ -167,85 +167,71 @@ export function HowItWorksInteractive() {
 
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center"
+      className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* ── Left: interactive stepper ── */}
-      <ol className="relative order-2 lg:order-1">
-        {/* track */}
-        <div className="absolute left-[27px] top-8 bottom-8 w-0.5 bg-[#e3e6e4] rounded-full" />
-        {/* progress fill (CSS transition on height) */}
-        <div
-          className="absolute left-[27px] top-8 w-0.5 bg-[#006d2f] rounded-full transition-[height] duration-700 ease-in-out"
-          style={{ height: `calc((100% - 64px) * ${progress / 100})` }}
-        />
+      {/* ── Right: heading + interactive steps ── */}
+      <div className="order-2 space-y-12">
+        <div className="space-y-4">
+          <h2 className={`${headline} text-4xl font-extrabold tracking-tight text-[#191c1d]`}>
+            No more guessing games. <span className="text-[#006d2f]">Just message us on WhatsApp.</span>
+          </h2>
+          <p className="text-[#5f5e5e] text-lg">
+            The modern standard for local expertise — get matched with a trusted pro in seconds.
+          </p>
+        </div>
 
-        {steps.map(({ icon: Icon, title, description }, i) => {
-          const state = i === active ? 'active' : i < active ? 'done' : 'idle';
-          return (
-            <li key={title} className="relative">
+        <div className="space-y-2">
+          {steps.map(({ icon: Icon, title, description }, i) => {
+            const isActive = i === active;
+            const isDone = i < active;
+            return (
               <button
+                key={title}
                 type="button"
+                // Highlight follows the cursor; click/focus keep it usable on touch & keyboard.
+                onMouseEnter={() => setActive(i)}
+                onFocus={() => setActive(i)}
                 onClick={() => setActive(i)}
-                aria-current={state === 'active'}
-                className="group flex items-start gap-5 w-full text-left py-4 focus:outline-none"
+                aria-current={isActive}
+                className={[
+                  'w-full text-left flex gap-6 items-start rounded-2xl p-4 -mx-4 focus:outline-none',
+                  'transition-all duration-500',
+                  isActive ? 'bg-white shadow-lg shadow-black/[0.06]' : '',
+                ].join(' ')}
               >
-                {/* node */}
-                <span className="relative z-10 shrink-0">
-                  <span
-                    className={[
-                      'absolute inset-0 rounded-2xl bg-[#25d366]/30 blur-md transition-opacity duration-500',
-                      state === 'active' ? 'opacity-100' : 'opacity-0',
-                    ].join(' ')}
-                  />
-                  <span
-                    className={[
-                      'relative flex items-center justify-center w-14 h-14 rounded-2xl border transition-all duration-500',
-                      state === 'active'
-                        ? `${whatsappGradient} border-transparent text-white shadow-lg shadow-[#006d2f]/30 scale-105`
-                        : state === 'done'
-                          ? 'bg-[#e2f6ea] border-[#25d366]/30 text-[#006d2f]'
-                          : 'bg-white border-[#e3e6e4] text-[#a8b0ab]',
-                    ].join(' ')}
-                  >
-                    {state === 'done' ? <CheckCheck className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
-                  </span>
+                <span
+                  className={[
+                    'w-14 h-14 shrink-0 rounded-full flex items-center justify-center transition-all duration-500',
+                    isActive
+                      ? `${whatsappGradient} text-white shadow-lg shadow-[#006d2f]/25 scale-105`
+                      : 'bg-[#25d366]/20 text-[#006d2f]',
+                  ].join(' ')}
+                >
+                  {isDone ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
                 </span>
 
-                {/* copy */}
-                <span className="flex-1 pt-1">
-                  <span className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold tracking-widest text-[#8a938c]">
-                      0{i + 1}
-                    </span>
-                    <h3
-                      className={[
-                        jakarta.className,
-                        'text-lg md:text-xl font-bold transition-colors duration-300',
-                        state === 'idle' ? 'text-[#9aa39c]' : 'text-[#191c1d]',
-                      ].join(' ')}
-                    >
-                      {title}
-                    </h3>
-                  </span>
-                  <p
+                <span className="flex-1 min-w-0">
+                  <h4
                     className={[
-                      'text-sm md:text-[15px] leading-relaxed mt-1 transition-colors duration-300',
-                      state === 'active' ? 'text-[#5f5e5e]' : 'text-[#a8b0ab]',
+                      headline,
+                      'text-xl font-bold transition-colors duration-300',
+                      isActive ? 'text-[#191c1d]' : 'text-[#5f5e5e]',
                     ].join(' ')}
                   >
-                    {description}
-                  </p>
+                    {title}
+                  </h4>
+                  <p className="text-[#5f5e5e] leading-relaxed mt-1.5">{description}</p>
                 </span>
               </button>
-            </li>
-          );
-        })}
-      </ol>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* ── Right: live WhatsApp phone mockup (matches WhatsAppChatPreview) ── */}
-      <div className="order-1 lg:order-2 flex justify-center">
+      {/* ── Left: live WhatsApp phone mockup (matches WhatsAppChatPreview) ── */}
+      <div className="order-1 relative flex justify-center py-6">
         <div className="relative w-full max-w-[320px] bg-zinc-900 rounded-[2.5rem] p-3 shadow-[0_40px_100px_rgba(0,0,0,0.18)]">
           {/* Screen */}
           <div className="bg-zinc-100 rounded-[2rem] overflow-hidden">
@@ -314,6 +300,12 @@ export function HowItWorksInteractive() {
 
           {/* Home indicator */}
           <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-zinc-600 rounded-full" />
+        </div>
+
+        {/* Trust badge */}
+        <div className="absolute -bottom-10 right-0 lg:-right-10 bg-[#006d2f] p-8 rounded-2xl text-white shadow-2xl max-w-xs">
+          <p className={`${headline} text-4xl font-extrabold mb-2`}>100%</p>
+          <p className="font-bold opacity-90">Verified professionals, every time.</p>
         </div>
       </div>
     </div>
