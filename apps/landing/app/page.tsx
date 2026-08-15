@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
+import QRCode from 'qrcode';
+import { Plus_Jakarta_Sans, Inter, Caveat } from 'next/font/google';
 import {
   MessageCircle,
   BadgeCheck,
@@ -27,9 +28,11 @@ import {
 import { Navbar } from '@/components/navbar';
 import { WhatsAppChatPreview } from '@/components/whatsapp-chat-preview';
 import { services } from '@/lib/services-data';
+import { WHATSAPP_BOT_LINK } from '@/lib/whatsapp';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
+const caveat = Caveat({ subsets: ['latin'], weight: ['600', '700'] });
 const headline = jakarta.className;
 
 const featuredServices = services.slice(0, 6);
@@ -56,8 +59,19 @@ const whatsappGradient = 'bg-[linear-gradient(135deg,#006d2f_0%,#25d366_100%)]';
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    QRCode.toDataURL(WHATSAPP_BOT_LINK, {
+      width: 448,
+      margin: 1,
+      errorCorrectionLevel: 'H',
+      color: { dark: '#006d2f', light: '#ffffff' },
+    })
+      .then(setQrDataUrl)
+      .catch(() => {});
+  }, []);
 
   if (!mounted) return null;
 
@@ -90,18 +104,25 @@ export default function Home() {
                 Skip the forms and the wait. Connect with top-rated local professionals through our intelligent WhatsApp assistant.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <button className={`${whatsappGradient} text-white px-8 py-4 rounded-full font-extrabold text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#006d2f]/20 hover:scale-105 transition-all`}>
+                <a
+                  href={WHATSAPP_BOT_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${whatsappGradient} text-white px-8 py-4 rounded-full font-extrabold text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#006d2f]/20 hover:scale-105 transition-all`}
+                >
                   <MessageCircle className="w-6 h-6 fill-white" />
                   Book on WhatsApp
-                </button>
+                </a>
                 <a href="#services" className="bg-[#e7e8e9] text-[#191c1d] px-8 py-4 rounded-full font-bold text-lg text-center hover:bg-[#e1e3e4] transition-all">
                   Browse Services
                 </a>
               </div>
             </div>
-            {/* Floating interactive elements */}
-            <div className="hidden lg:block relative">
-              <div className="bg-white p-6 rounded-xl shadow-2xl shadow-black/5 border border-[#bbcbb9]/10 max-w-sm absolute -top-20 right-0 animate-float-up">
+            {/* Floating interactive elements — top-to-bottom narrative: provider tracking → chat snippet → QR CTA */}
+            <div className="hidden lg:block relative min-h-[700px]">
+
+              {/* 1. Provider tracking card — shifted right, over the open photo area */}
+              <div className="bg-white p-6 rounded-xl shadow-2xl shadow-black/5 border border-[#bbcbb9]/10 max-w-sm absolute top-[40px] left-[260px] z-10 animate-float-up">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 rounded-full bg-[#3de273] flex items-center justify-center">
                     <User className="w-6 h-6 text-white" />
@@ -115,11 +136,59 @@ export default function Home() {
                   <div className="h-full bg-[#006d2f] w-3/4" />
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-xl shadow-xl absolute top-40 -left-10 max-w-[240px]">
+
+              {/* 2. Chat snippet — shifted further right and down, near the bottom of the open photo area */}
+              <div
+                className="bg-white p-4 rounded-xl shadow-xl absolute top-[600px] left-[300px] z-10 max-w-[240px] animate-fade-in-up"
+                style={{ animationDelay: '0.2s' }}
+              >
                 <div className="flex gap-2 items-start">
                   <MessageCircle className="w-6 h-6 text-[#006d2f] shrink-0" />
                   <p className="text-sm font-medium">"I need an electrician for my living room lights."</p>
                 </div>
+              </div>
+
+              {/* 3. WhatsApp bot QR code — primary CTA, anchored at the bottom with room to breathe */}
+              <div
+                className="absolute top-[262px] left-0 z-20 animate-float-up"
+                style={{ animationDelay: '0.4s' }}
+              >
+                <a
+                  href={WHATSAPP_BOT_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative group flex flex-col items-center gap-4 hover:-translate-y-1 transition-transform"
+                >
+                  <div className="relative p-2 rounded-2xl border border-white/70 bg-white/30 backdrop-blur-[2px] shadow-sm">
+                    {qrDataUrl ? (
+                      <img
+                        src={qrDataUrl}
+                        alt="Scan to chat with InstaFixd on WhatsApp"
+                        className="w-56 h-56"
+                      />
+                    ) : (
+                      <div className="w-56 h-56 rounded-md bg-[#edeeef] animate-pulse" />
+                    )}
+                    {qrDataUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-11 h-11 rounded-full bg-white border-2 border-[#25d366] shadow-sm flex items-center justify-center">
+                          <MessageCircle className="w-5 h-5 text-[#006d2f] fill-[#006d2f]" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hand-drawn annotation — sits in the open space to the card's right, clear of every other element */}
+                  <div className="absolute top-1/2 -translate-y-1/2 left-[calc(100%+16px)] flex items-center gap-2 pointer-events-none select-none">
+                    <svg width="56" height="48" viewBox="0 0 56 48" fill="none" className="text-[#006d2f] shrink-0">
+                      <path d="M50 40C34 40 14 24 6 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="1 7" />
+                      <path d="M17 14L6 8L7 20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span className={`${caveat.className} -rotate-3 text-2xl font-bold text-[#006d2f] whitespace-nowrap`}>
+                      Scan me to chat!
+                    </span>
+                  </div>
+                </a>
               </div>
             </div>
           </div>
