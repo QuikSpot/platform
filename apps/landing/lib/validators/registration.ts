@@ -24,6 +24,7 @@ export const step1Schema = z
       z.literal(''),
     ]),
     address: z.string().min(10, 'Address must be at least 10 characters'),
+    languageCode: z.enum(['en', 'si', 'ta'], { message: 'Please select a preferred language' }),
     email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
     password: z
       .string()

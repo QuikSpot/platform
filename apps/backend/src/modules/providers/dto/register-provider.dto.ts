@@ -19,6 +19,12 @@ export enum ExperienceLevelDto {
   EXPERT = 'EXPERT',
 }
 
+export enum LanguageCodeDto {
+  EN = 'en',
+  SI = 'si',
+  TA = 'ta',
+}
+
 export class ServiceDto {
   @IsNotEmpty()
   @IsString()
@@ -127,4 +133,9 @@ export class RegisterProviderDto {
   @ValidateNested()
   @Type(() => AgreementsDto)
   agreements?: AgreementsDto;
+
+  /** Preferred language for WhatsApp bot communication (ISO 639-1) */
+  @IsOptional()
+  @IsEnum(LanguageCodeDto)
+  languageCode?: LanguageCodeDto;
 }

@@ -26,6 +26,7 @@ export interface ProviderProfile {
   nicNumber: string;
   province: string | null;
   district: string | null;
+  languageCode: string;
   isActive: boolean;
   serviceZones: string[];
   services: ServiceEntry[];
