@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { HowItWorksInteractive } from '@/components/how-it-works';
+import { FaqSection } from '@/components/faq-section';
 import { services } from '@/lib/services-data';
 import { WHATSAPP_BOT_LINK } from '@/lib/whatsapp';
 
@@ -304,6 +305,9 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── FAQ ── */}
+        <FaqSection />
+
         {/* ── Final CTA ── */}
         <section className="py-24 px-6 md:px-12 bg-[#191c1d] text-[#f8f9fa] text-center">
           <div className="max-w-4xl mx-auto space-y-12">
@@ -315,12 +319,6 @@ export default function Home() {
                 <MessageCircle className="w-9 h-9 fill-white" />
                 Chat with InstaFixd
               </button>
-            </div>
-            <div className="flex flex-wrap justify-center gap-8 opacity-60">
-              <span className="font-black text-xl italic tracking-widest">VISA</span>
-              <span className="font-black text-xl italic tracking-widest">MasterCard</span>
-              <span className="font-black text-xl italic tracking-widest">Apple Pay</span>
-              <span className="font-black text-xl italic tracking-widest">G-Pay</span>
             </div>
           </div>
         </section>
@@ -339,14 +337,15 @@ export default function Home() {
               <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#">About Us</a></li>
               <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#services">Services</a></li>
               <li><Link className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="/register/partner">Partner with Us</Link></li>
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#faq">FAQ</a></li>
               <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#">Careers</a></li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Contact Info</h4>
             <ul className="space-y-4 text-sm text-slate-500">
-              <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> support@instafixd.lk</li>
-              <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +94 11 234 5678</li>
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> contact.instafixd@gmail.com</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +94 76 594 4878</li>
               <li className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Colombo, Sri Lanka</li>
             </ul>
           </div>

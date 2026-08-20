@@ -104,8 +104,7 @@ Continued use of Instafixd after a policy update constitutes your acceptance of 
 
 Instafixd Pvt Ltd
 Sri Lanka
-Email: privacy@instafixd.lk
-Support: support@instafixd.lk`,
+Email: contact.instafixd@gmail.com`,
   },
 ];
 
