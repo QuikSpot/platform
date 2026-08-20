@@ -29,6 +29,7 @@ type FormData = {
   password: string;
   confirmPassword: string;
   address: string;
+  languageCode: string;
   province: string;
   district: string;
   serviceZones: string[];
@@ -58,6 +59,11 @@ const STEPS = [
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'si', label: 'Sinhala' },
+  { code: 'ta', label: 'Tamil' },
+];
 
 interface Category {
   id: string;
@@ -120,6 +126,7 @@ const INITIAL_FORM: FormData = {
   password: '',
   confirmPassword: '',
   address: '',
+  languageCode: 'en',
   province: '',
   district: '',
   serviceZones: [],
@@ -375,6 +382,7 @@ export default function PartnerRegistration() {
           email: form.email,
           password: form.password,
           nicNumber: form.nicNumber,
+          languageCode: form.languageCode,
           province: form.province,
           district: form.district,
           serviceZones: form.serviceZones,
@@ -462,7 +470,7 @@ export default function PartnerRegistration() {
       : [...form.serviceDays, day]);
 
   const getStepData = (s: number) => {
-    if (s === 1) return { fullName: form.fullName, nicNumber: form.nicNumber, mobileNumber: form.mobileNumber, whatsappNumber: form.whatsappNumber, address: form.address, email: form.email, password: form.password, confirmPassword: form.confirmPassword };
+    if (s === 1) return { fullName: form.fullName, nicNumber: form.nicNumber, mobileNumber: form.mobileNumber, whatsappNumber: form.whatsappNumber, address: form.address, languageCode: form.languageCode, email: form.email, password: form.password, confirmPassword: form.confirmPassword };
     if (s === 2) return { province: form.province, district: form.district, serviceZones: form.serviceZones };
     if (s === 3) return { primaryCategory: form.primaryCategory, experienceLevel: form.experienceLevel, subCategories: form.subCategories, bio: form.bio };
     if (s === 4) return { nightService: form.nightService, serviceDays: form.serviceDays, workStartTime: form.workStartTime, workEndTime: form.workEndTime };
@@ -721,6 +729,18 @@ export default function PartnerRegistration() {
                   <input type="tel" placeholder="+94 77 123 4567" value={form.whatsappNumber}
                     onChange={e => set('whatsappNumber', e.target.value)} className={fic('whatsappNumber')} />
                   {err('whatsappNumber')}
+                </div>
+                <div>
+                  <label className={labelCls}>Preferred Language</label>
+                  <div className="relative">
+                    <select value={form.languageCode}
+                      onChange={e => set('languageCode', e.target.value)} className={fsc('languageCode')}>
+                      {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1.5">We&apos;ll use this for your WhatsApp bot conversations.</p>
+                  {err('languageCode')}
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelCls}>Permanent Address</label>

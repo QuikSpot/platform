@@ -92,9 +92,12 @@ export class ProvidersService {
         nic_number: dto.nicNumber,
         province: dto.province ?? null,
         district: dto.district ?? null,
+        language_code: dto.languageCode ?? 'en',
         is_active: false,
       })
-      .select('id, full_name, mobile_number, email, nic_number, province, district, is_active, created_at')
+      .select(
+        'id, full_name, mobile_number, email, nic_number, province, district, language_code, is_active, created_at',
+      )
       .single();
 
     if (spError) {
@@ -171,6 +174,7 @@ export class ProvidersService {
       nicNumber: spRow.nic_number,
       province: spRow.province,
       district: spRow.district,
+      languageCode: spRow.language_code,
       isActive: spRow.is_active,
       createdAt: new Date(spRow.created_at),
     };
@@ -181,7 +185,7 @@ export class ProvidersService {
       .from('service_provider')
       .select(
         `id, full_name, mobile_number, whatsapp_number, email, nic_number,
-         province, district, is_active, created_at,
+         province, district, language_code, is_active, created_at,
          provider_service_zone(zone_id, service_zone(zone_name)),
          provider_service(experience_level, description, main_category(name), sub_category(name)),
          provider_availability(available_from, available_to, is_24_7, is_available_now, night_service),
@@ -202,6 +206,7 @@ export class ProvidersService {
     if (dto.whatsappNumber !== undefined) updates['whatsapp_number'] = dto.whatsappNumber;
     if (dto.province !== undefined) updates['province'] = dto.province || null;
     if (dto.district !== undefined) updates['district'] = dto.district || null;
+    if (dto.languageCode !== undefined) updates['language_code'] = dto.languageCode;
 
     if (Object.keys(updates).length > 0) {
       const { error } = await this.supabase.db
@@ -472,6 +477,7 @@ interface SpRowFull {
   nic_number: string;
   province: string | null;
   district: string | null;
+  language_code: string;
   is_active: boolean;
   created_at: string;
   provider_service_zone: Array<{
@@ -507,6 +513,7 @@ function toProviderProfileFull(row: SpRowFull) {
     nicNumber: row.nic_number,
     province: row.province,
     district: row.district,
+    languageCode: row.language_code,
     isActive: row.is_active,
     createdAt: new Date(row.created_at),
     serviceZones: (row.provider_service_zone ?? [])

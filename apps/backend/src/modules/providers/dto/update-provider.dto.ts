@@ -10,6 +10,7 @@ import {
   MaxLength,
   ValidateNested,
 } from 'class-validator';
+import { LanguageCodeDto } from './register-provider.dto';
 
 export class UpdateServiceDto {
   @IsNotEmpty()
@@ -98,4 +99,9 @@ export class UpdateProviderDto {
   @ValidateNested()
   @Type(() => UpdateAvailabilityDto)
   availability?: UpdateAvailabilityDto;
+
+  /** Preferred language for WhatsApp bot communication (ISO 639-1) */
+  @IsOptional()
+  @IsEnum(LanguageCodeDto)
+  languageCode?: LanguageCodeDto;
 }

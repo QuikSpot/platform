@@ -6,6 +6,7 @@ export interface ProviderRegistrationResult {
   nicNumber: string;
   province: string | null;
   district: string | null;
+  languageCode: string;
   isActive: boolean;
   createdAt: Date;
 }
