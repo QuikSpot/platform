@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocations } from '@/hooks/use-locations';
 import { validateStep } from '@/lib/validators/registration';
+import { uploadProviderDocument, type DocumentCategory } from '@/lib/upload-documents';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -413,25 +414,33 @@ export default function PartnerRegistration() {
 
       const providerId: string = body.data!.id;
 
-      // ── Step 2: Upload documents to private storage ──────────────
-      const hasFiles =
-        form.nicFrontImage || form.nicBackImage || form.selfieImage || form.portfolio;
+      // ── Step 2: Upload documents straight to Supabase Storage, then confirm ──
+      const filesToUpload: { category: DocumentCategory; file: File }[] = [
+        ...(form.nicFrontImage ? [{ category: 'NIC_FRONT' as const, file: form.nicFrontImage }] : []),
+        ...(form.nicBackImage ? [{ category: 'NIC_BACK' as const, file: form.nicBackImage }] : []),
+        ...(form.selfieImage ? [{ category: 'SELFIE' as const, file: form.selfieImage }] : []),
+        ...(form.portfolio ? [{ category: 'PORTFOLIO' as const, file: form.portfolio }] : []),
+      ];
 
-      if (hasFiles) {
-        const formData = new FormData();
-        formData.append('providerId', providerId);
-        if (form.nicFrontImage) formData.append('nicFrontImage', form.nicFrontImage);
-        if (form.nicBackImage) formData.append('nicBackImage', form.nicBackImage);
-        if (form.selfieImage) formData.append('selfieImage', form.selfieImage);
-        if (form.portfolio) formData.append('portfolio', form.portfolio);
+      if (filesToUpload.length > 0) {
+        try {
+          const confirmed = await Promise.all(
+            filesToUpload.map(({ category, file }) =>
+              uploadProviderDocument(backendUrl, providerId, category, file),
+            ),
+          );
 
-        const docRes = await fetch(`${backendUrl}/api/v1/provider/documents`, {
-          method: 'POST',
-          body: formData,
-        });
+          const confirmRes = await fetch(`${backendUrl}/api/v1/provider/documents`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ providerId, documents: confirmed }),
+          });
 
-        if (!docRes.ok) {
-          console.warn('Document upload failed. Registration was still successful.');
+          if (!confirmRes.ok) {
+            console.warn('Document confirmation failed. Registration was still successful.');
+          }
+        } catch (docErr) {
+          console.warn('Document upload failed. Registration was still successful.', docErr);
         }
       }
 
