@@ -26,7 +26,7 @@ export default function ServicesPage() {
                 All Services
               </h1>
               <p className="text-[#5f5e5e] text-lg">
-                Every category of skilled, verified professionals available on InstaFixd. Tap a category to see all sub-categories we cover.
+                Every category of skilled, verified professionals available on instaFixd. Tap a category to see all sub-categories we cover.
               </p>
             </div>
 

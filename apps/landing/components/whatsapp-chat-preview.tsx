@@ -66,7 +66,7 @@ export function WhatsAppChatPreview() {
             <MessageCircle className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="font-semibold text-zinc-900 text-sm">InstaFixd</p>
+            <p className="font-semibold text-zinc-900 text-sm">instaFixd</p>
             <p className="font-mono text-[10px] text-green-600 uppercase tracking-wider">online</p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export function WhatsAppChatPreview() {
                   <p className="text-[10px] font-bold text-green-700 mb-0.5">{msg.name}</p>
                 )}
                 {msg.type === 'bot' && (
-                  <p className="text-[10px] font-bold text-blue-600 mb-0.5">InstaFixd Bot</p>
+                  <p className="text-[10px] font-bold text-blue-600 mb-0.5">instaFixd Bot</p>
                 )}
                 <p className="text-xs leading-relaxed">{msg.message}</p>
                 <div

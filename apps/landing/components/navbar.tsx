@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Wrench, Menu, X, UserCircle, LogOut } from 'lucide-react';
+import { Menu, X, UserCircle, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/#services', label: 'Services' },
   { href: '/how-it-works', label: 'How It Works' },
+  { href: '/contact', label: 'Contact Us' },
   { href: '/agreement', label: 'Privacy Policy' },
 ];
 
@@ -76,18 +77,14 @@ export function Navbar() {
         />
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <motion.div
+        <Link href="/" className="flex items-center shrink-0">
+          <motion.img
             layout
             transition={{ duration: 0.55, ease: EASE }}
-            className={cn(
-              'bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center shrink-0',
-              scrolled ? 'w-8 h-8' : 'w-10 h-10'
-            )}
-          >
-            <Wrench className={cn('text-white transition-all duration-500', scrolled ? 'w-4.5 h-4.5' : 'w-6 h-6')} />
-          </motion.div>
-          <span className="text-lg font-bold text-gray-900 tracking-tight">InstaFixd</span>
+            src="/logo.png"
+            alt="instaFixd"
+            className={cn('w-auto transition-all duration-500', scrolled ? 'h-5' : 'h-5')}
+          />
         </Link>
 
         {/* Desktop links */}

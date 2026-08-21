@@ -8,9 +8,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'instantFix',
-  description: 'instantFix App',
-  generator: 'instantFix',
+  title: 'instaFixd',
+  description: 'instaFixd App',
+  generator: 'instaFixd',
   icons: {
     icon: [
       {

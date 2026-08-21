@@ -5,9 +5,9 @@ import { Navbar } from '@/components/navbar';
 import { HowItWorksExplorer } from '@/components/how-it-works-explorer';
 
 export const metadata: Metadata = {
-  title: 'How It Works – InstaFixd',
+  title: 'How It Works – instaFixd',
   description:
-    'See exactly how InstaFixd works — a step-by-step walkthrough of the journey for customers booking a service and for professionals offering their services.',
+    'See exactly how instaFixd works — a step-by-step walkthrough of the journey for customers booking a service and for professionals offering their services.',
 };
 
 export default function HowItWorksPage() {
@@ -29,7 +29,7 @@ export default function HowItWorksPage() {
               <span className="text-[#006d2f]">two simple journeys.</span>
             </h1>
             <p className="text-slate-500 text-lg mt-5 leading-relaxed">
-              Whether you need a job done or you&apos;re the pro who does it, InstaFixd keeps everything
+              Whether you need a job done or you&apos;re the pro who does it, instaFixd keeps everything
               inside a simple WhatsApp conversation. Choose your path below to see how.
             </p>
           </div>
@@ -56,7 +56,7 @@ export default function HowItWorksPage() {
               <Zap className="w-8 h-8 text-[#6ee7a8]" />
               <h3 className="text-xl font-extrabold mt-4">Want to earn as a pro?</h3>
               <p className="text-white/70 mt-2 flex-1">
-                Join InstaFixd as a verified professional and get a steady stream of nearby jobs.
+                Join instaFixd as a verified professional and get a steady stream of nearby jobs.
               </p>
               <Link
                 href="/register/partner"

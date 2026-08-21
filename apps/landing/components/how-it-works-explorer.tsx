@@ -96,9 +96,9 @@ const CUSTOMER_STEPS: Step[] = [
   {
     icon: MessageCircle,
     title: 'Start a Chat',
-    summary: 'Message the InstaFixd WhatsApp bot describing your problem in your own words — no forms, no new app.',
+    summary: 'Message the instaFixd WhatsApp bot describing your problem in your own words — no forms, no new app.',
     details: [
-      'Open WhatsApp and say hello to InstaFixd',
+      'Open WhatsApp and say hello to instaFixd',
       'Describe the issue casually, like texting a friend',
       'Available 24/7 in Sinhala, Tamil & English',
     ],

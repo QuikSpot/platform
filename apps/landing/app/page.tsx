@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import QRCode from 'qrcode';
 import { Plus_Jakarta_Sans, Inter, Caveat } from 'next/font/google';
 import {
   MessageCircle,
@@ -26,8 +25,9 @@ import {
 import { Navbar } from '@/components/navbar';
 import { HowItWorksInteractive } from '@/components/how-it-works';
 import { FaqSection } from '@/components/faq-section';
+import { ChatbotWidget } from '@/components/chatbot-widget';
 import { services } from '@/lib/services-data';
-import { WHATSAPP_BOT_LINK } from '@/lib/whatsapp';
+import { WHATSAPP_BOT_LINK, buildWhatsAppInquiryLink } from '@/lib/whatsapp';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
@@ -43,7 +43,7 @@ const steps = [
 ];
 
 const testimonials = [
-  { name: 'Sarah Jenkins', role: 'Homeowner', text: '"I was skeptical about booking a plumber on WhatsApp, but InstaFixd made it so easy. Found someone in 5 minutes!"' },
+  { name: 'Sarah Jenkins', role: 'Homeowner', text: '"I was skeptical about booking a plumber on WhatsApp, but instaFixd made it so easy. Found someone in 5 minutes!"' },
   { name: 'Michael Chen', role: 'Tech Manager', text: '"The quality of the AC repair was outstanding. The professional was verified and clearly knew their craft."' },
   { name: 'Jessica Drew', role: 'Startup Founder', text: '"Payment through WhatsApp was seamless. I love that I don\'t need another app on my phone."' },
 ];
@@ -51,22 +51,12 @@ const testimonials = [
 const whatsappGradient = 'bg-[linear-gradient(135deg,#006d2f_0%,#25d366_100%)]';
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [inquiry, setInquiry] = useState('');
 
-  useEffect(() => {
-    setMounted(true);
-    QRCode.toDataURL(WHATSAPP_BOT_LINK, {
-      width: 448,
-      margin: 1,
-      errorCorrectionLevel: 'H',
-      color: { dark: '#006d2f', light: '#ffffff' },
-    })
-      .then(setQrDataUrl)
-      .catch(() => {});
-  }, []);
-
-  if (!mounted) return null;
+  const handleFindPro = (e: React.FormEvent) => {
+    e.preventDefault();
+    window.open(buildWhatsAppInquiryLink(inquiry), '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className={`min-h-screen bg-[#f8f9fa] text-[#191c1d] overflow-x-hidden ${inter.className}`}>
@@ -153,22 +143,11 @@ export default function Home() {
                   className="relative group flex flex-col items-center gap-4 hover:-translate-y-1 transition-transform"
                 >
                   <div className="relative p-2 rounded-2xl border border-white/70 bg-white/30 backdrop-blur-[2px] shadow-sm">
-                    {qrDataUrl ? (
-                      <img
-                        src={qrDataUrl}
-                        alt="Scan to chat with InstaFixd on WhatsApp"
-                        className="w-56 h-56"
-                      />
-                    ) : (
-                      <div className="w-56 h-56 rounded-md bg-[#edeeef] animate-pulse" />
-                    )}
-                    {qrDataUrl && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-11 h-11 rounded-full bg-white border-2 border-[#25d366] shadow-sm flex items-center justify-center">
-                          <MessageCircle className="w-5 h-5 text-[#006d2f] fill-[#006d2f]" />
-                        </div>
-                      </div>
-                    )}
+                    <img
+                      src="/whatsapp-qr.png"
+                      alt="Scan to chat with instaFixd on WhatsApp"
+                      className="w-56 h-56"
+                    />
                   </div>
 
                   {/* Hand-drawn annotation — sits in the open space to the card's right, clear of every other element */}
@@ -189,7 +168,10 @@ export default function Home() {
 
         {/* ── Search Bar ── */}
         <section className="max-w-4xl mx-auto -mt-12 relative z-20 px-6">
-          <div className="bg-white rounded-2xl shadow-2xl p-2 flex items-center gap-4 group focus-within:ring-2 ring-[#006d2f] transition-all">
+          <form
+            onSubmit={handleFindPro}
+            className="bg-white rounded-2xl shadow-2xl p-2 flex items-center gap-4 group focus-within:ring-2 ring-[#006d2f] transition-all"
+          >
             <div className="pl-6 text-[#5f5e5e] group-focus-within:text-[#006d2f] transition-colors">
               <Search className="w-8 h-8" />
             </div>
@@ -197,11 +179,16 @@ export default function Home() {
               className="w-full py-6 text-xl bg-transparent border-none focus:ring-0 focus:outline-none placeholder:text-[#c8c6c5] font-medium text-[#191c1d]"
               placeholder="What do you need help with today?"
               type="text"
+              value={inquiry}
+              onChange={e => setInquiry(e.target.value)}
             />
-            <button className="bg-[#006d2f] text-white px-10 py-5 rounded-xl font-bold text-lg hover:opacity-90 transition-all shrink-0">
+            <button
+              type="submit"
+              className="bg-[#006d2f] text-white px-10 py-5 rounded-xl font-bold text-lg hover:opacity-90 transition-all shrink-0"
+            >
               Find Pro
             </button>
-          </div>
+          </form>
         </section>
 
         {/* ── How It Works ── */}
@@ -317,7 +304,7 @@ export default function Home() {
             <div className="flex justify-center pt-6">
               <button className={`${whatsappGradient} text-white px-12 py-6 rounded-full font-black text-2xl flex items-center gap-4 hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-[#006d2f]/30`}>
                 <MessageCircle className="w-9 h-9 fill-white" />
-                Chat with InstaFixd
+                Chat with instaFixd
               </button>
             </div>
           </div>
@@ -328,7 +315,7 @@ export default function Home() {
       <footer className="bg-slate-50 w-full py-16 px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 max-w-7xl mx-auto">
           <div className="space-y-6">
-            <div className={`${headline} text-xl font-extrabold text-slate-900`}>InstaFixd</div>
+            <img src="/logo.png" alt="instaFixd" className="h-7 w-auto" />
             <p className="text-slate-500 text-sm leading-relaxed">The premium marketplace for verified local service professionals, delivered exclusively via WhatsApp.</p>
           </div>
           <div>
@@ -365,7 +352,7 @@ export default function Home() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-400 text-xs">© {new Date().getFullYear()} InstaFixd. All rights reserved.</p>
+          <p className="text-slate-400 text-xs">© {new Date().getFullYear()} instaFixd. All rights reserved.</p>
           <div className="flex gap-6">
             <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="LinkedIn"><Linkedin className="w-5 h-5" /></a>
             <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="Facebook"><Facebook className="w-5 h-5" /></a>
@@ -373,6 +360,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <ChatbotWidget />
     </div>
   );
 }

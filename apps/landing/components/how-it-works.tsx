@@ -27,7 +27,7 @@ const STEP_DURATION = 3200;
 const steps = [
   {
     icon: Send,
-    title: 'Message InstaFixd Bot',
+    title: 'Message instaFixd Bot',
     description: 'Send a quick WhatsApp describing what you need. No forms, no new apps to install.',
   },
   {
@@ -250,7 +250,7 @@ export function HowItWorksInteractive() {
                 <MessageCircle className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-zinc-900 text-sm">InstaFixd</p>
+                <p className="font-semibold text-zinc-900 text-sm">instaFixd</p>
                 <p className="font-mono text-[10px] text-green-600 uppercase tracking-wider">online</p>
               </div>
             </div>
@@ -324,7 +324,7 @@ function Bubble({ from, children }: { from: 'user' | 'bot'; children: ReactNode 
   }
   return (
     <div className="max-w-[80%] bg-white text-zinc-800 rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm">
-      <p className="text-[10px] font-bold text-blue-600 mb-1">InstaFixd Bot</p>
+      <p className="text-[10px] font-bold text-blue-600 mb-1">instaFixd Bot</p>
       {children}
     </div>
   );

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Wrench, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 
 export default function LoginPage() {
@@ -31,11 +31,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center">
-              <Wrench className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">InstaFixd</span>
+          <Link href="/" className="flex items-center">
+            <img src="/logo.png" alt="instaFixd" className="h-8 w-auto" />
           </Link>
         </div>
 
