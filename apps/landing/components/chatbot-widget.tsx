@@ -21,6 +21,8 @@ const GREETING: ChatMessage = {
 const PLACEHOLDER_REPLY =
   "Thanks for your message! I'm still being trained on instaFixd's services, so my answers are limited for now. For anything urgent, message us directly on WhatsApp and a real person will help.";
 
+const CHAT_ENDPOINT = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/ai/chat`;
+
 function TypingIndicator() {
   return (
     <div className="flex items-end gap-2">
@@ -49,7 +51,7 @@ export function ChatbotWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = input.trim();
     if (!text || isTyping) return;
 
@@ -57,11 +59,21 @@ export function ChatbotWidget() {
     setInput('');
     setIsTyping(true);
 
-    // No RAG service yet — placeholder reply stands in until the assistant backend ships.
-    setTimeout(() => {
+    try {
+      const res = await fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text }),
+      });
+      if (!res.ok) throw new Error(`chat ${res.status}`);
+      const body = await res.json();
+      const reply: string = body?.data?.answer ?? PLACEHOLDER_REPLY;
+      setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'bot', text: reply }]);
+    } catch {
       setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'bot', text: PLACEHOLDER_REPLY }]);
+    } finally {
       setIsTyping(false);
-    }, 1100);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
