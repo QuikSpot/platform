@@ -3,6 +3,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { AiService } from './ai.service';
 import { PredictCategoryDto } from './dto/predict-category.dto';
 import { ImproveTextDto } from './dto/improve-text.dto';
+import { ChatDto } from './dto/chat.dto';
 
 @Public()
 @Controller('ai')
@@ -19,5 +20,11 @@ export class AiController {
   @HttpCode(HttpStatus.OK)
   improveText(@Body() dto: ImproveTextDto) {
     return this.aiService.improveText(dto.text);
+  }
+
+  @Post('chat')
+  @HttpCode(HttpStatus.OK)
+  chat(@Body() dto: ChatDto) {
+    return this.aiService.chat(dto.question);
   }
 }
