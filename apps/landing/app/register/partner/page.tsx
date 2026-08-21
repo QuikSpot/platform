@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   Sparkles,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 type FormData = {
@@ -136,7 +138,7 @@ const INITIAL_FORM: FormData = {
   subCategories: [],
   bio: '',
   nightService: false,
-  serviceDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+  serviceDays: [],
   workStartTime: '08:00',
   workEndTime: '18:00',
   nicFrontImage: null,
@@ -161,6 +163,8 @@ export default function PartnerRegistration() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [zoneSearch, setZoneSearch] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -590,7 +594,7 @@ export default function PartnerRegistration() {
 
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
-        <span className="text-xl font-bold text-[#114b2e]">InstaFixd</span>
+        <img src="/logo.png" alt="instaFixd" className="h-7 w-auto" />
         <Link href="/" className="text-sm font-medium text-slate-700 hover:text-[#114b2e] transition-colors">
           Back to Home
         </Link>
@@ -635,7 +639,7 @@ export default function PartnerRegistration() {
             Partner Registration
           </span>
           <h1 className="text-5xl font-extrabold text-[#114b2e] mb-3 leading-tight">
-            Become an InstaFixd Expert
+            Become an instaFixd Expert
           </h1>
           <p className="text-slate-500 text-base max-w-md mx-auto leading-relaxed">
             Join our ecosystem of premium service providers. Grow your local business with the support of a lush community.
@@ -734,7 +738,7 @@ export default function PartnerRegistration() {
                 </div>
 
                 <div>
-                  <label className={labelCls}>WhatsApp Number <span className="text-slate-400 normal-case font-normal tracking-normal">(optional)</span></label>
+                  <label className={labelCls}>WhatsApp Number </label>
                   <input type="tel" placeholder="+94 77 123 4567" value={form.whatsappNumber}
                     onChange={e => set('whatsappNumber', e.target.value)} className={fic('whatsappNumber')} />
                   {err('whatsappNumber')}
@@ -765,14 +769,34 @@ export default function PartnerRegistration() {
                 </div>
                 <div>
                   <label className={labelCls}>Password</label>
-                  <input type="password" placeholder="Min. 8 characters" value={form.password}
-                    onChange={e => set('password', e.target.value)} className={fic('password')} />
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} placeholder="Min. 8 characters" value={form.password}
+                      onChange={e => set('password', e.target.value)} className={`${fic('password')} pr-11`} />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {(form.password.length > 0 || errors.password) && <PasswordChecklist password={form.password} />}
                 </div>
                 <div>
                   <label className={labelCls}>Confirm Password</label>
-                  <input type="password" placeholder="Re-enter your password" value={form.confirmPassword}
-                    onChange={e => set('confirmPassword', e.target.value)} className={fic('confirmPassword')} />
+                  <div className="relative">
+                    <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={form.confirmPassword}
+                      onChange={e => set('confirmPassword', e.target.value)} className={`${fic('confirmPassword')} pr-11`} />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(v => !v)}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {err('confirmPassword')}
                 </div>
               </div>
@@ -1010,14 +1034,15 @@ export default function PartnerRegistration() {
               </div>
 
               <div className="mb-6 relative z-10">
-                <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-4">Select Service Days</p>
+                <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-1">Select Service Days</p>
+                <p className="text-xs text-white/40 mb-4">Tap the days you're available to work.</p>
                 <div className="flex gap-2 flex-wrap">
                   {DAYS.map(day => (
                     <button key={day} type="button" onClick={() => toggleDay(day)}
                       className={`w-12 h-12 rounded-full text-xs font-bold transition-all ${
                         form.serviceDays.includes(day)
-                          ? 'bg-[#163324] border-2 border-[#1aae74]/40 text-white'
-                          : 'bg-white/10 text-white/50 hover:bg-white/20 border-2 border-transparent'
+                          ? 'bg-[#1aae74] border-2 border-[#1aae74] text-white shadow-md shadow-[#1aae74]/30'
+                          : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70 border-2 border-white/15 hover:border-white/25'
                       }`}>
                       {day}
                     </button>
@@ -1136,13 +1161,13 @@ export default function PartnerRegistration() {
                   {[
                     {
                       key: 'agreeTerms' as const,
-                      title: 'I agree to the InstaFixd Terms & Conditions',
+                      title: 'I agree to the instaFixd Terms & Conditions',
                       desc: 'By checking this, you agree to our professional code of conduct and service quality standards.',
                     },
                     {
                       key: 'agreeCommission' as const,
                       title: 'I acknowledge the 10% Platform Commission',
-                      desc: 'InstaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
+                      desc: 'instaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
                     },
                   ].map(({ key, title, desc }) => (
                     <div key={key}>
@@ -1212,7 +1237,7 @@ export default function PartnerRegistration() {
 
       {/* Footer */}
       <footer className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-emerald-100/60">
-        <p className="text-xs text-slate-400">© 2024 InstaFixd. All rights reserved.</p>
+        <p className="text-xs text-slate-400">© 2024 instaFixd. All rights reserved.</p>
         <div className="flex items-center gap-6 mt-3 md:mt-0">
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Privacy</Link>
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Terms</Link>

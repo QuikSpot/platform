@@ -8,7 +8,7 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['700', '800'] }
 
 const FAQS = [
   {
-    question: 'How do I book a service on InstaFixd?',
+    question: 'How do I book a service on instaFixd?',
     answer:
       "Just send a WhatsApp message describing what you need — no app to download, no forms to fill. Our assistant matches you with a verified pro nearby in seconds.",
   },
@@ -23,7 +23,7 @@ const FAQS = [
       'Payment happens securely through a WhatsApp link once the job is done — no cash handling, no separate payment app.',
   },
   {
-    question: 'How do I become an InstaFixd partner?',
+    question: 'How do I become an instaFixd partner?',
     answer:
       'Apply through our partner registration form with your basic details, service categories, and availability — it takes about 10 minutes.',
   },

@@ -43,13 +43,28 @@ const DAY_NUM_TO_CODE: Record<number, string> = {
   6: 'SAT',
 };
 
+// How long an OTP-verified mobile number stays "consumable" by register() before it expires —
+// long enough to finish the multi-step registration wizard after verifying.
+const MOBILE_VERIFICATION_TTL_MS = 30 * 60 * 1000;
+
 @Injectable()
 export class ProvidersService {
   private readonly logger = new Logger(ProvidersService.name);
 
+  // Tracks mobile numbers that OTP verification has recently confirmed but that don't have a
+  // service_provider row yet (normalized mobile -> expiry timestamp). register() consumes this
+  // to know whether the number it's about to insert was actually verified.
+  private readonly verifiedMobiles = new Map<string, number>();
+
   constructor(private readonly supabase: SupabaseService) {}
 
   async register(dto: RegisterProviderDto): Promise<ProviderRegistrationResult> {
+    if (!this.consumeMobileVerification(dto.mobileNumber)) {
+      throw new BadRequestException(
+        'Please verify your mobile number with an OTP before registering',
+      );
+    }
+
     // ── 1. Create Supabase Auth user ─────────────────────────────────
     const { data: authData, error: authError } = await this.supabase.admin.createUser({
       email: dto.email,
@@ -80,6 +95,7 @@ export class ProvidersService {
         district: dto.district ?? null,
         language_code: dto.languageCode ?? 'en',
         is_active: false,
+        mobile_verified: true,
       })
       .select(
         'id, full_name, mobile_number, email, nic_number, province, district, language_code, is_active, created_at',
@@ -342,13 +358,38 @@ export class ProvidersService {
   }
 
   async markMobileVerified(mobileNumber: string): Promise<void> {
+    // Updates the row if one already exists (e.g. a returning provider re-verifying their
+    // number) — a no-op during first-time signup, since the row isn't created until register()
+    // runs afterward. That's why we also record the verification in memory below: it's the only
+    // way for the later register() insert to know this number was actually OTP-verified.
     await this.supabase.db
       .from('service_provider')
       .update({ mobile_verified: true })
       .eq('mobile_number', mobileNumber);
+
+    this.verifiedMobiles.set(
+      this.normalizeMobileForVerificationTracking(mobileNumber),
+      Date.now() + MOBILE_VERIFICATION_TTL_MS,
+    );
   }
 
   // ── Private helpers ──────────────────────────────────────────────────
+
+  /** Checks and consumes a recent OTP verification for this mobile number (single use). */
+  private consumeMobileVerification(mobileNumber: string): boolean {
+    const key = this.normalizeMobileForVerificationTracking(mobileNumber);
+    const expiresAt = this.verifiedMobiles.get(key);
+    if (expiresAt === undefined) return false;
+    this.verifiedMobiles.delete(key);
+    return Date.now() <= expiresAt;
+  }
+
+  private normalizeMobileForVerificationTracking(mobile: string): string {
+    let m = mobile.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+    if (m.startsWith('+')) m = m.slice(1);
+    if (m.startsWith('0')) m = '94' + m.slice(1);
+    return m;
+  }
 
   private async insertServiceZones(providerId: string, zoneNames: string[]): Promise<void> {
     for (const zoneName of zoneNames) {
