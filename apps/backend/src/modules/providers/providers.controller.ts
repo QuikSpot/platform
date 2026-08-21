@@ -1,22 +1,10 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Patch,
-  Post,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { ConfirmDocumentsDto } from './dto/confirm-documents.dto';
 import { RegisterProviderDto } from './dto/register-provider.dto';
+import { SignDocumentDto } from './dto/sign-document.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
-import { UploadDocumentsDto } from './dto/upload-documents.dto';
-import type { ProviderDocumentFiles } from './providers.service';
 import { ProvidersService } from './providers.service';
 
 @Controller('provider')
@@ -30,48 +18,20 @@ export class ProvidersController {
     return this.providersService.register(dto);
   }
 
+  /** Returns a signed Supabase Storage upload URL so the browser can upload the file directly. */
+  @Public()
+  @Post('documents/sign')
+  @HttpCode(HttpStatus.OK)
+  signDocumentUpload(@Body() dto: SignDocumentDto) {
+    return this.providersService.createSignedUpload(dto);
+  }
+
+  /** Records metadata for files the browser already uploaded via a signed URL. */
   @Public()
   @Post('documents')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'nicFrontImage', maxCount: 1 },
-        { name: 'nicBackImage', maxCount: 1 },
-        { name: 'selfieImage', maxCount: 1 },
-        { name: 'portfolio', maxCount: 10 },
-      ],
-      {
-        storage: memoryStorage(),
-        limits: { fileSize: 20 * 1024 * 1024 },
-        fileFilter: (
-          _req: unknown,
-          file: { mimetype: string },
-          cb: (err: Error | null, accept: boolean) => void,
-        ) => {
-          const allowed = new Set([
-            'image/jpeg',
-            'image/png',
-            'image/webp',
-            'application/pdf',
-            'application/zip',
-            'application/x-zip-compressed',
-          ]);
-          allowed.has(file.mimetype)
-            ? cb(null, true)
-            : cb(new Error(`Unsupported file type: ${file.mimetype}`), false);
-        },
-      },
-    ),
-  )
-  uploadDocuments(
-    @Body() dto: UploadDocumentsDto,
-    @UploadedFiles() files: Express.Multer.File[] | Record<string, Express.Multer.File[]>,
-  ) {
-    return this.providersService.uploadDocuments(
-      dto.providerId,
-      files as ProviderDocumentFiles,
-    );
+  confirmDocuments(@Body() dto: ConfirmDocumentsDto) {
+    return this.providersService.confirmDocuments(dto);
   }
 
   @Get('me')

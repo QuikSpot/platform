@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocations } from '@/hooks/use-locations';
 import { validateStep } from '@/lib/validators/registration';
+import { uploadProviderDocument, type DocumentCategory } from '@/lib/upload-documents';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -16,7 +17,10 @@ import {
   Upload,
   UserRound,
   CheckCircle2,
+  Sparkles,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 type FormData = {
@@ -28,6 +32,7 @@ type FormData = {
   password: string;
   confirmPassword: string;
   address: string;
+  languageCode: string;
   province: string;
   district: string;
   serviceZones: string[];
@@ -57,6 +62,11 @@ const STEPS = [
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'si', label: 'Sinhala' },
+  { code: 'ta', label: 'Tamil' },
+];
 
 interface Category {
   id: string;
@@ -119,6 +129,7 @@ const INITIAL_FORM: FormData = {
   password: '',
   confirmPassword: '',
   address: '',
+  languageCode: 'en',
   province: '',
   district: '',
   serviceZones: [],
@@ -127,7 +138,7 @@ const INITIAL_FORM: FormData = {
   subCategories: [],
   bio: '',
   nightService: false,
-  serviceDays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+  serviceDays: [],
   workStartTime: '08:00',
   workEndTime: '18:00',
   nicFrontImage: null,
@@ -152,6 +163,8 @@ export default function PartnerRegistration() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [zoneSearch, setZoneSearch] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -159,6 +172,11 @@ export default function PartnerRegistration() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  const [enhancingBio, setEnhancingBio] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
+  const [predictingCategory, setPredictingCategory] = useState(false);
+  const lastPredictedBio = useRef('');
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -264,6 +282,74 @@ export default function PartnerRegistration() {
     }
   };
 
+  const applyPredictedCategories = (predictions: { main_category_name: string; sub_category_name: string }[]) => {
+    if (predictions.length === 0) return;
+    const mainCategory = predictions[0].main_category_name;
+    const predictedSubs = predictions.map(p => p.sub_category_name);
+
+    setForm(f => ({
+      ...f,
+      // Only set the primary category if the user hasn't already picked one manually.
+      primaryCategory: f.primaryCategory ? f.primaryCategory : (categories.some(c => c.name === mainCategory) ? mainCategory : f.primaryCategory),
+      // Merge with whatever is already selected (manual or previously predicted) — never drop existing entries.
+      subCategories: Array.from(new Set([...f.subCategories, ...predictedSubs])),
+    }));
+  };
+
+  const predictCategoryFromBio = async (bioText: string) => {
+    if (!bioText.trim() || bioText === lastPredictedBio.current) return;
+    lastPredictedBio.current = bioText;
+    setPredictingCategory(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/ai/predict-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: bioText }),
+      });
+      if (!res.ok) return;
+      const body = await res.json() as { data?: { main_category_name: string; sub_category_name: string }[] };
+      applyPredictedCategories(body.data ?? []);
+    } catch {
+      // Silent — category prediction is a background convenience, not a blocking action.
+    } finally {
+      setPredictingCategory(false);
+    }
+  };
+
+  const handleBioBlur = () => {
+    void predictCategoryFromBio(form.bio);
+  };
+
+  const handleEnhanceBio = async () => {
+    if (!form.bio.trim()) {
+      setBioError('Write a short bio first, then enhance it.');
+      return;
+    }
+    setEnhancingBio(true);
+    setBioError(null);
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/ai/improve-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: form.bio }),
+      });
+      if (!res.ok) {
+        setBioError('Unable to enhance your bio right now. Please try again.');
+        return;
+      }
+      const body = await res.json() as { data?: { improved?: string } };
+      const enhanced = body.data?.improved;
+      if (enhanced) {
+        set('bio', enhanced);
+        await predictCategoryFromBio(enhanced);
+      }
+    } catch {
+      setBioError('Unable to reach the enhancement service. Please try again.');
+    } finally {
+      setEnhancingBio(false);
+    }
+  };
+
   const mapExperienceLevel = (level: string): string => {
     const map: Record<string, string> = {
       'Entry Level (1–2 years)': 'BEGINNER',
@@ -301,6 +387,7 @@ export default function PartnerRegistration() {
           email: form.email,
           password: form.password,
           nicNumber: form.nicNumber,
+          languageCode: form.languageCode,
           province: form.province,
           district: form.district,
           serviceZones: form.serviceZones,
@@ -331,25 +418,33 @@ export default function PartnerRegistration() {
 
       const providerId: string = body.data!.id;
 
-      // ── Step 2: Upload documents to private storage ──────────────
-      const hasFiles =
-        form.nicFrontImage || form.nicBackImage || form.selfieImage || form.portfolio;
+      // ── Step 2: Upload documents straight to Supabase Storage, then confirm ──
+      const filesToUpload: { category: DocumentCategory; file: File }[] = [
+        ...(form.nicFrontImage ? [{ category: 'NIC_FRONT' as const, file: form.nicFrontImage }] : []),
+        ...(form.nicBackImage ? [{ category: 'NIC_BACK' as const, file: form.nicBackImage }] : []),
+        ...(form.selfieImage ? [{ category: 'SELFIE' as const, file: form.selfieImage }] : []),
+        ...(form.portfolio ? [{ category: 'PORTFOLIO' as const, file: form.portfolio }] : []),
+      ];
 
-      if (hasFiles) {
-        const formData = new FormData();
-        formData.append('providerId', providerId);
-        if (form.nicFrontImage) formData.append('nicFrontImage', form.nicFrontImage);
-        if (form.nicBackImage) formData.append('nicBackImage', form.nicBackImage);
-        if (form.selfieImage) formData.append('selfieImage', form.selfieImage);
-        if (form.portfolio) formData.append('portfolio', form.portfolio);
+      if (filesToUpload.length > 0) {
+        try {
+          const confirmed = await Promise.all(
+            filesToUpload.map(({ category, file }) =>
+              uploadProviderDocument(backendUrl, providerId, category, file),
+            ),
+          );
 
-        const docRes = await fetch(`${backendUrl}/api/v1/provider/documents`, {
-          method: 'POST',
-          body: formData,
-        });
+          const confirmRes = await fetch(`${backendUrl}/api/v1/provider/documents`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ providerId, documents: confirmed }),
+          });
 
-        if (!docRes.ok) {
-          console.warn('Document upload failed. Registration was still successful.');
+          if (!confirmRes.ok) {
+            console.warn('Document confirmation failed. Registration was still successful.');
+          }
+        } catch (docErr) {
+          console.warn('Document upload failed. Registration was still successful.', docErr);
         }
       }
 
@@ -388,7 +483,7 @@ export default function PartnerRegistration() {
       : [...form.serviceDays, day]);
 
   const getStepData = (s: number) => {
-    if (s === 1) return { fullName: form.fullName, nicNumber: form.nicNumber, mobileNumber: form.mobileNumber, whatsappNumber: form.whatsappNumber, address: form.address, email: form.email, password: form.password, confirmPassword: form.confirmPassword };
+    if (s === 1) return { fullName: form.fullName, nicNumber: form.nicNumber, mobileNumber: form.mobileNumber, whatsappNumber: form.whatsappNumber, address: form.address, languageCode: form.languageCode, email: form.email, password: form.password, confirmPassword: form.confirmPassword };
     if (s === 2) return { province: form.province, district: form.district, serviceZones: form.serviceZones };
     if (s === 3) return { primaryCategory: form.primaryCategory, experienceLevel: form.experienceLevel, subCategories: form.subCategories, bio: form.bio };
     if (s === 4) return { nightService: form.nightService, serviceDays: form.serviceDays, workStartTime: form.workStartTime, workEndTime: form.workEndTime };
@@ -499,7 +594,7 @@ export default function PartnerRegistration() {
 
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
-        <span className="text-xl font-bold text-[#114b2e]">InstaFixd</span>
+        <img src="/logo.png" alt="instaFixd" className="h-7 w-auto" />
         <Link href="/" className="text-sm font-medium text-slate-700 hover:text-[#114b2e] transition-colors">
           Back to Home
         </Link>
@@ -544,7 +639,7 @@ export default function PartnerRegistration() {
             Partner Registration
           </span>
           <h1 className="text-5xl font-extrabold text-[#114b2e] mb-3 leading-tight">
-            Become an InstaFixd Expert
+            Become an instaFixd Expert
           </h1>
           <p className="text-slate-500 text-base max-w-md mx-auto leading-relaxed">
             Join our ecosystem of premium service providers. Grow your local business with the support of a lush community.
@@ -643,10 +738,22 @@ export default function PartnerRegistration() {
                 </div>
 
                 <div>
-                  <label className={labelCls}>WhatsApp Number <span className="text-slate-400 normal-case font-normal tracking-normal">(optional)</span></label>
+                  <label className={labelCls}>WhatsApp Number </label>
                   <input type="tel" placeholder="+94 77 123 4567" value={form.whatsappNumber}
                     onChange={e => set('whatsappNumber', e.target.value)} className={fic('whatsappNumber')} />
                   {err('whatsappNumber')}
+                </div>
+                <div>
+                  <label className={labelCls}>Preferred Language</label>
+                  <div className="relative">
+                    <select value={form.languageCode}
+                      onChange={e => set('languageCode', e.target.value)} className={fsc('languageCode')}>
+                      {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1.5">We&apos;ll use this for your WhatsApp bot conversations.</p>
+                  {err('languageCode')}
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelCls}>Permanent Address</label>
@@ -662,14 +769,34 @@ export default function PartnerRegistration() {
                 </div>
                 <div>
                   <label className={labelCls}>Password</label>
-                  <input type="password" placeholder="Min. 8 characters" value={form.password}
-                    onChange={e => set('password', e.target.value)} className={fic('password')} />
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} placeholder="Min. 8 characters" value={form.password}
+                      onChange={e => set('password', e.target.value)} className={`${fic('password')} pr-11`} />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {(form.password.length > 0 || errors.password) && <PasswordChecklist password={form.password} />}
                 </div>
                 <div>
                   <label className={labelCls}>Confirm Password</label>
-                  <input type="password" placeholder="Re-enter your password" value={form.confirmPassword}
-                    onChange={e => set('confirmPassword', e.target.value)} className={fic('confirmPassword')} />
+                  <div className="relative">
+                    <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={form.confirmPassword}
+                      onChange={e => set('confirmPassword', e.target.value)} className={`${fic('confirmPassword')} pr-11`} />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(v => !v)}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {err('confirmPassword')}
                 </div>
               </div>
@@ -793,6 +920,30 @@ export default function PartnerRegistration() {
                 <h2 className="text-2xl font-bold text-slate-900">Expertise</h2>
               </div>
 
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <label className={labelCls}>Professional Bio</label>
+                  <button
+                    type="button"
+                    onClick={handleEnhanceBio}
+                    disabled={enhancingBio || !form.bio.trim()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-[#1aae74] hover:bg-emerald-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {enhancingBio ? 'Enhancing…' : 'Enhance'}
+                  </button>
+                </div>
+                <textarea placeholder="Tell customers about your craftsmanship and values..." value={form.bio}
+                  onChange={e => set('bio', e.target.value)} onBlur={handleBioBlur} rows={5}
+                  className={`${fic('bio')} resize-none`} />
+                <div className="flex items-center justify-between mt-1.5">
+                  {err('bio') ?? (bioError ? <p className="text-xs text-red-500">{bioError}</p> : null)}
+                  <p className={`text-xs ml-auto ${form.bio.length > 500 ? 'text-red-500' : 'text-slate-400'}`}>
+                    {form.bio.length}/500
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 <div>
                   <label className={labelCls}>Primary Category</label>
@@ -833,36 +984,27 @@ export default function PartnerRegistration() {
                 </div>
               </div>
 
-              <div className="mb-8">
+              <div>
                 <label className={labelCls}>Your Selected Expertise</label>
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
-                  {form.subCategories.length > 0 ? (
-                    form.subCategories.map(cat => (
-                      <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a3d2b] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
-                        {cat}
-                        <button type="button" onClick={() => toggleSubCategory(cat)} className="hover:text-emerald-300 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      </span>
-                    ))
-                  ) : (
+                  {form.subCategories.length === 0 && !predictingCategory && (
                     <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories above.</p>
+                  )}
+                  {form.subCategories.map(cat => (
+                    <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a3d2b] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
+                      {cat}
+                      <button type="button" onClick={() => toggleSubCategory(cat)} className="hover:text-emerald-300 transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </span>
+                  ))}
+                  {predictingCategory && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 text-transparent text-xs font-semibold animate-pulse w-24">
+                      loading
+                    </span>
                   )}
                 </div>
                 {err('subCategories')}
-              </div>
-
-              <div>
-                <label className={labelCls}>Professional Bio</label>
-                <textarea placeholder="Tell customers about your craftsmanship and values..." value={form.bio}
-                  onChange={e => set('bio', e.target.value)} rows={5}
-                  className={`${fic('bio')} resize-none`} />
-                <div className="flex items-center justify-between mt-1.5">
-                  {err('bio')}
-                  <p className={`text-xs ml-auto ${form.bio.length > 500 ? 'text-red-500' : 'text-slate-400'}`}>
-                    {form.bio.length}/500
-                  </p>
-                </div>
               </div>
             </div>
           )}
@@ -892,14 +1034,15 @@ export default function PartnerRegistration() {
               </div>
 
               <div className="mb-6 relative z-10">
-                <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-4">Select Service Days</p>
+                <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-1">Select Service Days</p>
+                <p className="text-xs text-white/40 mb-4">Tap the days you're available to work.</p>
                 <div className="flex gap-2 flex-wrap">
                   {DAYS.map(day => (
                     <button key={day} type="button" onClick={() => toggleDay(day)}
                       className={`w-12 h-12 rounded-full text-xs font-bold transition-all ${
                         form.serviceDays.includes(day)
-                          ? 'bg-[#163324] border-2 border-[#1aae74]/40 text-white'
-                          : 'bg-white/10 text-white/50 hover:bg-white/20 border-2 border-transparent'
+                          ? 'bg-[#1aae74] border-2 border-[#1aae74] text-white shadow-md shadow-[#1aae74]/30'
+                          : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70 border-2 border-white/15 hover:border-white/25'
                       }`}>
                       {day}
                     </button>
@@ -1018,13 +1161,13 @@ export default function PartnerRegistration() {
                   {[
                     {
                       key: 'agreeTerms' as const,
-                      title: 'I agree to the InstaFixd Terms & Conditions',
+                      title: 'I agree to the instaFixd Terms & Conditions',
                       desc: 'By checking this, you agree to our professional code of conduct and service quality standards.',
                     },
                     {
                       key: 'agreeCommission' as const,
                       title: 'I acknowledge the 10% Platform Commission',
-                      desc: 'InstaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
+                      desc: 'instaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
                     },
                   ].map(({ key, title, desc }) => (
                     <div key={key}>
@@ -1094,7 +1237,7 @@ export default function PartnerRegistration() {
 
       {/* Footer */}
       <footer className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-emerald-100/60">
-        <p className="text-xs text-slate-400">© 2024 InstaFixd. All rights reserved.</p>
+        <p className="text-xs text-slate-400">© 2024 instaFixd. All rights reserved.</p>
         <div className="flex items-center gap-6 mt-3 md:mt-0">
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Privacy</Link>
           <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Terms</Link>

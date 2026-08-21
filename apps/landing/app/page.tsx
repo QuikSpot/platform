@@ -1,638 +1,367 @@
 'use client';
 
-//test1
-
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { Plus_Jakarta_Sans, Inter, Caveat } from 'next/font/google';
 import {
-  Wrench,
-  Zap,
-  Droplet,
-  Wind,
-  BookOpen,
-  Sparkles,
   MessageCircle,
-  CheckCircle2,
+  BadgeCheck,
+  Search,
   ArrowRight,
-  Play,
-  Shield,
-  Clock,
+  ArrowUpRight,
   Star,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Send,
   Linkedin,
   Facebook,
   Instagram,
-  Twitter,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X,
-  UserCircle,
-  LogOut,
+  MessageSquare,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
-import { ChatPreviewSection } from '@/components/chat-preview-section';
-import { useAuth } from '@/context/auth-context';
+import { Navbar } from '@/components/navbar';
+import { HowItWorksInteractive } from '@/components/how-it-works';
+import { FaqSection } from '@/components/faq-section';
+import { ChatbotWidget } from '@/components/chatbot-widget';
+import { services } from '@/lib/services-data';
+import { WHATSAPP_BOT_LINK, buildWhatsAppInquiryLink } from '@/lib/whatsapp';
 
-const services = [
-  { icon: Zap,       title: 'Electricians',    description: 'Expert electrical repairs and installations' },
-  { icon: Droplet,   title: 'Plumbers',        description: 'Professional plumbing solutions' },
-  { icon: Wind,      title: 'AC Repair',       description: 'Climate control experts' },
-  { icon: Sparkles,  title: 'Cleaners',        description: 'Home & office cleaning services' },
-  { icon: BookOpen,  title: 'Tutors',          description: 'Professional tutoring services' },
-  { icon: Wrench,    title: 'General Repairs', description: 'All-round maintenance services' },
-];
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] });
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] });
+const caveat = Caveat({ subsets: ['latin'], weight: ['600', '700'] });
+const headline = jakarta.className;
+
+const featuredServices = services.slice(0, 6);
 
 const steps = [
-  { number: '1', title: 'Message InstaFixd Bot', description: 'Start a WhatsApp conversation and describe your problem' },
-  { number: '2', title: 'AI Analysis',           description: 'Our AI analyzes your needs and identifies the right provider' },
-  { number: '3', title: 'Instant Matching',      description: 'Get matched with the best available service provider' },
-  { number: '4', title: 'Confirmation',          description: 'Receive booking confirmation directly on WhatsApp' },
+  { icon: MessageSquare, title: '1. Say Hello', description: 'Send a simple message on WhatsApp describing what you need help with.' },
+  { icon: Sparkles, title: '2. Curator Matches', description: 'Our AI-driven curator matches you with the perfect available professional in seconds.' },
+  { icon: ShieldCheck, title: '3. Service Done', description: 'Your professional arrives, does the job, and you pay securely via WhatsApp link.' },
 ];
 
 const testimonials = [
-  { name: 'Ravi Kumar',  role: 'Homeowner',      text: 'InstaFixd fixed my AC in hours! The WhatsApp integration made everything so convenient.',                        rating: 5 },
-  { name: 'Priya Silva', role: 'Business Owner', text: 'Reliable, fast, and professional. All my property maintenance is now handled through InstaFixd.',               rating: 5 },
-  { name: 'Anil Perera', role: 'Homeowner',      text: 'The AI bot understood exactly what I needed. Found the perfect plumber in minutes!',                            rating: 5 },
+  { name: 'Sarah Jenkins', role: 'Homeowner', text: '"I was skeptical about booking a plumber on WhatsApp, but instaFixd made it so easy. Found someone in 5 minutes!"' },
+  { name: 'Michael Chen', role: 'Tech Manager', text: '"The quality of the AC repair was outstanding. The professional was verified and clearly knew their craft."' },
+  { name: 'Jessica Drew', role: 'Startup Founder', text: '"Payment through WhatsApp was seamless. I love that I don\'t need another app on my phone."' },
 ];
 
-const featureCards = [
-  { type: 'image', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop', label: 'Analytics and Reports' },
-  { type: 'image', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop',  label: 'Multiple Job Types' },
-  { type: 'text',  label: 'Bidding Module', desc: 'The bidding module allows professionals to send detailed bids and proposals for biddable jobs, giving service seekers more options and price quotations.' },
-  { type: 'image', img: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800&auto=format&fit=crop',     label: 'Advanced Search' },
-  { type: 'image', img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop',  label: 'Real-time Tracking' },
-];
-
-const navLinks = [
-  { href: '#services',      label: 'Services' },
-  { href: '#how-it-works',  label: 'How It Works' },
-  { href: '#testimonials',  label: 'Testimonials' },
-  { href: '/agreement',     label: 'Privacy Policy' },
-];
+const whatsappGradient = 'bg-[linear-gradient(135deg,#006d2f_0%,#25d366_100%)]';
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const { profile, logout } = useAuth();
-  const router = useRouter();
+  const [inquiry, setInquiry] = useState('');
 
-  useEffect(() => { setMounted(true); }, []);
-
-  function handleLogout() {
-    logout();
-    setProfileMenuOpen(false);
-  }
-
-  if (!mounted) return null;
-
-  const scrollCarousel = (dir: 'left' | 'right') => {
-    carouselRef.current?.scrollBy({ left: dir === 'right' ? 448 : -448, behavior: 'smooth' });
+  const handleFindPro = (e: React.FormEvent) => {
+    e.preventDefault();
+    window.open(buildWhatsAppInquiryLink(inquiry), '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className={`min-h-screen bg-[#f8f9fa] text-[#191c1d] overflow-x-hidden ${inter.className}`}>
 
-      {/* ── Navigation ── */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">InstaFixd</span>
-            </div>
+      <Navbar />
 
-            {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-8">
-              {navLinks.map(l =>
-                l.href.startsWith('/') ? (
-                  <Link key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
-                    {l.label}
-                  </Link>
-                ) : (
-                  <a key={l.href} href={l.href} className="text-sm text-gray-600 hover:text-green-700 transition-colors font-medium">
-                    {l.label}
-                  </a>
-                )
-              )}
-            </div>
+      <main>
 
-            <div className="flex items-center gap-3">
-              {profile ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setProfileMenuOpen(o => !o)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
-                      <UserCircle className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
-                      {profile.fullName}
-                    </span>
-                  </button>
-                  <AnimatePresence>
-                    {profileMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 4 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-1.5 z-50"
-                      >
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="text-xs font-semibold text-gray-900 truncate">{profile.fullName}</p>
-                          <p className="text-xs text-gray-400 truncate">{profile.email}</p>
-                        </div>
-                        <button
-                          onClick={() => { setProfileMenuOpen(false); router.push('/profile'); }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
-                        >
-                          <UserCircle className="w-4 h-4 text-gray-400" /> My Profile
-                        </button>
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
-                        >
-                          <LogOut className="w-4 h-4" /> Sign out
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <>
-                  <Link href="/login" className="hidden sm:block">
-                    <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50">Sign in</Button>
-                  </Link>
-                  <Link href="/register/partner" className="hidden sm:block">
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-                  </Link>
-                </>
-              )}
-              {/* Mobile Get Started */}
-              {!profile && (
-                <Link href="/register/partner" className="md:hidden">
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5">Get Started</Button>
-                </Link>
-              )}
-              {/* Mobile hamburger */}
-              <button
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                onClick={() => setMobileMenuOpen(o => !o)}
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
+        {/* ── Hero ── */}
+        <section className="relative min-h-[870px] flex items-center overflow-hidden px-6 md:px-12">
+          <div className="absolute inset-0 z-0">
+            <img
+              alt="Professional electrician working on a circuit breaker"
+              className="w-full h-full object-cover opacity-20"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6JOzLFnFEBV1PkdJbu2OcVewIp375ylsULNC0ZwxZ5OreXm4HUr5du9rndOsc0BxMx7xceqBPnfbHPF_aD23E6eL3B9Qw7HjMmtbW40AC5w7StWARHrMKU6SF40xjgclDwbXB6JFC_E3D0suiKttA52JIvuxkIMzDf3hJ_CwzFwnKjzVW0AomS33P40DY0iEN5g8Ftjxij7mONPPvX58DLDZWJ7PS21m-afnBWogy73ZyOlCF93FwQ8iFbNWs9FjDDIThIqX90lA"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#f8f9fa] via-[#f8f9fa]/90 to-transparent" />
           </div>
-        </div>
-
-        {/* Mobile menu dropdown */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden border-t border-gray-100 bg-white overflow-hidden"
-            >
-              <div className="px-4 py-4 flex flex-col gap-1">
-                {navLinks.map(l =>
-                  l.href.startsWith('/') ? (
-                    <Link
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
-                    >
-                      {l.label}
-                    </Link>
-                  ) : (
-                    <a
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
-                    >
-                      {l.label}
-                    </a>
-                  )
-                )}
-                {profile ? (
-                  <>
-                    <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors flex items-center gap-2">
-                      <UserCircle className="w-4 h-4" /> My Profile
-                    </Link>
-                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
-                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2 w-full text-left">
-                      <LogOut className="w-4 h-4" /> Sign out
-                    </button>
-                  </>
-                ) : (
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full mt-2 border-gray-200">Sign in</Button>
-                  </Link>
-                )}
+          <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#25d366]/20 text-[#006d2f] font-bold text-sm tracking-wide uppercase">
+                <BadgeCheck className="w-4 h-4" /> Verified Experts Only
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      {/* ── Hero ── */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-white">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-green-200/40 rounded-full opacity-50 blur-[100px] -z-10" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-emerald-100/40 rounded-full opacity-50 blur-[100px] -z-10" />
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 mb-8 px-5 py-2.5 bg-white rounded-full shadow-sm border border-green-100/50"
-          >
-            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-medium text-green-800 tracking-wide uppercase">Now Launching in Sri Lanka</span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 leading-[1.1]"
-          >
-            Your Local Service
-            <br />
-            <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-800 bg-clip-text text-transparent pr-4">
-              Marketplace
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed font-light"
-          >
-            Connect instantly with trusted service providers. Describe your problem on WhatsApp, let our AI find the perfect match, and get it done seamlessly.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
-          >
-            <Button size="lg" className="bg-green-700 hover:bg-green-800 text-white text-lg h-14 px-8 rounded-full shadow-lg shadow-green-900/20 transition-all hover:scale-105">
-              <MessageCircle className="w-5 h-5 mr-2" /> Chat on WhatsApp
-            </Button>
-            <Button size="lg" variant="outline" className="text-slate-700 border-slate-200 hover:bg-slate-50 text-lg h-14 px-8 rounded-full transition-all hover:scale-105">
-              <Play className="w-5 h-5 mr-2" /> Watch Demo
-            </Button>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }}
-            className="flex flex-wrap justify-center gap-4 md:gap-8"
-          >
-            {[
-              { icon: CheckCircle2, label: 'Verified Providers' },
-              { icon: Clock,        label: 'Same-Day Service' },
-              { icon: Shield,       label: 'Secure & Guaranteed' },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/40 text-sm font-medium text-slate-600">
-                <Icon className="w-4 h-4 text-green-600 shrink-0" />
-                <span>{label}</span>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Feature cards */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto relative z-10">
-          {[
-            { icon: '⚡', title: 'Quick Booking',  desc: 'Book trusted services in seconds',            bg: 'bg-amber-100/60',  hover: 'group-hover:border-amber-300' },
-            { icon: '🤖', title: 'AI Powered',     desc: 'Smart matching with top professionals',       bg: 'bg-blue-100/60',   hover: 'group-hover:border-blue-300' },
-            { icon: '💬', title: 'WhatsApp Chat',  desc: 'No apps needed, entirely conversational',     bg: 'bg-emerald-100/60',hover: 'group-hover:border-emerald-300' },
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 * (i + 1) }}
-              className={`group relative bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 ${item.hover} hover:shadow-xl overflow-hidden cursor-pointer`}
-            >
-              <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full ${item.bg} opacity-0 group-hover:opacity-100 group-hover:scale-[2.5] transition-all duration-700 ease-out blur-3xl`} />
-              <div className={`relative w-14 h-14 rounded-2xl ${item.bg} flex items-center justify-center text-3xl mb-5 transform group-hover:scale-110 transition-all duration-300`}>
-                {item.icon}
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Services ── */}
-      <section id="services" className="py-24 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900">Expert Services Available</h2>
-            <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-              From emergency repairs to regular home care, find the right verified professional for any job instantly.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service, i) => {
-              const Icon = service.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}
-                  className="group relative bg-white rounded-[2rem] p-8 hover:bg-slate-50 transition-colors duration-300 border border-slate-100 shadow-sm hover:shadow-xl"
-                >
-                  <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 group-hover:bg-green-100">
-                    <Icon className="w-7 h-7 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{service.title}</h3>
-                  <p className="text-slate-500 text-sm">{service.description}</p>
-                  <div className="mt-5 flex items-center text-green-600 font-semibold text-sm opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                    Learn more <ArrowRight className="w-4 h-4 ml-1" />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How It Works ── */}
-      <section id="how-it-works" className="py-20 px-4 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">How InstaFixd Works</h2>
-            <p className="text-xl text-gray-500">Smart AI matching powered by WhatsApp</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((step, i) => (
-              <div key={i} className="relative">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="bg-white rounded-2xl p-7 text-center border-2 border-green-100 hover:border-green-400 transition-colors h-full shadow-sm"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-lg shadow-md shadow-green-500/20">
-                    {step.number}
-                  </div>
-                  <h3 className="text-base font-bold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{step.description}</p>
-                </motion.div>
-                {i < steps.length - 1 && (
-                  <div className="hidden lg:flex absolute top-1/2 -right-3.5 -translate-y-1/2 z-10">
-                    <ArrowRight className="w-5 h-5 text-green-300" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WhatsApp Chat Preview ── */}
-      <ChatPreviewSection />
-
-      {/* ── Features Carousel ── */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-slate-900 leading-tight">
-                Features Built for<br />Modern Service Businesses
-              </h2>
-              <p className="text-lg text-slate-500 leading-relaxed">
-                A powerful suite of tools to manage, grow, and scale your professional services — all in one place.
+              <h1 className={`${headline} text-6xl md:text-7xl font-extrabold text-[#191c1d] leading-[1.1] tracking-tight`}>
+                Service Anytime, <br /><span className="text-[#006d2f]">Anywhere.</span><br />Just WhatsApp.
+              </h1>
+              <p className="text-lg md:text-xl text-[#5f5e5e] max-w-lg font-medium leading-relaxed">
+                Skip the forms and the wait. Connect with top-rated local professionals through our intelligent WhatsApp assistant.
               </p>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <a
+                  href={WHATSAPP_BOT_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${whatsappGradient} text-white px-8 py-4 rounded-full font-extrabold text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#006d2f]/20 hover:scale-105 transition-all`}
+                >
+                  <MessageCircle className="w-6 h-6 fill-white" />
+                  Book on WhatsApp
+                </a>
+                <a href="#services" className="bg-[#e7e8e9] text-[#191c1d] px-8 py-4 rounded-full font-bold text-lg text-center hover:bg-[#e1e3e4] transition-all">
+                  Browse Services
+                </a>
+              </div>
             </div>
-            <div className="flex gap-3 shrink-0">
-              <button
-                onClick={() => scrollCarousel('left')}
-                className="w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scrollCarousel('right')}
-                className="w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-600 hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+            {/* Floating interactive elements — top-to-bottom narrative: provider tracking → chat snippet → QR CTA */}
+            <div className="hidden lg:block relative min-h-[700px]">
 
-          {/* Carousel — no overflow-hidden on parent so scroll works */}
-          <div
-            ref={carouselRef}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {featureCards.map((card, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="min-w-[300px] md:min-w-[380px] shrink-0 snap-start rounded-3xl overflow-hidden h-[420px] flex flex-col"
-              >
-                {card.type === 'image' ? (
-                  <>
-                    <div className="flex-1 overflow-hidden bg-slate-100">
-                      <img
-                        src={card.img}
-                        alt={card.label}
-                        className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                      />
-                    </div>
-                    <div className="bg-[#f4f4f5] px-6 py-5 flex items-center justify-between shrink-0">
-                      <h3 className="text-base font-bold text-slate-900">{card.label}</h3>
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                        <ArrowRight className="w-4 h-4 text-slate-600" />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 bg-[#1aae74] p-10 flex flex-col justify-center hover:bg-[#159362] transition-colors">
-                    <div className="w-10 h-0.5 bg-white/30 rounded-full mb-8" />
-                    <h3 className="text-2xl font-bold text-white mb-4">{card.label}</h3>
-                    <p className="text-emerald-50/90 leading-relaxed text-sm">{card.desc}</p>
-                    <div className="mt-8 inline-flex items-center gap-2 text-white/80 text-sm font-medium hover:text-white transition-colors cursor-pointer">
-                      Learn more <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section id="testimonials" className="py-24 px-4 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 text-slate-900">Loved by Sri Lankans</h2>
-            <p className="text-xl text-slate-500">Don't just take our word for it — see what our community says</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.6 }}
-                className="bg-white rounded-3xl p-8 relative border border-slate-100 shadow-sm hover:shadow-lg transition-shadow"
-              >
-                <div className="absolute top-4 right-8 text-6xl font-serif text-green-200 leading-none select-none">"</div>
-                <div className="flex gap-1 mb-5">
-                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                </div>
-                <p className="text-slate-700 mb-6 text-base leading-relaxed relative z-10">{t.text}</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-base shrink-0">
-                    {t.name.charAt(0)}
+              {/* 1. Provider tracking card — shifted right, over the open photo area */}
+              <div className="bg-white p-6 rounded-xl shadow-2xl shadow-black/5 border border-[#bbcbb9]/10 max-w-sm absolute top-[40px] left-[260px] z-10 animate-float-up">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#3de273] flex items-center justify-center">
+                    <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-slate-500">{t.role}</p>
+                    <p className="font-bold text-[#191c1d]">Alex, Master Plumber</p>
+                    <p className="text-sm text-[#5f5e5e]">Arriving in 15 mins</p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+                <div className="h-2 w-full bg-[#edeeef] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#006d2f] w-3/4" />
+                </div>
+              </div>
+
+              {/* 2. Chat snippet — shifted further right and down, near the bottom of the open photo area */}
+              <div
+                className="bg-white p-4 rounded-xl shadow-xl absolute top-[600px] left-[300px] z-10 max-w-[240px] animate-fade-in-up"
+                style={{ animationDelay: '0.2s' }}
+              >
+                <div className="flex gap-2 items-start">
+                  <MessageCircle className="w-6 h-6 text-[#006d2f] shrink-0" />
+                  <p className="text-sm font-medium">"I need an electrician for my living room lights."</p>
+                </div>
+              </div>
+
+              {/* 3. WhatsApp bot QR code — primary CTA, anchored at the bottom with room to breathe */}
+              <div
+                className="absolute top-[262px] left-0 z-20 animate-float-up"
+                style={{ animationDelay: '0.4s' }}
+              >
+                <a
+                  href={WHATSAPP_BOT_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative group flex flex-col items-center gap-4 hover:-translate-y-1 transition-transform"
+                >
+                  <div className="relative p-2 rounded-2xl border border-white/70 bg-white/30 backdrop-blur-[2px] shadow-sm">
+                    <img
+                      src="/whatsapp-qr.png"
+                      alt="Scan to chat with instaFixd on WhatsApp"
+                      className="w-56 h-56"
+                    />
+                  </div>
+
+                  {/* Hand-drawn annotation — sits in the open space to the card's right, clear of every other element */}
+                  <div className="absolute top-1/2 -translate-y-1/2 left-[calc(100%+16px)] flex items-center gap-2 pointer-events-none select-none">
+                    <svg width="56" height="48" viewBox="0 0 56 48" fill="none" className="text-[#006d2f] shrink-0">
+                      <path d="M50 40C34 40 14 24 6 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="1 7" />
+                      <path d="M17 14L6 8L7 20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span className={`${caveat.className} -rotate-3 text-2xl font-bold text-[#006d2f] whitespace-nowrap`}>
+                      Scan me to chat!
+                    </span>
+                  </div>
+                </a>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* ── Search Bar ── */}
+        <section className="max-w-4xl mx-auto -mt-12 relative z-20 px-6">
+          <form
+            onSubmit={handleFindPro}
+            className="bg-white rounded-2xl shadow-2xl p-2 flex items-center gap-4 group focus-within:ring-2 ring-[#006d2f] transition-all"
+          >
+            <div className="pl-6 text-[#5f5e5e] group-focus-within:text-[#006d2f] transition-colors">
+              <Search className="w-8 h-8" />
+            </div>
+            <input
+              className="w-full py-6 text-xl bg-transparent border-none focus:ring-0 focus:outline-none placeholder:text-[#c8c6c5] font-medium text-[#191c1d]"
+              placeholder="What do you need help with today?"
+              type="text"
+              value={inquiry}
+              onChange={e => setInquiry(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="bg-[#006d2f] text-white px-10 py-5 rounded-xl font-bold text-lg hover:opacity-90 transition-all shrink-0"
+            >
+              Find Pro
+            </button>
+          </form>
+        </section>
+
+        {/* ── How It Works ── */}
+        <section id="how-it-works" className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-20 space-y-4">
+              <h2 className={`${headline} text-4xl md:text-5xl font-extrabold tracking-tight`}>
+                Just text us, <span className="text-[#006d2f]">we'll find your pro.</span>
+              </h2>
+              <p className="text-[#5f5e5e] text-lg max-w-2xl mx-auto">Experience the most seamless booking journey ever created for local services.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+              {steps.map(({ icon: Icon, title, description }) => (
+                <div key={title} className="flex flex-col items-center text-center space-y-6 group">
+                  <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center group-hover:bg-[#006d2f] transition-colors duration-500">
+                    <Icon className="w-10 h-10 text-[#006d2f] group-hover:text-white transition-colors" />
+                  </div>
+                  <h3 className={`${headline} text-2xl font-bold`}>{title}</h3>
+                  <p className="text-[#5f5e5e] leading-relaxed">{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Popular Services ── */}
+        <section id="services" className="py-24 px-6 md:px-12 bg-[#f3f4f5]">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex justify-between items-end mb-12">
+              <div className="space-y-4">
+                <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>Popular Services</h2>
+                <p className="text-[#5f5e5e] text-lg">Trusted by thousands of homeowners every day.</p>
+              </div>
+              <Link href="/services" className="hidden md:flex items-center gap-2 text-[#006d2f] font-bold hover:underline">
+                View All Services <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredServices.map(service => (
+                <Link key={service.title} href="/services" className="bg-white rounded-xl overflow-hidden group shadow-sm hover:shadow-xl transition-all duration-300 block">
+                  <div className="h-56 relative overflow-hidden">
+                    <img
+                      alt={service.alt}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      src={service.img}
+                    />
+                    {service.popular && (
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#006d2f]">POPULAR</div>
+                    )}
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <h3 className={`${headline} text-2xl font-bold`}>{service.title}</h3>
+                    <p className="text-[#5f5e5e] text-sm">{service.description}</p>
+                    <div className="flex items-center justify-end pt-4">
+                      <span className="text-[#191c1d] font-bold flex items-center gap-1 group-hover:text-[#006d2f] transition-colors">
+                        Explore <ArrowUpRight className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-10 flex md:hidden justify-center">
+              <Link href="/services" className="flex items-center gap-2 text-[#006d2f] font-bold hover:underline">
+                View All Services <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Why Choose Us ── */}
+        <section className="py-24 px-6 md:px-12 bg-[#f8f9fa]">
+          <div className="max-w-7xl mx-auto">
+            <HowItWorksInteractive />
+          </div>
+        </section>
+
+        {/* ── Testimonials ── */}
+        <section id="testimonials" className="py-24 px-6 md:px-12 bg-[#f3f4f5] overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className={`${headline} text-4xl font-extrabold tracking-tight`}>What our users say</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map(t => (
+                <div key={t.name} className="bg-white p-8 rounded-2xl space-y-6 shadow-sm">
+                  <div className="flex gap-0.5 text-[#006d2f]">
+                    {[...Array(5)].map((_, j) => <Star key={j} className="w-5 h-5 fill-[#006d2f]" />)}
+                  </div>
+                  <p className="text-[#191c1d] font-medium italic">{t.text}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#edeeef]" />
+                    <div>
+                      <p className="font-bold">{t.name}</p>
+                      <p className="text-xs text-[#5f5e5e]">{t.role}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <FaqSection />
+
+        {/* ── Final CTA ── */}
+        <section className="py-24 px-6 md:px-12 bg-[#191c1d] text-[#f8f9fa] text-center">
+          <div className="max-w-4xl mx-auto space-y-12">
+            <h2 className={`${headline} text-5xl md:text-6xl font-extrabold tracking-tighter`}>
+              Experience the Future of Local Services. <br />Start a chat today.
+            </h2>
+            <div className="flex justify-center pt-6">
+              <button className={`${whatsappGradient} text-white px-12 py-6 rounded-full font-black text-2xl flex items-center gap-4 hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-[#006d2f]/30`}>
+                <MessageCircle className="w-9 h-9 fill-white" />
+                Chat with instaFixd
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* ── Footer ── */}
-      <footer className="bg-emerald-50 py-16 px-4">
-        <div className="max-w-7xl mx-auto bg-white border border-emerald-900 rounded-2xl overflow-hidden shadow-2xl">
-
-          {/* Top section */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-12 p-10 md:p-14">
-            {/* Left CTA */}
-            <div>
-              <div className="flex -space-x-3 mb-8">
-                {[11,12,13,14].map(n => (
-                  <div key={n} className="w-11 h-11 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?img=${n}`} alt="User" loading="lazy" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">Build your</p>
-              <p className="text-4xl md:text-5xl font-serif italic text-emerald-600 leading-tight">Dream Service</p>
-              <p className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight mb-8">Marketplace.</p>
-              <Button className="bg-[#114b2e] hover:bg-[#0d3b23] text-white rounded-xl px-7 h-12 text-base w-fit transition-transform hover:scale-105">
-                Get In Touch <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-
-            {/* Right links — clean 4-column layout */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:ml-6">
-              {/* Col 1 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Services</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  <li><a href="#" className="hover:text-emerald-700 transition-colors font-medium">Home Services App</a></li>
-                  <li><a href="#" className="hover:text-emerald-700 transition-colors font-medium">Enterprise</a></li>
-                </ul>
-                <h4 className="font-bold text-emerald-800 mt-8 mb-5 uppercase text-xs tracking-wider">Case Studies</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  <li><a href="#" className="hover:text-emerald-700 transition-colors font-medium">Impact Maker</a></li>
-                </ul>
-              </div>
-
-              {/* Col 2 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Platforms</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Freelancer', 'Taskrabbit', 'Airtasker', 'Thumbtack', 'Voice123', 'Handy'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 3 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Categories</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Laundry', 'Babysitters', 'Mechanic', 'Plumbers', 'Car Wash', 'Beauty', 'Massage'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 4 */}
-              <div>
-                <h4 className="font-bold text-slate-900 mb-5 uppercase text-xs tracking-wider">Company</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Demo', 'Pricing', 'Clients'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-                <h4 className="font-bold text-emerald-800 mt-8 mb-5 uppercase text-xs tracking-wider">Resources</h4>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  {['Features', 'Resource Center', 'FAQs'].map(l => (
-                    <li key={l}><a href="#" className="hover:text-emerald-700 transition-colors font-medium">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+      <footer className="bg-slate-50 w-full py-16 px-6 md:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 max-w-7xl mx-auto">
+          <div className="space-y-6">
+            <img src="/logo.png" alt="instaFixd" className="h-7 w-auto" />
+            <p className="text-slate-500 text-sm leading-relaxed">The premium marketplace for verified local service professionals, delivered exclusively via WhatsApp.</p>
           </div>
-
-          {/* Bottom section */}
-          <div className="border-t border-emerald-900">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end p-10 md:p-14">
-              <div>
-                <h1 className="text-5xl sm:text-7xl md:text-[8rem] font-black text-[#114b2e] tracking-tighter leading-none break-words">
-                  InstaFixd
-                </h1>
-              </div>
-              <div className="flex flex-col md:items-end gap-6">
-                {/* Social icons */}
-                <div className="flex gap-3">
-                  {[
-                    { Icon: Linkedin,  label: 'LinkedIn' },
-                    { Icon: Facebook,  label: 'Facebook' },
-                    { Icon: Twitter,   label: 'Twitter' },
-                    { Icon: Instagram, label: 'Instagram' },
-                  ].map(({ Icon, label }) => (
-                    <button key={label} aria-label={label} className="w-10 h-10 bg-slate-900 rounded text-white flex items-center justify-center hover:bg-emerald-800 transition-colors">
-                      <Icon className="w-4 h-4" />
-                    </button>
-                  ))}
-                </div>
-                {/* Contact */}
-                <div className="text-slate-900 font-semibold md:text-right space-y-1 text-sm">
-                  <p>+94 11 234 5678</p>
-                  <a href="mailto:sales@instafixd.lk" className="underline underline-offset-4 decoration-2 hover:text-emerald-700 transition-colors">
-                    sales@instafixd.lk
-                  </a>
-                </div>
-                {/* Legal links */}
-                <div className="text-xs font-semibold text-slate-500 flex gap-4">
-                  <a href="#" className="hover:text-slate-800 transition-colors hover:underline">Server Requirement</a>
-                  <span>|</span>
-                  <a href="#" className="hover:text-slate-800 transition-colors hover:underline">Sitemap</a>
-                </div>
-              </div>
+          <div>
+            <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Quick Links</h4>
+            <ul className="space-y-4 text-sm text-slate-500">
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#">About Us</a></li>
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#services">Services</a></li>
+              <li><Link className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="/register/partner">Partner with Us</Link></li>
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#faq">FAQ</a></li>
+              <li><a className="hover:text-green-600 underline-offset-4 hover:underline transition-all" href="#">Careers</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Contact Info</h4>
+            <ul className="space-y-4 text-sm text-slate-500">
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4" /> contact.instafixd@gmail.com</li>
+              <li className="flex items-center gap-2"><Phone className="w-4 h-4" /> +94 76 594 4878</li>
+              <li className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Colombo, Sri Lanka</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 mb-6 uppercase text-xs tracking-widest">Newsletter</h4>
+            <p className="text-xs text-slate-500 mb-4">Get the latest updates and service deals.</p>
+            <div className="flex gap-2">
+              <input
+                className="bg-white border-none text-sm rounded-lg w-full px-3 focus:ring-1 focus:outline-none ring-[#006d2f]"
+                placeholder="Email address"
+                type="email"
+              />
+              <button className="bg-[#006d2f] text-white p-2 rounded-lg" aria-label="Subscribe">
+                <Send className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="text-center mt-8 text-sm font-medium text-slate-500">
-          © {new Date().getFullYear()} InstaFixd — A product of{' '}
-          <span className="underline decoration-slate-300 underline-offset-4">InstaFixd Technologies</span>.
+        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-slate-400 text-xs">© {new Date().getFullYear()} instaFixd. All rights reserved.</p>
+          <div className="flex gap-6">
+            <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="LinkedIn"><Linkedin className="w-5 h-5" /></a>
+            <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="Facebook"><Facebook className="w-5 h-5" /></a>
+            <a className="text-slate-400 hover:text-[#006d2f] transition-colors" href="#" aria-label="Instagram"><Instagram className="w-5 h-5" /></a>
+          </div>
         </div>
       </footer>
+
+      <ChatbotWidget />
     </div>
   );
 }

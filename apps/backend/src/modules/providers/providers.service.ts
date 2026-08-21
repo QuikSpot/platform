@@ -8,34 +8,20 @@ import {
 } from '@nestjs/common';
 import { extname } from 'path';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
+import { ConfirmDocumentsDto } from './dto/confirm-documents.dto';
 import { RegisterProviderDto } from './dto/register-provider.dto';
+import { DocumentCategory, SignDocumentDto } from './dto/sign-document.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { ProviderRegistrationResult } from './types/provider-registration.types';
 
-interface MulterFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-}
+const DOCUMENTS_BUCKET = 'private-documents';
 
-export type ProviderDocumentFiles = {
-  nicFrontImage?: MulterFile[];
-  nicBackImage?: MulterFile[];
-  selfieImage?: MulterFile[];
-  portfolio?: MulterFile[];
+/** Maps a verification upload category to the doc_type stored in verification_document */
+const VERIFICATION_DOC_TYPE: Record<Exclude<DocumentCategory, 'PORTFOLIO'>, string> = {
+  NIC_FRONT: 'NIC_FRONT',
+  NIC_BACK: 'NIC_BACK',
+  SELFIE: 'OTHER',
 };
-
-const VERIFICATION_FIELDS: Array<{
-  field: keyof ProviderDocumentFiles;
-  docType: string;
-}> = [
-  { field: 'nicFrontImage', docType: 'NIC_FRONT' },
-  { field: 'nicBackImage', docType: 'NIC_BACK' },
-  { field: 'selfieImage', docType: 'OTHER' },
-];
 
 const DAY_CODE_TO_NUM: Record<string, number> = {
   SUN: 0,
@@ -57,13 +43,28 @@ const DAY_NUM_TO_CODE: Record<number, string> = {
   6: 'SAT',
 };
 
+// How long an OTP-verified mobile number stays "consumable" by register() before it expires —
+// long enough to finish the multi-step registration wizard after verifying.
+const MOBILE_VERIFICATION_TTL_MS = 30 * 60 * 1000;
+
 @Injectable()
 export class ProvidersService {
   private readonly logger = new Logger(ProvidersService.name);
 
+  // Tracks mobile numbers that OTP verification has recently confirmed but that don't have a
+  // service_provider row yet (normalized mobile -> expiry timestamp). register() consumes this
+  // to know whether the number it's about to insert was actually verified.
+  private readonly verifiedMobiles = new Map<string, number>();
+
   constructor(private readonly supabase: SupabaseService) {}
 
   async register(dto: RegisterProviderDto): Promise<ProviderRegistrationResult> {
+    if (!this.consumeMobileVerification(dto.mobileNumber)) {
+      throw new BadRequestException(
+        'Please verify your mobile number with an OTP before registering',
+      );
+    }
+
     // ── 1. Create Supabase Auth user ─────────────────────────────────
     const { data: authData, error: authError } = await this.supabase.admin.createUser({
       email: dto.email,
@@ -92,9 +93,13 @@ export class ProvidersService {
         nic_number: dto.nicNumber,
         province: dto.province ?? null,
         district: dto.district ?? null,
+        language_code: dto.languageCode ?? 'en',
         is_active: false,
+        mobile_verified: true,
       })
-      .select('id, full_name, mobile_number, email, nic_number, province, district, is_active, created_at')
+      .select(
+        'id, full_name, mobile_number, email, nic_number, province, district, language_code, is_active, created_at',
+      )
       .single();
 
     if (spError) {
@@ -171,6 +176,7 @@ export class ProvidersService {
       nicNumber: spRow.nic_number,
       province: spRow.province,
       district: spRow.district,
+      languageCode: spRow.language_code,
       isActive: spRow.is_active,
       createdAt: new Date(spRow.created_at),
     };
@@ -181,7 +187,7 @@ export class ProvidersService {
       .from('service_provider')
       .select(
         `id, full_name, mobile_number, whatsapp_number, email, nic_number,
-         province, district, is_active, created_at,
+         province, district, language_code, is_active, created_at,
          provider_service_zone(zone_id, service_zone(zone_name)),
          provider_service(experience_level, description, main_category(name), sub_category(name)),
          provider_availability(available_from, available_to, is_24_7, is_available_now, night_service),
@@ -202,6 +208,7 @@ export class ProvidersService {
     if (dto.whatsappNumber !== undefined) updates['whatsapp_number'] = dto.whatsappNumber;
     if (dto.province !== undefined) updates['province'] = dto.province || null;
     if (dto.district !== undefined) updates['district'] = dto.district || null;
+    if (dto.languageCode !== undefined) updates['language_code'] = dto.languageCode;
 
     if (Object.keys(updates).length > 0) {
       const { error } = await this.supabase.db
@@ -246,91 +253,99 @@ export class ProvidersService {
     return this.getMe(providerId);
   }
 
-  async uploadDocuments(
-    providerId: string,
-    files: ProviderDocumentFiles,
+  /**
+   * Issues a short-lived Supabase Storage signed upload URL so the browser can upload
+   * the file directly, bypassing our API entirely. Vercel Serverless Functions enforce a
+   * hard ~4.5MB request body cap platform-side — routing verification/portfolio files
+   * through our own endpoint hit that ceiling in production even though local dev (no such
+   * proxy limit) and our own Multer config (20MB) never showed a problem.
+   */
+  async createSignedUpload(
+    dto: SignDocumentDto,
+  ): Promise<{ path: string; token: string; signedUrl: string }> {
+    const { data: provider } = await this.supabase.db
+      .from('service_provider')
+      .select('id')
+      .eq('id', dto.providerId)
+      .maybeSingle();
+
+    if (!provider) throw new NotFoundException('Provider not found');
+
+    const basePath = `providers/${dto.providerId}`;
+    const ext = extname(dto.fileName).toLowerCase() || '.bin';
+
+    // Same path scheme the old direct-upload flow used, so existing storage_path
+    // values and RLS policies keyed off this layout keep working unchanged.
+    const storagePath =
+      dto.category === 'PORTFOLIO'
+        ? `${basePath}/portfolio/${Date.now()}${ext}`
+        : `${basePath}/verification/${VERIFICATION_DOC_TYPE[dto.category].toLowerCase()}${ext}`;
+
+    const { data, error } = await this.supabase.storage
+      .from(DOCUMENTS_BUCKET)
+      .createSignedUploadUrl(storagePath, { upsert: dto.category !== 'PORTFOLIO' });
+
+    if (error || !data) {
+      this.logger.error(`createSignedUploadUrl failed: ${error?.message}`);
+      throw new InternalServerErrorException('Failed to prepare upload');
+    }
+
+    return { path: data.path, token: data.token, signedUrl: data.signedUrl };
+  }
+
+  /** Records the metadata for files the browser already uploaded via a signed URL. */
+  async confirmDocuments(
+    dto: ConfirmDocumentsDto,
   ): Promise<{ providerId: string; uploaded: string[]; failed: string[] }> {
     const { data: provider } = await this.supabase.db
       .from('service_provider')
       .select('id')
-      .eq('id', providerId)
-      .single();
+      .eq('id', dto.providerId)
+      .maybeSingle();
 
     if (!provider) throw new NotFoundException('Provider not found');
 
-    const bucket = 'private-documents';
-    const basePath = `providers/${providerId}`;
     const uploaded: string[] = [];
     const failed: string[] = [];
 
-    // Verification docs: NIC front/back and selfie
-    for (const { field, docType } of VERIFICATION_FIELDS) {
-      const file = files[field]?.[0];
-      if (!file) continue;
+    for (const doc of dto.documents) {
+      if (doc.category === 'PORTFOLIO') {
+        const { error } = await this.supabase.db.from('portfolio_document').insert({
+          provider_id: dto.providerId,
+          doc_type: resolvePortfolioDocType(doc.mimeType),
+          storage_path: doc.storagePath,
+          mime_type: doc.mimeType,
+          original_name: doc.originalName,
+        });
 
-      const ext = extname(file.originalname).toLowerCase() || '.bin';
-      const storagePath = `${basePath}/verification/${docType.toLowerCase()}${ext}`;
-
-      const { error: storageError } = await this.supabase.storage
-        .from(bucket)
-        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: true });
-
-      if (storageError) {
-        this.logger.error(`Storage upload failed [${docType}]: ${storageError.message}`);
-        failed.push(docType);
+        if (error) {
+          this.logger.error(`portfolio_document insert failed: ${error.message}`);
+          failed.push('portfolio');
+        } else {
+          uploaded.push('portfolio');
+        }
         continue;
       }
 
-      const { error: dbError } = await this.supabase.db.from('verification_document').insert({
-        provider_id: providerId,
+      const docType = VERIFICATION_DOC_TYPE[doc.category];
+      const { error } = await this.supabase.db.from('verification_document').insert({
+        provider_id: dto.providerId,
         doc_type: docType,
-        storage_path: storagePath,
-        mime_type: file.mimetype,
-        original_name: file.originalname,
+        storage_path: doc.storagePath,
+        mime_type: doc.mimeType,
+        original_name: doc.originalName,
         status: 'PENDING',
       });
 
-      if (dbError) {
-        this.logger.error(`verification_document insert failed [${docType}]: ${dbError.message}`);
+      if (error) {
+        this.logger.error(`verification_document insert failed [${docType}]: ${error.message}`);
         failed.push(docType);
       } else {
         uploaded.push(docType);
       }
     }
 
-    // Portfolio docs
-    for (const file of files.portfolio ?? []) {
-      const docType = resolvePortfolioDocType(file.mimetype);
-      const ext = extname(file.originalname).toLowerCase() || '.bin';
-      const storagePath = `${basePath}/portfolio/${Date.now()}${ext}`;
-
-      const { error: storageError } = await this.supabase.storage
-        .from(bucket)
-        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
-
-      if (storageError) {
-        this.logger.error(`Storage upload failed [portfolio]: ${storageError.message}`);
-        failed.push('portfolio');
-        continue;
-      }
-
-      const { error: dbError } = await this.supabase.db.from('portfolio_document').insert({
-        provider_id: providerId,
-        doc_type: docType,
-        storage_path: storagePath,
-        mime_type: file.mimetype,
-        original_name: file.originalname,
-      });
-
-      if (dbError) {
-        this.logger.error(`portfolio_document insert failed: ${dbError.message}`);
-        failed.push('portfolio');
-      } else {
-        uploaded.push('portfolio');
-      }
-    }
-
-    return { providerId, uploaded, failed };
+    return { providerId: dto.providerId, uploaded, failed };
   }
 
   async findByMobile(mobileNumber: string): Promise<{ id: string } | null> {
@@ -343,13 +358,38 @@ export class ProvidersService {
   }
 
   async markMobileVerified(mobileNumber: string): Promise<void> {
+    // Updates the row if one already exists (e.g. a returning provider re-verifying their
+    // number) — a no-op during first-time signup, since the row isn't created until register()
+    // runs afterward. That's why we also record the verification in memory below: it's the only
+    // way for the later register() insert to know this number was actually OTP-verified.
     await this.supabase.db
       .from('service_provider')
       .update({ mobile_verified: true })
       .eq('mobile_number', mobileNumber);
+
+    this.verifiedMobiles.set(
+      this.normalizeMobileForVerificationTracking(mobileNumber),
+      Date.now() + MOBILE_VERIFICATION_TTL_MS,
+    );
   }
 
   // ── Private helpers ──────────────────────────────────────────────────
+
+  /** Checks and consumes a recent OTP verification for this mobile number (single use). */
+  private consumeMobileVerification(mobileNumber: string): boolean {
+    const key = this.normalizeMobileForVerificationTracking(mobileNumber);
+    const expiresAt = this.verifiedMobiles.get(key);
+    if (expiresAt === undefined) return false;
+    this.verifiedMobiles.delete(key);
+    return Date.now() <= expiresAt;
+  }
+
+  private normalizeMobileForVerificationTracking(mobile: string): string {
+    let m = mobile.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
+    if (m.startsWith('+')) m = m.slice(1);
+    if (m.startsWith('0')) m = '94' + m.slice(1);
+    return m;
+  }
 
   private async insertServiceZones(providerId: string, zoneNames: string[]): Promise<void> {
     for (const zoneName of zoneNames) {
@@ -472,6 +512,7 @@ interface SpRowFull {
   nic_number: string;
   province: string | null;
   district: string | null;
+  language_code: string;
   is_active: boolean;
   created_at: string;
   provider_service_zone: Array<{
@@ -507,6 +548,7 @@ function toProviderProfileFull(row: SpRowFull) {
     nicNumber: row.nic_number,
     province: row.province,
     district: row.district,
+    languageCode: row.language_code,
     isActive: row.is_active,
     createdAt: new Date(row.created_at),
     serviceZones: (row.provider_service_zone ?? [])

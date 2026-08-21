@@ -40,6 +40,11 @@ const LABEL_TO_EXP: Record<string, string> = {
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'si', label: 'Sinhala' },
+  { code: 'ta', label: 'Tamil' },
+];
 
 const COMPACT_TO_FULL: Record<string, string> = {
   MO: 'MON', TU: 'TUE', WE: 'WED', TH: 'THU', FR: 'FRI', SA: 'SAT', SU: 'SUN',
@@ -76,6 +81,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [languageCode, setLanguageCode] = useState('en');
   const [province, setProvince] = useState('');
   const [district, setDistrict] = useState('');
   const [serviceZones, setServiceZones] = useState<string[]>([]);
@@ -112,6 +118,7 @@ export default function ProfilePage() {
     setFullName(profile.fullName ?? '');
     setMobileNumber(profile.mobileNumber ?? '');
     setWhatsappNumber(profile.whatsappNumber ?? '');
+    setLanguageCode(profile.languageCode ?? 'en');
     setProvince(profile.province ?? '');
     setDistrict(profile.district ?? '');
     setServiceZones(profile.serviceZones ?? []);
@@ -176,6 +183,7 @@ export default function ProfilePage() {
           fullName,
           mobileNumber,
           whatsappNumber: whatsappNumber || undefined,
+          languageCode,
           province: province || undefined,
           district: district || undefined,
           serviceZones,
@@ -225,11 +233,8 @@ export default function ProfilePage() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">InstaFixd</span>
+            <Link href="/" className="flex items-center">
+              <img src="/logo.png" alt="instaFixd" className="h-8 w-auto" />
             </Link>
             <button
               onClick={handleLogout}
@@ -321,6 +326,14 @@ export default function ProfilePage() {
                     <label className={labelCls}>WhatsApp <span className="text-gray-400 font-normal">(optional)</span></label>
                     <input type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="07XXXXXXXX" className={inputCls} />
                   </div>
+                </div>
+
+                <div>
+                  <label className={labelCls}>Preferred Language</label>
+                  <select value={languageCode} onChange={(e) => setLanguageCode(e.target.value)} className={selectCls}>
+                    {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1.5">Used for your WhatsApp bot conversations.</p>
                 </div>
 
                 <div className="border-t border-gray-100 pt-5">

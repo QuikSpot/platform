@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Wrench, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import type { Metadata } from 'next';
+import { Navbar } from '@/components/navbar';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy – Instafixd',
@@ -103,8 +104,7 @@ Continued use of Instafixd after a policy update constitutes your acceptance of 
 
 Instafixd Pvt Ltd
 Sri Lanka
-Email: privacy@instafixd.lk
-Support: support@instafixd.lk`,
+Email: contact.instafixd@gmail.com`,
   },
 ];
 
@@ -112,20 +112,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-green-50/30 to-white">
 
-      {/* Minimal nav */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center">
-              <Wrench className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">InstaFixd</span>
-          </Link>
-          <Link href="/" className="text-sm text-gray-500 hover:text-green-700 transition-colors font-medium">
-            ← Back to Home
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Content */}
       <main className="pt-28 pb-24 px-4">
