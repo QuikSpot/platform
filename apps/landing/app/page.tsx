@@ -146,7 +146,7 @@ export default function Home() {
                     <img
                       src="/whatsapp-qr.png"
                       alt="Scan to chat with instaFixd on WhatsApp"
-                      className="w-56 h-56"
+                      className="w-72 h-72"
                     />
                   </div>
 
