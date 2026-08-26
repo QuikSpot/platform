@@ -1,38 +1,30 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useLocations } from '@/hooks/use-locations';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { validateStep } from '@/lib/validators/registration';
 import { uploadProviderDocument, type DocumentCategory } from '@/lib/upload-documents';
-import Link from 'next/link';
-import {
-  ArrowRight,
-  ArrowLeft,
-  BadgeCheck,
-  MapPin,
-  Wrench,
-  Clock,
-  ShieldCheck,
-  Camera,
-  Upload,
-  UserRound,
-  CheckCircle2,
-  Sparkles,
-  X,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { LocationStep } from './_components/location-step';
+import { ExpertiseStep } from './_components/expertise-step';
+import { ScheduleStep } from './_components/schedule-step';
+import { PersonalStep } from './_components/personal-step';
+import { PhoneStep } from './_components/phone-step';
+import { ProgressSummary } from './_components/progress-summary';
+import { ReviewStep } from './_components/review-step';
+import { SignupShell } from './_components/signup-shell';
+import { StepFooter, STEP_REGISTRY, TOTAL_STEPS } from './_components/step-config';
+import { SuccessScreen } from './_components/success-screen';
+import { VerificationStep } from './_components/verification-step';
 
 type FormData = {
+  phone: string;
   fullName: string;
   nicNumber: string;
-  mobileNumber: string;
-  whatsappNumber: string;
   email: string;
   password: string;
   confirmPassword: string;
-  address: string;
   languageCode: string;
+  address: string;
   province: string;
   district: string;
   serviceZones: string[];
@@ -52,89 +44,20 @@ type FormData = {
   agreeCommission: boolean;
 };
 
-const STEPS = [
-  { id: 1, label: 'Basic Info' },
-  { id: 2, label: 'Location' },
-  { id: 3, label: 'Expertise' },
-  { id: 4, label: 'Availability' },
-  { id: 5, label: 'Verification' },
-];
-
-const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const EXPERIENCE_LEVELS = ['Entry Level (1–2 years)', 'Intermediate (3–5 years)', 'Expert (5–10 years)', 'Master (10+ years)'];
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'si', label: 'Sinhala' },
-  { code: 'ta', label: 'Tamil' },
-];
-
-interface Category {
-  id: string;
-  name: string;
-  subCategories: { id: string; name: string }[];
-}
-
-
-const SelectChevron = () => (
-  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-);
-
-const TIME_OPTIONS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
-
-const PASSWORD_RULES = [
-  { label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
-  { label: 'One uppercase letter (A–Z)', test: (p: string) => /[A-Z]/.test(p) },
-  { label: 'One number (0–9)', test: (p: string) => /[0-9]/.test(p) },
-  { label: 'One special character (e.g. !@#$)', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
-];
-
-function PasswordChecklist({ password }: { password: string }) {
-  return (
-    <ul className="mt-2 space-y-1.5">
-      {PASSWORD_RULES.map(rule => {
-        const ok = rule.test(password);
-        return (
-          <li key={rule.label} className={`flex items-center gap-2 text-xs transition-colors ${ok ? 'text-[#1aae74]' : 'text-slate-400'}`}>
-            {ok
-              ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-              : <X className="w-3.5 h-3.5 flex-shrink-0 text-slate-300" />}
-            {rule.label}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-const Toggle = ({ on, onToggle, dark = false }: { on: boolean; onToggle: () => void; dark?: boolean }) => (
-  <button
-    type="button"
-    onClick={onToggle}
-    aria-checked={on}
-    role="switch"
-    className={`relative inline-flex w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1aae74] focus-visible:ring-offset-1 ${on ? 'bg-[#1aae74]' : dark ? 'bg-white/20' : 'bg-slate-300'}`}
-  >
-    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${on ? 'translate-x-[22px]' : 'translate-x-0'}`} />
-  </button>
-);
-
-const INITIAL_FORM: FormData = {
+const INITIAL: FormData = {
+  phone: '',
   fullName: '',
   nicNumber: '',
-  mobileNumber: '',
-  whatsappNumber: '',
   email: '',
   password: '',
   confirmPassword: '',
-  address: '',
   languageCode: 'en',
+  address: '',
   province: '',
   district: '',
   serviceZones: [],
   primaryCategory: '',
-  experienceLevel: 'Entry Level (1–2 years)',
+  experienceLevel: 'BEGINNER',
   subCategories: [],
   bio: '',
   nightService: false,
@@ -149,241 +72,190 @@ const INITIAL_FORM: FormData = {
   agreeCommission: false,
 };
 
+/** Maps a screen id (1..7) to the validator step number (1..5).
+ *  Steps 1 & 2 in the new flow (phone + personal) both validate against the old
+ *  step 1 schema; steps 3-7 in the new flow map to old 2-5 (skipping phone since
+ *  the OTP screen handles that gate). */
+function validatorStepFor(screen: number): number {
+  if (screen === 1 || screen === 2) return 1;
+  return screen - 1;
+}
+
+function validatorDataFor(screen: number, f: FormData): Record<string, unknown> {
+  if (screen === 1 || screen === 2) {
+    return {
+      fullName: f.fullName,
+      nicNumber: f.nicNumber,
+      mobileNumber: f.phone,
+      whatsappNumber: '',
+      address: f.address,
+      languageCode: f.languageCode,
+      email: f.email,
+      password: f.password,
+      confirmPassword: f.confirmPassword,
+    };
+  }
+  if (screen === 3) {
+    return {
+      province: f.province,
+      district: f.district,
+      serviceZones: f.serviceZones,
+    };
+  }
+  if (screen === 4) {
+    return {
+      primaryCategory: f.primaryCategory,
+      experienceLevel: f.experienceLevel,
+      subCategories: f.subCategories,
+      bio: f.bio,
+    };
+  }
+  if (screen === 5) {
+    return {
+      nightService: f.nightService,
+      serviceDays: f.serviceDays,
+      workStartTime: f.workStartTime,
+      workEndTime: f.workEndTime,
+    };
+  }
+  return {
+    nicFrontImage: f.nicFrontImage,
+    nicBackImage: f.nicBackImage,
+    selfieImage: f.selfieImage,
+    portfolio: f.portfolio,
+    agreeTerms: f.agreeTerms,
+    agreeCommission: f.agreeCommission,
+  };
+}
+
+const SESSION_KEY = 'instaFixdPartnerSignup';
+
 export default function PartnerRegistration() {
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormData>(INITIAL_FORM);
-
-  // OTP modal state
-  const [otpModalOpen, setOtpModalOpen] = useState(false);
-  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const [zoneSearch, setZoneSearch] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [screen, setScreen] = useState<number>(1);
+  const [form, setForm] = useState<FormData>(INITIAL);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-
-  const [enhancingBio, setEnhancingBio] = useState(false);
-  const [bioError, setBioError] = useState<string | null>(null);
-  const [predictingCategory, setPredictingCategory] = useState(false);
-  const lastPredictedBio = useRef('');
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+  // Hydrate from sessionStorage so the user can resume after closing the tab
   useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${backendUrl}/api/v1/categories`, { signal: controller.signal })
-      .then(r => r.json())
-      .then((res: { data?: Category[] }) => {
-        const list: Category[] = res.data ?? [];
-        setCategories(list);
-        if (list.length > 0) {
-          setForm(f => f.primaryCategory ? f : { ...f, primaryCategory: list[0].name });
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { screen?: number; form?: Partial<FormData>; completed?: number[] };
+        if (parsed.screen && parsed.screen >= 1 && parsed.screen <= TOTAL_STEPS) {
+          setScreen(parsed.screen);
         }
-      })
-      .catch(err => { if (err.name !== 'AbortError') setCategoriesLoading(false); })
-      .finally(() => setCategoriesLoading(false));
-    return () => controller.abort();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (parsed.completed) {
+          setCompleted(new Set(parsed.completed));
+        }
+        if (parsed.form) {
+          // Files can't be restored from JSON — start fresh for those
+          setForm((f) => ({ ...f, ...parsed.form, nicFrontImage: null, nicBackImage: null, selfieImage: null, portfolio: null }));
+        }
+      }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
-  const { provinces, districts, zones, provincesLoading, districtsLoading, zonesLoading } =
-    useLocations(form.province, form.district);
+  useEffect(() => {
+    try {
+      const { nicFrontImage: _a, nicBackImage: _b, selfieImage: _c, portfolio: _d, ...persistable } = form;
+      void _a; void _b; void _c; void _d;
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ screen, form: persistable, completed: Array.from(completed) }),
+      );
+    } catch {
+      /* storage may be full or disabled */
+    }
+  }, [form, screen, completed]);
 
-  const handleSendOtp = async () => {
-    if (!form.mobileNumber.trim()) {
-      setApiError('Please enter your mobile number first.');
+  const set = useMemo(
+    () =>
+      function <K extends keyof FormData>(key: K, value: FormData[K]) {
+        setForm((f) => ({ ...f, [key]: value }));
+        setErrors((prev) => {
+          if (!prev[key as string]) return prev;
+          const next = { ...prev };
+          delete next[key as string];
+          return next;
+        });
+      },
+    [],
+  );
+
+  /** Re-typeset `set` for a step's partial form shape. Subset of FormData
+   *  is structurally compatible at runtime; the type just needs a nudge. */
+  const setFor = <V extends Record<string, unknown>>(): ((
+    key: keyof V,
+    value: V[keyof V],
+  ) => void) => set as unknown as (key: keyof V, value: V[keyof V]) => void;
+
+  const stepTitle = STEP_REGISTRY[screen - 1]?.title ?? '';
+  const stepSubtitle = STEP_REGISTRY[screen - 1]?.subtitle;
+
+  const goNext = () => {
+    const vStep = validatorStepFor(screen);
+    const vData = validatorDataFor(screen, form);
+    const stepErrors = validateStep(vStep, vData);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
       return;
     }
-    setSendingOtp(true);
-    setApiError(null);
-    try {
-      const res = await fetch(`${backendUrl}/api/v1/otp/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber: form.mobileNumber }),
-      });
-      if (!res.ok) {
-        const body = await res.json() as { message?: string };
-        setApiError(body?.message ?? 'Failed to send OTP. Please try again.');
-        return;
-      }
-      setOtpDigits(['', '', '', '', '', '']);
-      setOtpError(null);
-      setOtpModalOpen(true);
-      // Focus first box after modal opens
-      setTimeout(() => otpRefs.current[0]?.focus(), 50);
-    } catch {
-      setApiError('Unable to send OTP. Please check your connection.');
-    } finally {
-      setSendingOtp(false);
-    }
+    setErrors({});
+    setCompleted((prev) => new Set([...prev, screen]));
+    setScreen((s) => Math.min(s + 1, TOTAL_STEPS));
+    // Scroll to top for the new screen
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
-    const next = [...otpDigits];
-    next[index] = value;
-    setOtpDigits(next);
-    if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
+  const goBack = () => {
+    setErrors({});
+    setScreen((s) => Math.max(1, s - 1));
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
+  const goTo = (target: number) => {
+    setErrors({});
+    setScreen(target);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    const next = [...otpDigits];
-    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i];
-    setOtpDigits(next);
-    const lastFilled = Math.min(pasted.length, 5);
-    otpRefs.current[lastFilled]?.focus();
+  const handlePhoneVerified = (phone: string) => {
+    set('phone', phone);
+    setCompleted((prev) => new Set([...prev, 1]));
+    setScreen(2);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleVerifyOtp = async () => {
-    const code = otpDigits.join('');
-    if (code.length < 6) return;
-    setOtpLoading(true);
-    setOtpError(null);
-    try {
-      const res = await fetch(`${backendUrl}/api/v1/otp/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobileNumber: form.mobileNumber, code }),
-      });
-      if (!res.ok) {
-        const body = await res.json() as { message?: string };
-        setOtpError(body?.message ?? 'Invalid OTP. Please try again.');
-        return;
-      }
-      setOtpModalOpen(false);
-      setPhoneVerified(true);
-      setErrors(prev => { const e = { ...prev }; delete e.mobileNumber; return e; });
-    } catch {
-      setOtpError('Unable to verify. Please try again.');
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const applyPredictedCategories = (predictions: { main_category_name: string; sub_category_name: string }[]) => {
-    if (predictions.length === 0) return;
-    const mainCategory = predictions[0].main_category_name;
-    const predictedSubs = predictions.map(p => p.sub_category_name);
-
-    setForm(f => ({
-      ...f,
-      // Only set the primary category if the user hasn't already picked one manually.
-      primaryCategory: f.primaryCategory ? f.primaryCategory : (categories.some(c => c.name === mainCategory) ? mainCategory : f.primaryCategory),
-      // Merge with whatever is already selected (manual or previously predicted) — never drop existing entries.
-      subCategories: Array.from(new Set([...f.subCategories, ...predictedSubs])),
-    }));
-  };
-
-  const predictCategoryFromBio = async (bioText: string) => {
-    if (!bioText.trim() || bioText === lastPredictedBio.current) return;
-    lastPredictedBio.current = bioText;
-    setPredictingCategory(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/v1/ai/predict-category`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: bioText }),
-      });
-      if (!res.ok) return;
-      const body = await res.json() as { data?: { main_category_name: string; sub_category_name: string }[] };
-      applyPredictedCategories(body.data ?? []);
-    } catch {
-      // Silent — category prediction is a background convenience, not a blocking action.
-    } finally {
-      setPredictingCategory(false);
-    }
-  };
-
-  const handleBioBlur = () => {
-    void predictCategoryFromBio(form.bio);
-  };
-
-  const handleEnhanceBio = async () => {
-    if (!form.bio.trim()) {
-      setBioError('Write a short bio first, then enhance it.');
-      return;
-    }
-    setEnhancingBio(true);
-    setBioError(null);
-    try {
-      const res = await fetch(`${backendUrl}/api/v1/ai/improve-text`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: form.bio }),
-      });
-      if (!res.ok) {
-        setBioError('Unable to enhance your bio right now. Please try again.');
-        return;
-      }
-      const body = await res.json() as { data?: { improved?: string } };
-      const enhanced = body.data?.improved;
-      if (enhanced) {
-        set('bio', enhanced);
-        await predictCategoryFromBio(enhanced);
-      }
-    } catch {
-      setBioError('Unable to reach the enhancement service. Please try again.');
-    } finally {
-      setEnhancingBio(false);
-    }
-  };
-
-  const mapExperienceLevel = (level: string): string => {
-    const map: Record<string, string> = {
-      'Entry Level (1–2 years)': 'BEGINNER',
-      'Intermediate (3–5 years)': 'INTERMEDIATE',
-      'Expert (5–10 years)': 'EXPERT',
-      'Master (10+ years)': 'EXPERT',
-    };
-    return map[level] ?? 'BEGINNER';
-  };
-
+  // ── Submit handler ─────────────────────────────────────────────
   const handleSubmit = async () => {
-    const s5Errors = validateStep(5, {
-      nicFrontImage: form.nicFrontImage,
-      nicBackImage: form.nicBackImage,
-      selfieImage: form.selfieImage,
-      portfolio: form.portfolio,
-      agreeTerms: form.agreeTerms,
-      agreeCommission: form.agreeCommission,
-    });
-    if (Object.keys(s5Errors).length > 0) {
-      setErrors(s5Errors);
-      return;
-    }
-    setIsLoading(true);
+    setIsSubmitting(true);
     setApiError(null);
     try {
-      // ── Step 1: Register provider (JSON) ────────────────────────
+      const mapExperienceLevel = (level: string): string => {
+        const map: Record<string, string> = {
+          'Entry Level (1–2 years)': 'BEGINNER',
+          'Intermediate (3–5 years)': 'INTERMEDIATE',
+          'Expert (5–10 years)': 'EXPERT',
+          'Master (10+ years)': 'EXPERT',
+        };
+        return map[level] ?? 'BEGINNER';
+      };
+
       const res = await fetch(`${backendUrl}/api/v1/provider/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: form.fullName,
-          mobileNumber: form.mobileNumber,
-          whatsappNumber: form.whatsappNumber || undefined,
+          mobileNumber: form.phone,
+          whatsappNumber: undefined,
           email: form.email,
           password: form.password,
           nicNumber: form.nicNumber,
@@ -410,15 +282,13 @@ export default function PartnerRegistration() {
         }),
       });
 
-      const body = await res.json() as { data?: { id: string }; message?: string };
+      const body = (await res.json().catch(() => ({}))) as { data?: { id: string }; message?: string };
       if (!res.ok) {
         setApiError(body?.message ?? 'Registration failed. Please try again.');
         return;
       }
+      const providerId = body.data!.id;
 
-      const providerId: string = body.data!.id;
-
-      // ── Step 2: Upload documents straight to Supabase Storage, then confirm ──
       const filesToUpload: { category: DocumentCategory; file: File }[] = [
         ...(form.nicFrontImage ? [{ category: 'NIC_FRONT' as const, file: form.nicFrontImage }] : []),
         ...(form.nicBackImage ? [{ category: 'NIC_BACK' as const, file: form.nicBackImage }] : []),
@@ -434,816 +304,201 @@ export default function PartnerRegistration() {
             ),
           );
 
-          const confirmRes = await fetch(`${backendUrl}/api/v1/provider/documents`, {
+          await fetch(`${backendUrl}/api/v1/provider/documents`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ providerId, documents: confirmed }),
           });
-
-          if (!confirmRes.ok) {
-            console.warn('Document confirmation failed. Registration was still successful.');
-          }
         } catch (docErr) {
           console.warn('Document upload failed. Registration was still successful.', docErr);
         }
       }
 
-      setForm(INITIAL_FORM);
-      setStep(1);
+      // Clean up state
+      setForm(INITIAL);
+      setCompleted(new Set());
       setErrors({});
-      setPhoneVerified(false);
-      setOtpDigits(['', '', '', '', '', '']);
-      setOtpError(null);
+      setScreen(1);
+      try {
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch {
+        /* noop */
+      }
       setSubmitted(true);
     } catch {
       setApiError('Unable to reach the server. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const toggleZone = (zone: string) =>
-    set('serviceZones', form.serviceZones.includes(zone)
-      ? form.serviceZones.filter(z => z !== zone)
-      : [...form.serviceZones, zone]);
-
-  const set = <K extends keyof FormData>(key: K, value: FormData[K]) => {
-    setForm(f => ({ ...f, [key]: value }));
-    setErrors(prev => { const e = { ...prev }; delete e[key as string]; return e; });
+  const handleRegisterAnother = () => {
+    setSubmitted(false);
   };
 
-  const toggleSubCategory = (cat: string) =>
-    set('subCategories', form.subCategories.includes(cat)
-      ? form.subCategories.filter(c => c !== cat)
-      : [...form.subCategories, cat]);
+  if (submitted) {
+    return <SuccessScreen onRegisterAnother={handleRegisterAnother} />;
+  }
 
-  const toggleDay = (day: string) =>
-    set('serviceDays', form.serviceDays.includes(day)
-      ? form.serviceDays.filter(d => d !== day)
-      : [...form.serviceDays, day]);
-
-  const getStepData = (s: number) => {
-    if (s === 1) return { fullName: form.fullName, nicNumber: form.nicNumber, mobileNumber: form.mobileNumber, whatsappNumber: form.whatsappNumber, address: form.address, languageCode: form.languageCode, email: form.email, password: form.password, confirmPassword: form.confirmPassword };
-    if (s === 2) return { province: form.province, district: form.district, serviceZones: form.serviceZones };
-    if (s === 3) return { primaryCategory: form.primaryCategory, experienceLevel: form.experienceLevel, subCategories: form.subCategories, bio: form.bio };
-    if (s === 4) return { nightService: form.nightService, serviceDays: form.serviceDays, workStartTime: form.workStartTime, workEndTime: form.workEndTime };
-    return { nicFrontImage: form.nicFrontImage, nicBackImage: form.nicBackImage, selfieImage: form.selfieImage, portfolio: form.portfolio, agreeTerms: form.agreeTerms, agreeCommission: form.agreeCommission };
-  };
-
-  const handleNext = () => {
-    const newErrors = validateStep(step, getStepData(step));
-    if (step === 1 && !phoneVerified && !newErrors.mobileNumber) {
-      newErrors.mobileNumber = 'Please verify your mobile number first';
+  // ── Render the active screen ───────────────────────────────────
+  const renderScreen = () => {
+    switch (screen) {
+      case 1:
+        return <PhoneStep initialValue={form.phone} onVerified={handlePhoneVerified} backendUrl={backendUrl} />;
+      case 2:
+        return (
+          <PersonalStep
+            values={{
+              fullName: form.fullName,
+              nicNumber: form.nicNumber,
+              email: form.email,
+              password: form.password,
+              confirmPassword: form.confirmPassword,
+              languageCode: form.languageCode,
+              address: form.address,
+            }}
+            errors={errors}
+            onChange={setFor()}
+            onSubmit={goNext}
+            primaryLabel="Continue"
+            primaryIcon={<ArrowRight className="w-4 h-4" />}
+          />
+        );
+      case 3:
+        return (
+          <LocationStep
+            values={{
+              province: form.province,
+              district: form.district,
+              serviceZones: form.serviceZones,
+            }}
+            errors={errors}
+            onChange={setFor()}
+            onSubmit={goNext}
+          />
+        );
+      case 4:
+        return (
+          <ExpertiseStep
+            values={{
+              primaryCategory: form.primaryCategory,
+              experienceLevel: form.experienceLevel,
+              subCategories: form.subCategories,
+              bio: form.bio,
+            }}
+            errors={errors}
+            onChange={setFor()}
+            onSubmit={goNext}
+            backendUrl={backendUrl}
+          />
+        );
+      case 5:
+        return (
+          <ScheduleStep
+            values={{
+              nightService: form.nightService,
+              serviceDays: form.serviceDays,
+              workStartTime: form.workStartTime,
+              workEndTime: form.workEndTime,
+            }}
+            errors={errors}
+            onChange={setFor()}
+            onSubmit={goNext}
+          />
+        );
+      case 6:
+        return (
+          <VerificationStep
+            values={{
+              nicFrontImage: form.nicFrontImage,
+              nicBackImage: form.nicBackImage,
+              selfieImage: form.selfieImage,
+              portfolio: form.portfolio,
+              agreeTerms: form.agreeTerms,
+              agreeCommission: form.agreeCommission,
+            }}
+            errors={errors}
+            onChange={setFor()}
+            onSubmit={goNext}
+          />
+        );
+      case 7:
+        return (
+          <ReviewStep
+            fullName={form.fullName}
+            mobileNumber={form.phone}
+            email={form.email}
+            province={form.province}
+            district={form.district}
+            serviceZones={form.serviceZones}
+            primaryCategory={form.primaryCategory}
+            subCategories={form.subCategories}
+            experienceLevel={form.experienceLevel}
+            bio={form.bio}
+            nightService={form.nightService}
+            serviceDays={form.serviceDays}
+            workStartTime={form.workStartTime}
+            workEndTime={form.workEndTime}
+            nicFrontImage={form.nicFrontImage}
+            nicBackImage={form.nicBackImage}
+            selfieImage={form.selfieImage}
+            portfolio={form.portfolio}
+            isSubmitting={isSubmitting}
+            apiError={apiError}
+            onEdit={goTo}
+            onSubmit={handleSubmit}
+          />
+        );
+      default:
+        return null;
     }
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-    setErrors({});
-    setStep(s => s + 1);
   };
 
-  const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition';
-  const selectCls = `${inputCls} appearance-none`;
-  const labelCls = 'block text-xs font-semibold text-slate-500 tracking-widest uppercase mb-2';
+  // Phone screen has its own submit button (it triggers the OTP).
+  // Review screen has its own submit button (final submit).
+  // All other screens get a generic mobile "Continue" sticky CTA + desktop "Continue" in footer.
+  const showShellFooter = screen !== 1 && screen !== 7;
 
-  const fic = (field: string) =>
-    `w-full px-4 py-3 rounded-xl border ${errors[field] ? 'border-red-400' : 'border-slate-200'} bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition`;
-  const fsc = (field: string) => `${fic(field)} appearance-none`;
-  const err = (field: string) =>
-    errors[field] ? <p className="text-xs text-red-500 mt-1.5">{errors[field]}</p> : null;
-  const errDark = (field: string) =>
-    errors[field] ? <p className="text-xs text-red-300 mt-1.5">{errors[field]}</p> : null;
+  const primaryAction =
+    showShellFooter ? (
+      <StepFooter
+        primaryLabel={screen === 6 ? 'Review application' : 'Continue'}
+        primaryAction={goNext}
+        primaryIcon={<ArrowRight className="w-4 h-4" />}
+      />
+    ) : screen === 7 ? (
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+        className="w-full lg:w-auto inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Submitting…
+          </>
+        ) : (
+          <>
+            Submit application
+            <ArrowRight className="w-4 h-4" />
+          </>
+        )}
+      </button>
+    ) : null;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #e8f5ee 0%, #d4eddf 50%, #e8f5ee 100%)' }}>
-
-      {/* ── OTP Modal ── */}
-      {otpModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setOtpModalOpen(false)}
-          />
-          <div className="relative bg-white rounded-3xl p-8 shadow-2xl w-full max-w-sm mx-4 animate-in fade-in zoom-in duration-200">
-            {/* Close */}
-            <button
-              type="button"
-              onClick={() => setOtpModalOpen(false)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-400"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Icon */}
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
-              <ShieldCheck className="w-6 h-6 text-[#1aae74]" />
-            </div>
-
-            <h3 className="text-xl font-bold text-slate-900 mb-1">Verify your number</h3>
-            <p className="text-sm text-slate-500 mb-7">
-              We sent a 6-digit code to{' '}
-              <span className="font-semibold text-slate-700">{form.mobileNumber}</span>
-            </p>
-
-            {/* OTP digit inputs */}
-            <div className="flex gap-2 justify-center mb-6" onPaste={handleOtpPaste}>
-              {otpDigits.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={el => { otpRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={e => handleOtpChange(i, e.target.value)}
-                  onKeyDown={e => handleOtpKeyDown(i, e)}
-                  className={`w-11 h-14 text-center text-xl font-bold rounded-xl border-2 transition-colors focus:outline-none focus:border-[#1aae74] ${
-                    digit ? 'border-[#1aae74] bg-emerald-50 text-[#114b2e]' : 'border-slate-200 bg-slate-50 text-slate-700'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {otpError && (
-              <p className="text-sm text-red-500 text-center mb-4">{otpError}</p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              disabled={otpLoading || otpDigits.join('').length < 6}
-              className="w-full py-3.5 bg-[#1a3d2b] text-white rounded-xl font-semibold text-sm hover:bg-[#114b2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {otpLoading ? 'Verifying…' : 'Confirm & Verify'}
-            </button>
-
-            <div className="text-center mt-4">
-              <button
-                type="button"
-                onClick={handleSendOtp}
-                disabled={sendingOtp}
-                className="text-sm text-[#1aae74] font-medium hover:underline disabled:opacity-50"
-              >
-                {sendingOtp ? 'Sending…' : 'Resend code'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <header className="flex items-center justify-between px-8 py-5">
-        <img src="/logo.png" alt="instaFixd" className="h-7 w-auto" />
-        <Link href="/" className="text-sm font-medium text-slate-700 hover:text-[#114b2e] transition-colors">
-          Back to Home
-        </Link>
-      </header>
-
-      <main className="flex-1 flex flex-col items-center px-6 py-10">
-
-        {/* ── Success screen ── */}
-        {submitted && (
-          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md text-center py-16">
-            <div className="w-20 h-20 rounded-full bg-[#1aae74]/15 flex items-center justify-center mb-6">
-              <CheckCircle2 className="w-10 h-10 text-[#1aae74]" />
-            </div>
-            <h2 className="text-3xl font-extrabold text-[#114b2e] mb-3">Application Submitted!</h2>
-            <p className="text-slate-500 text-base leading-relaxed mb-8">
-              Our curation team will review your application within 48 hours and reach out to you.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
-              <button
-                type="button"
-                onClick={() => setSubmitted(false)}
-                className="px-6 py-3 rounded-xl bg-[#1a3d2b] text-white font-semibold text-sm hover:bg-[#114b2e] transition-colors"
-              >
-                Register Another Partner
-              </button>
-              <Link
-                href="/"
-                className="px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors"
-              >
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* ── Multi-step form ── */}
-        {!submitted && (
-        <>
-        {/* Hero */}
-        <div className="text-center mb-10">
-          <span className="inline-block px-4 py-1.5 rounded-full border border-[#1aae74]/60 bg-[#1aae74]/10 text-[#1aae74] text-xs font-bold tracking-widest uppercase mb-4">
-            Partner Registration
-          </span>
-          <h1 className="text-5xl font-extrabold text-[#114b2e] mb-3 leading-tight">
-            Become an instaFixd Expert
-          </h1>
-          <p className="text-slate-500 text-base max-w-md mx-auto leading-relaxed">
-            Join our ecosystem of premium service providers. Grow your local business with the support of a lush community.
-          </p>
-        </div>
-
-        {/* Step indicator */}
-        <div className="flex items-center mb-10">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center">
-              <div className="flex items-center gap-2">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${
-                  step === s.id
-                    ? 'bg-[#1aae74] text-white shadow-md shadow-[#1aae74]/30'
-                    : step > s.id
-                    ? 'bg-[#114b2e] text-white'
-                    : 'bg-white text-slate-400 border border-slate-200'
-                }`}>
-                  {step > s.id ? <CheckCircle2 className="w-4 h-4" /> : s.id}
-                </div>
-                <span className={`text-xs font-semibold hidden sm:block ${step === s.id ? 'text-[#114b2e]' : step > s.id ? 'text-[#1aae74]' : 'text-slate-400'}`}>
-                  {s.label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div className={`w-8 h-px mx-2 transition-colors ${step > s.id ? 'bg-[#1aae74]' : 'bg-slate-200'}`} />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Form */}
-        <div className="w-full max-w-3xl space-y-5">
-
-          {/* ── Step 1: Basic Information ── */}
-          {step === 1 && (
-            <div className="bg-white rounded-3xl p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <BadgeCheck className="w-5 h-5 text-[#1aae74]" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Basic Information</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className={labelCls}>Full Name</label>
-                  <input type="text" placeholder="Johnathan Doe" value={form.fullName}
-                    onChange={e => set('fullName', e.target.value)} className={fic('fullName')} />
-                  {err('fullName')}
-                </div>
-                <div>
-                  <label className={labelCls}>NIC / ID Number</label>
-                  <input type="text" placeholder="987654321V" value={form.nicNumber}
-                    onChange={e => set('nicNumber', e.target.value)} className={fic('nicNumber')} />
-                  {err('nicNumber')}
-                </div>
-
-                {/* Mobile number with verify */}
-                <div>
-                  <label className={labelCls}>Mobile Number</label>
-                  <div className="flex items-center gap-2 w-full min-w-0 overflow-hidden">
-                    <input
-                      type="tel"
-                      placeholder="+94 77 123 4567"
-                      value={form.mobileNumber}
-                      onChange={e => {
-                        set('mobileNumber', e.target.value);
-                        if (phoneVerified) setPhoneVerified(false);
-                      }}
-                      className={`flex-1 min-w-0 px-4 py-3 rounded-xl border ${errors.mobileNumber ? 'border-red-400' : 'border-slate-200'} bg-slate-50 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition`}
-                    />
-                    {phoneVerified ? (
-                      <div className="shrink-0 flex items-center gap-1.5 px-4 py-3 bg-emerald-50 text-[#1aae74] text-sm font-semibold rounded-xl border border-[#1aae74]/30 whitespace-nowrap">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Verified
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleSendOtp}
-                        disabled={sendingOtp}
-                        className="shrink-0 px-4 py-3 bg-[#1a3d2b] text-white text-sm font-semibold rounded-xl hover:bg-[#114b2e] transition-colors whitespace-nowrap disabled:opacity-60"
-                      >
-                        {sendingOtp ? '…' : 'Verify'}
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1.5">
-                    {phoneVerified ? 'Phone number verified successfully.' : 'An OTP will be sent to this number.'}
-                  </p>
-                  {err('mobileNumber')}
-                  {apiError && (
-                    <p className="text-xs text-red-500 mt-1">{apiError}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className={labelCls}>WhatsApp Number </label>
-                  <input type="tel" placeholder="+94 77 123 4567" value={form.whatsappNumber}
-                    onChange={e => set('whatsappNumber', e.target.value)} className={fic('whatsappNumber')} />
-                  {err('whatsappNumber')}
-                </div>
-                <div>
-                  <label className={labelCls}>Preferred Language</label>
-                  <div className="relative">
-                    <select value={form.languageCode}
-                      onChange={e => set('languageCode', e.target.value)} className={fsc('languageCode')}>
-                      {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1.5">We&apos;ll use this for your WhatsApp bot conversations.</p>
-                  {err('languageCode')}
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelCls}>Permanent Address</label>
-                  <input type="text" placeholder="123, Lush Lane, Garden City" value={form.address}
-                    onChange={e => set('address', e.target.value)} className={fic('address')} />
-                  {err('address')}
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelCls}>Email Address</label>
-                  <input type="email" placeholder="johnathan@instafixd.com" value={form.email}
-                    onChange={e => set('email', e.target.value)} className={fic('email')} />
-                  {err('email')}
-                </div>
-                <div>
-                  <label className={labelCls}>Password</label>
-                  <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} placeholder="Min. 8 characters" value={form.password}
-                      onChange={e => set('password', e.target.value)} className={`${fic('password')} pr-11`} />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {(form.password.length > 0 || errors.password) && <PasswordChecklist password={form.password} />}
-                </div>
-                <div>
-                  <label className={labelCls}>Confirm Password</label>
-                  <div className="relative">
-                    <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter your password" value={form.confirmPassword}
-                      onChange={e => set('confirmPassword', e.target.value)} className={`${fic('confirmPassword')} pr-11`} />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(v => !v)}
-                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {err('confirmPassword')}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 2: Service Location ── */}
-          {step === 2 && (
-            <div className="bg-white rounded-3xl p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-[#1aae74]" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Service Location</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-                <div>
-                  <label className={labelCls}>Province</label>
-                  <div className="relative">
-                    <select value={form.province}
-                      onChange={e => {
-                        set('province', e.target.value);
-                        set('district', '');
-                        set('serviceZones', []);
-                      }}
-                      disabled={provincesLoading}
-                      className={`${fsc('province')} disabled:opacity-50`}>
-                      <option value="">{provincesLoading ? 'Loading…' : 'Select province'}</option>
-                      {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
-                  </div>
-                  {err('province')}
-                </div>
-                <div>
-                  <label className={labelCls}>District</label>
-                  <div className="relative">
-                    <select value={form.district}
-                      onChange={e => { set('district', e.target.value); set('serviceZones', []); }}
-                      disabled={!form.province || districtsLoading}
-                      className={`${fsc('district')} disabled:opacity-50`}>
-                      <option value="">{districtsLoading ? 'Loading…' : 'Select district'}</option>
-                      {districts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
-                  </div>
-                  {err('district')}
-                </div>
-              </div>
-
-              <div className="mb-8">
-                <label className={labelCls}>Your Selected Service Zones</label>
-                <div className={`bg-slate-50 border ${errors.serviceZones ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all`}>
-                  {form.serviceZones.length > 0 ? (
-                    form.serviceZones.map(zone => (
-                      <span key={zone} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#114b2e] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
-                        {zone}
-                        <button type="button" onClick={() => toggleZone(zone)} className="hover:text-emerald-300 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      </span>
-                    ))
-                  ) : (
-                    <p className="text-xs text-slate-400 italic">No zones selected yet. Select from the available towns in {form.district}.</p>
-                  )}
-                </div>
-                {err('serviceZones')}
-              </div>
-
-              <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl relative">
-                <label className={labelCls}>Search & Select Service Zones in {form.district}</label>
-                <div className="relative mt-3">
-                  <input
-                    type="text"
-                    placeholder="Search for towns (e.g. Maharagama...)"
-                    value={zoneSearch}
-                    onChange={e => setZoneSearch(e.target.value)}
-                    className={inputCls}
-                  />
-                  {zonesLoading && (
-                    <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl px-4 py-3 text-xs text-slate-400 italic">
-                      Loading zones…
-                    </div>
-                  )}
-                  {!zonesLoading && zoneSearch.trim() && (
-                    <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                      {zones
-                        .filter(z => z.zone_name.toLowerCase().includes(zoneSearch.toLowerCase()))
-                        .map(z => (
-                          <button
-                            key={z.id}
-                            type="button"
-                            onClick={() => { toggleZone(z.zone_name); setZoneSearch(''); }}
-                            className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-emerald-50 transition-colors ${
-                              form.serviceZones.includes(z.zone_name) ? 'bg-emerald-50/50 text-[#1aae74] font-semibold' : 'text-slate-600'
-                            }`}
-                          >
-                            {z.zone_name}
-                            {form.serviceZones.includes(z.zone_name) && <CheckCircle2 className="w-4 h-4" />}
-                          </button>
-                        ))}
-                      {zones.filter(z => z.zone_name.toLowerCase().includes(zoneSearch.toLowerCase())).length === 0 && (
-                        <div className="px-4 py-3 text-xs text-slate-400 italic">No matching zones found in this district.</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <p className="text-[10px] text-slate-400 mt-2 italic uppercase tracking-wider">Type to find specific areas where you provide service.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 3: Expertise ── */}
-          {step === 3 && (
-            <div className="bg-white rounded-3xl p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <Wrench className="w-5 h-5 text-[#1aae74]" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-900">Expertise</h2>
-              </div>
-
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-2">
-                  <label className={labelCls}>Professional Bio</label>
-                  <button
-                    type="button"
-                    onClick={handleEnhanceBio}
-                    disabled={enhancingBio || !form.bio.trim()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-[#1aae74] hover:bg-emerald-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {enhancingBio ? 'Enhancing…' : 'Enhance'}
-                  </button>
-                </div>
-                <textarea placeholder="Tell customers about your craftsmanship and values..." value={form.bio}
-                  onChange={e => set('bio', e.target.value)} onBlur={handleBioBlur} rows={5}
-                  className={`${fic('bio')} resize-none`} />
-                <div className="flex items-center justify-between mt-1.5">
-                  {err('bio') ?? (bioError ? <p className="text-xs text-red-500">{bioError}</p> : null)}
-                  <p className={`text-xs ml-auto ${form.bio.length > 500 ? 'text-red-500' : 'text-slate-400'}`}>
-                    {form.bio.length}/500
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-                <div>
-                  <label className={labelCls}>Primary Category</label>
-                  <div className="relative">
-                    <select value={form.primaryCategory} onChange={e => { set('primaryCategory', e.target.value); set('subCategories', []); }} className={selectCls} disabled={categoriesLoading}>
-                      {categoriesLoading
-                        ? <option>Loading…</option>
-                        : categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)
-                      }
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
-                  </div>
-                </div>
-                <div>
-                  <label className={labelCls}>Experience Level</label>
-                  <div className="relative">
-                    <select value={form.experienceLevel} onChange={e => set('experienceLevel', e.target.value)} className={selectCls}>
-                      {EXPERIENCE_LEVELS.map(l => <option key={l}>{l}</option>)}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-8 p-6 bg-slate-50/50 border border-slate-100 rounded-2xl">
-                <label className={labelCls}>Available Sub-Categories for {form.primaryCategory}</label>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {(categories.find(c => c.name === form.primaryCategory)?.subCategories ?? []).map(sub => (
-                    <button key={sub.id} type="button" onClick={() => toggleSubCategory(sub.name)}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
-                        form.subCategories.includes(sub.name)
-                          ? 'bg-[#1aae74] border-[#1aae74] text-white shadow-md shadow-[#1aae74]/20'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-[#1aae74] hover:text-[#1aae74]'
-                      }`}>
-                      {sub.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className={labelCls}>Your Selected Expertise</label>
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 min-h-[60px] flex flex-wrap gap-2 transition-all">
-                  {form.subCategories.length === 0 && !predictingCategory && (
-                    <p className="text-xs text-slate-400 italic flex items-center h-full">No expertise selected yet. Choose from the categories above.</p>
-                  )}
-                  {form.subCategories.map(cat => (
-                    <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a3d2b] text-white text-xs font-semibold shadow-sm animate-in fade-in zoom-in duration-200">
-                      {cat}
-                      <button type="button" onClick={() => toggleSubCategory(cat)} className="hover:text-emerald-300 transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                    </span>
-                  ))}
-                  {predictingCategory && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 text-transparent text-xs font-semibold animate-pulse w-24">
-                      loading
-                    </span>
-                  )}
-                </div>
-                {err('subCategories')}
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 4: Availability Schedule ── */}
-          {step === 4 && (
-            <div className="bg-[#1a3d2b] rounded-3xl p-8 shadow-sm relative overflow-hidden">
-              <div className="absolute bottom-6 right-6 opacity-[0.08]">
-                <Clock className="w-44 h-44 text-white" />
-              </div>
-
-              <div className="flex items-center gap-3 mb-8 relative z-10">
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-[#1aae74]" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Availability Schedule</h2>
-              </div>
-
-              <div className="mb-6 relative z-10">
-                <div className="bg-white/10 rounded-2xl p-5">
-                  <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-3">Night Service</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white font-semibold text-lg">24/7 Support</span>
-                    <Toggle on={form.nightService} onToggle={() => set('nightService', !form.nightService)} dark />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-6 relative z-10">
-                <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-1">Select Service Days</p>
-                <p className="text-xs text-white/40 mb-4">Tap the days you're available to work.</p>
-                <div className="flex gap-2 flex-wrap">
-                  {DAYS.map(day => (
-                    <button key={day} type="button" onClick={() => toggleDay(day)}
-                      className={`w-12 h-12 rounded-full text-xs font-bold transition-all ${
-                        form.serviceDays.includes(day)
-                          ? 'bg-[#1aae74] border-2 border-[#1aae74] text-white shadow-md shadow-[#1aae74]/30'
-                          : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70 border-2 border-white/15 hover:border-white/25'
-                      }`}>
-                      {day}
-                    </button>
-                  ))}
-                </div>
-                {errDark('serviceDays')}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                <div>
-                  <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-2">Work Start Time</p>
-                  <div className="relative">
-                    <select value={form.workStartTime} onChange={e => set('workStartTime', e.target.value)}
-                      className="w-full appearance-none px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#1aae74]/40 transition cursor-pointer">
-                      {TIME_OPTIONS.map(t => <option key={t} value={t} className="bg-[#1a3d2b] text-white">{t}</option>)}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-emerald-300/80 tracking-widest uppercase mb-2">Work End Time</p>
-                  <div className="relative">
-                    <select value={form.workEndTime} onChange={e => set('workEndTime', e.target.value)}
-                      className="w-full appearance-none px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-[#1aae74]/40 transition cursor-pointer">
-                      {TIME_OPTIONS.map(t => <option key={t} value={t} className="bg-[#1a3d2b] text-white">{t}</option>)}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                  {errDark('workEndTime')}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 5: Trust & Verification ── */}
-          {step === 5 && (
-            <>
-              <div className="bg-white rounded-3xl p-8 shadow-sm">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-[#1aae74]" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Trust & Verification</h2>
-                </div>
-
-                <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BadgeCheck className="w-4 h-4 text-[#1aae74]" />
-                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">NIC / ID Card Verification</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className={`flex flex-col items-center justify-center border-2 border-dashed ${errors.nicFrontImage ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white`}>
-                        <input type="file" accept="image/*" className="hidden"
-                          onChange={e => set('nicFrontImage', e.target.files?.[0] ?? null)} />
-                        <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
-                        <p className="font-semibold text-slate-700 text-xs text-center">NIC Front Side</p>
-                        {form.nicFrontImage && (
-                          <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
-                            {form.nicFrontImage.name}
-                          </p>
-                        )}
-                      </label>
-                      {err('nicFrontImage')}
-                    </div>
-                    <div>
-                      <label className={`flex flex-col items-center justify-center border-2 border-dashed ${errors.nicBackImage ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-6 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white`}>
-                        <input type="file" accept="image/*" className="hidden"
-                          onChange={e => set('nicBackImage', e.target.files?.[0] ?? null)} />
-                        <Camera className="w-6 h-6 text-slate-300 group-hover:text-[#1aae74] mb-2 transition-colors" />
-                        <p className="font-semibold text-slate-700 text-xs text-center">NIC Back Side</p>
-                        {form.nicBackImage && (
-                          <p className="text-[10px] text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
-                            {form.nicBackImage.name}
-                          </p>
-                        )}
-                      </label>
-                      {err('nicBackImage')}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  {[
-                    { key: 'selfieImage' as const, icon: UserRound, label: 'Verification Selfie', sub: 'Holding your ID card', accept: 'image/*' },
-                    { key: 'portfolio' as const, icon: Upload, label: 'Portfolio / Work', sub: 'Past project photos (ZIP/PDF)', accept: '.zip,.pdf,image/*' },
-                  ].map(({ key, icon: Icon, label, sub, accept }) => (
-                    <div key={key}>
-                      <label
-                        className={`flex flex-col items-center justify-center border-2 border-dashed ${errors[key] ? 'border-red-400' : 'border-slate-200'} rounded-2xl p-8 cursor-pointer hover:border-[#1aae74] transition-colors group bg-white`}>
-                        <input type="file" accept={accept} className="hidden"
-                          onChange={e => set(key, e.target.files?.[0] ?? null)} />
-                        <Icon className="w-8 h-8 text-slate-300 group-hover:text-[#1aae74] mb-3 transition-colors" />
-                        <p className="font-semibold text-slate-700 text-sm text-center">{label}</p>
-                        <p className="text-xs text-slate-400 text-center mt-1">{sub}</p>
-                        {form[key] && (
-                          <p className="text-xs text-[#1aae74] mt-2 text-center truncate max-w-full px-2">
-                            {(form[key] as File).name}
-                          </p>
-                        )}
-                      </label>
-                      {err(key)}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="bg-slate-50 rounded-2xl p-6 space-y-5">
-                  {[
-                    {
-                      key: 'agreeTerms' as const,
-                      title: 'I agree to the instaFixd Terms & Conditions',
-                      desc: 'By checking this, you agree to our professional code of conduct and service quality standards.',
-                    },
-                    {
-                      key: 'agreeCommission' as const,
-                      title: 'I acknowledge the 10% Platform Commission',
-                      desc: 'instaFixd retains a small commission on successful bookings to maintain the platform and customer support.',
-                    },
-                  ].map(({ key, title, desc }) => (
-                    <div key={key}>
-                      <button type="button" onClick={() => set(key, !form[key])}
-                        className="flex items-start gap-4 w-full text-left">
-                        <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center ${
-                          form[key] ? 'bg-[#1aae74] border-[#1aae74]' : errors[key] ? 'border-red-400' : 'border-slate-300'
-                        }`}>
-                          {form[key] && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-800 text-sm">{title}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
-                        </div>
-                      </button>
-                      {err(key)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl px-8 py-5 flex flex-col gap-4">
-                {apiError && (
-                  <p className="text-sm text-red-600 font-medium">{apiError}</p>
-                )}
-                {submitted ? (
-                  <div className="flex items-center gap-3 text-[#1aae74] font-semibold">
-                    <CheckCircle2 className="w-5 h-5" />
-                    Application submitted! We&apos;ll review it within 48 hours.
-                  </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-slate-500 italic">Your application will be reviewed by our curation team within 48 hours.</p>
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="inline-flex items-center gap-2 bg-[#1a3d2b] text-white px-8 py-4 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? 'Submitting…' : 'Submit Application'} <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between pt-1">
-            {step > 1 ? (
-              <button type="button" onClick={() => setStep(s => s - 1)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
-            ) : <div />}
-            {step < 5 && (
-              <button type="button" onClick={handleNext}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1aae74] text-white text-sm font-semibold hover:bg-[#159e67] transition-colors">
-                Continue <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-        </>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-t border-emerald-100/60">
-        <p className="text-xs text-slate-400">© 2024 instaFixd. All rights reserved.</p>
-        <div className="flex items-center gap-6 mt-3 md:mt-0">
-          <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Privacy</Link>
-          <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Terms</Link>
-          <Link href="#" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Support</Link>
-        </div>
-      </footer>
-    </div>
+    <SignupShell
+      step={screen}
+      totalSteps={TOTAL_STEPS}
+      stepTitle={stepTitle}
+      stepSubtitle={stepSubtitle}
+      canGoBack={screen > 1}
+      onBack={goBack}
+      primaryAction={primaryAction ?? <div />}
+      summary={<ProgressSummary currentStep={screen} completedSteps={completed} />}
+    >
+      {renderScreen()}
+    </SignupShell>
   );
 }
