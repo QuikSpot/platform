@@ -1,8 +1,7 @@
 'use client';
 
-import { ArrowRight, User } from 'lucide-react';
 import { useState } from 'react';
-import { Checkbox, Field, PasswordInput, SelectInput, TextInput } from './fields';
+import { Field, PasswordInput, SelectInput, TextInput } from './fields';
 
 interface PersonalStepProps {
   values: {
@@ -41,25 +40,10 @@ export function PersonalStep({
   values,
   errors,
   onChange,
-  onSubmit,
-  primaryLabel = 'Continue',
-  primaryIcon,
 }: PersonalStepProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-          <User className="w-5 h-5 text-[#1aae74]" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Tell us about you</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            This is what customers will see on your profile.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5">
         <TextInput
           label="Full name"
           required
@@ -79,7 +63,8 @@ export function PersonalStep({
         <div className="md:col-span-2">
           <TextInput
             label="Email"
-            required
+            optional
+            hint="Used for login and account recovery, if provided."
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
@@ -111,31 +96,20 @@ export function PersonalStep({
         <SelectInput
           label="Preferred language"
           required
-          hint="Used for your WhatsApp bot conversations"
+          hint="For WhatsApp bot conversations"
           value={values.languageCode}
           onChange={(v) => onChange('languageCode', v)}
           options={LANGUAGES}
         />
-        <div className="md:col-span-2">
-          <TextInput
-            label="Permanent address"
-            required
-            placeholder="House No, Street, City"
-            value={values.address}
-            onChange={(e) => onChange('address', e.target.value)}
-            error={errors.address}
-          />
-        </div>
+        <TextInput
+          label="Permanent address"
+          required
+          placeholder="House No, Street, City"
+          value={values.address}
+          onChange={(e) => onChange('address', e.target.value)}
+          error={errors.address}
+        />
       </div>
-
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="hidden lg:inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors shadow-sm hover:shadow-md"
-      >
-        {primaryLabel}
-        {primaryIcon ?? <ArrowRight className="w-4 h-4" />}
-      </button>
     </div>
   );
 }

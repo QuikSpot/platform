@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Clock, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { Chip, Field, SelectInput } from './fields';
 
 interface ScheduleStepProps {
@@ -39,7 +39,7 @@ function formatTime12(hhmm: string): string {
   return `${h - 12} PM`;
 }
 
-export function ScheduleStep({ values, errors, onChange, onSubmit }: ScheduleStepProps) {
+export function ScheduleStep({ values, errors, onChange }: ScheduleStepProps) {
   const toggleDay = (code: string) => {
     onChange(
       'serviceDays',
@@ -51,43 +51,29 @@ export function ScheduleStep({ values, errors, onChange, onSubmit }: ScheduleSte
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-          <Clock className="w-5 h-5 text-[#1aae74]" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">When are you available?</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Set the days and hours customers can book you.
-          </p>
-        </div>
-      </div>
-
       {/* 24/7 toggle — premium callout */}
       <button
         type="button"
         onClick={() => onChange('nightService', !values.nightService)}
-        className={`w-full p-5 rounded-2xl border-2 transition-all text-left flex items-center gap-4 ${
+        className={`w-full p-4 rounded-2xl border-2 transition-all text-left flex items-center gap-4 ${
           values.nightService
             ? 'border-[#1aae74] bg-emerald-50/50'
             : 'border-slate-200 bg-white hover:border-slate-300'
         }`}
       >
         <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
             values.nightService ? 'bg-[#1aae74] text-white' : 'bg-slate-100 text-slate-500'
           }`}
         >
-          {values.nightService ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+          {values.nightService ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-slate-900">24/7 Availability</p>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Available every day, including nights and emergencies.
-          </p>
+          <p className="font-semibold text-slate-900 text-sm">24/7 availability</p>
+          <p className="text-xs text-slate-500">Every day, including nights</p>
         </div>
         <div
-          className={`w-6 h-11 rounded-full p-1 transition-colors ${
+          className={`w-6 h-11 rounded-full p-1 transition-colors flex-shrink-0 ${
             values.nightService ? 'bg-[#1aae74]' : 'bg-slate-200'
           }`}
         >
@@ -108,7 +94,7 @@ export function ScheduleStep({ values, errors, onChange, onSubmit }: ScheduleSte
                 key={d.code}
                 type="button"
                 onClick={() => toggleDay(d.code)}
-                className={`flex flex-col items-center justify-center py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+                className={`flex flex-col items-center justify-center py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${
                   selected
                     ? 'bg-[#1aae74] border-[#1aae74] text-white shadow-sm shadow-emerald-500/20'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -122,7 +108,7 @@ export function ScheduleStep({ values, errors, onChange, onSubmit }: ScheduleSte
       </Field>
 
       {!values.nightService && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5">
           <SelectInput
             label="Start time"
             required
@@ -143,13 +129,13 @@ export function ScheduleStep({ values, errors, onChange, onSubmit }: ScheduleSte
 
       {/* Preview chip */}
       {values.serviceDays.length > 0 && (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
             Your schedule
           </p>
           <p className="text-sm text-slate-700">
             {values.nightService ? (
-              <span className="font-medium">Available 24/7, every day</span>
+              <span className="font-medium">Available 24/7</span>
             ) : (
               <>
                 {values.serviceDays.length} day{values.serviceDays.length === 1 ? '' : 's'} a week
@@ -163,15 +149,6 @@ export function ScheduleStep({ values, errors, onChange, onSubmit }: ScheduleSte
           </p>
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="hidden lg:inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors shadow-sm hover:shadow-md"
-      >
-        Continue
-        <ArrowRight className="w-4 h-4" />
-      </button>
     </div>
   );
 }

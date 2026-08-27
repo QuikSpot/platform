@@ -1,7 +1,7 @@
 'use client';
 
-import { ArrowRight, CheckCircle2, FileText, IdCard, Image as ImageIcon, ShieldCheck, Upload, User, X } from 'lucide-react';
 import { ChangeEvent, useRef, useState } from 'react';
+import { CheckCircle2, FileText, IdCard, ShieldCheck, Upload, User, X } from 'lucide-react';
 import { Checkbox, Field } from './fields';
 
 interface VerificationStepProps {
@@ -53,7 +53,7 @@ function FileSlot({ label, description, file, error, accept, icon, onChange }: F
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className={`w-full text-left rounded-2xl border-2 border-dashed transition-colors p-4 ${
+        className={`w-full text-left rounded-2xl border-2 border-dashed transition-colors p-3.5 ${
           error
             ? 'border-red-300 bg-red-50/30'
             : file
@@ -63,17 +63,17 @@ function FileSlot({ label, description, file, error, accept, icon, onChange }: F
       >
         <div className="flex items-start gap-3">
           <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+            className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
               file ? 'bg-[#1aae74] text-white' : 'bg-slate-100 text-slate-500'
             }`}
           >
-            {file ? <CheckCircle2 className="w-5 h-5" /> : icon}
+            {file ? <CheckCircle2 className="w-4.5 h-4.5" /> : icon}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-900 text-sm">{label}</p>
             <p className="text-xs text-slate-500 mt-0.5">{description}</p>
             {file && (
-              <p className="text-xs text-[#1aae74] mt-2 font-medium flex items-center gap-1.5">
+              <p className="text-xs text-[#1aae74] mt-1.5 font-medium flex items-center gap-1.5">
                 <span className="truncate max-w-[180px]">{file.name}</span>
                 <span className="text-slate-400 font-normal">· {formatSize(file.size)}</span>
               </p>
@@ -86,7 +86,7 @@ function FileSlot({ label, description, file, error, accept, icon, onChange }: F
                 e.stopPropagation();
                 onChange(null);
               }}
-              className="flex-shrink-0 w-8 h-8 rounded-full hover:bg-white/80 flex items-center justify-center text-slate-500 hover:text-red-500 transition-colors"
+              className="flex-shrink-0 w-7 h-7 rounded-full hover:bg-white/80 flex items-center justify-center text-slate-500 hover:text-red-500 transition-colors"
               aria-label={`Remove ${label}`}
             >
               <X className="w-4 h-4" />
@@ -99,7 +99,7 @@ function FileSlot({ label, description, file, error, accept, icon, onChange }: F
         {previewUrl && (
           <div className="mt-3 rounded-xl overflow-hidden border border-slate-200">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="" className="w-full h-32 object-cover" />
+            <img src={previewUrl} alt="" className="w-full h-28 object-cover" />
           </div>
         )}
       </button>
@@ -115,40 +115,25 @@ function FileSlot({ label, description, file, error, accept, icon, onChange }: F
   );
 }
 
-export function VerificationStep({ values, errors, onChange, onSubmit }: VerificationStepProps) {
+export function VerificationStep({ values, errors, onChange }: VerificationStepProps) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-          <ShieldCheck className="w-5 h-5 text-[#1aae74]" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Verify your identity</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            We need a few documents to keep our community safe and trusted.
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
-        <ShieldCheck className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-amber-900">
-          <p className="font-semibold">Your data is encrypted and private</p>
-          <p className="text-amber-800 mt-0.5 text-xs">
-            Files are stored in a private bucket and only used for verification.
-          </p>
-        </div>
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex items-start gap-3">
+        <ShieldCheck className="w-4.5 h-4.5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-900">
+          Files are encrypted and used only for verification.
+        </p>
       </div>
 
       <Field label="National ID (NIC)" required>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
           <FileSlot
             label="NIC — Front"
             description="Clear photo of the front side"
             file={values.nicFrontImage}
             error={errors.nicFrontImage}
             accept="image/*"
-            icon={<IdCard className="w-5 h-5" />}
+            icon={<IdCard className="w-4.5 h-4.5" />}
             onChange={(f) => onChange('nicFrontImage', f)}
           />
           <FileSlot
@@ -157,7 +142,7 @@ export function VerificationStep({ values, errors, onChange, onSubmit }: Verific
             file={values.nicBackImage}
             error={errors.nicBackImage}
             accept="image/*"
-            icon={<IdCard className="w-5 h-5" />}
+            icon={<IdCard className="w-4.5 h-4.5" />}
             onChange={(f) => onChange('nicBackImage', f)}
           />
         </div>
@@ -166,34 +151,33 @@ export function VerificationStep({ values, errors, onChange, onSubmit }: Verific
       <Field label="Verification selfie" required>
         <FileSlot
           label="Selfie holding your NIC"
-          description="Make sure your face and the NIC are clearly visible"
+          description="Face and NIC clearly visible"
           file={values.selfieImage}
           error={errors.selfieImage}
           accept="image/*"
-          icon={<User className="w-5 h-5" />}
+          icon={<User className="w-4.5 h-4.5" />}
           onChange={(f) => onChange('selfieImage', f)}
         />
       </Field>
 
-      <Field label="Portfolio" optional hint="PDF, ZIP, or images. Helps customers trust you.">
+      <Field label="Portfolio" optional hint="PDF, ZIP, or images. Recommended.">
         <FileSlot
           label="Past work / portfolio"
-          description="Optional but recommended"
+          description="Optional"
           file={values.portfolio}
           error={errors.portfolio}
           accept=".zip,.pdf,image/*"
-          icon={<FileText className="w-5 h-5" />}
+          icon={<FileText className="w-4.5 h-4.5" />}
           onChange={(f) => onChange('portfolio', f)}
         />
       </Field>
 
-      <div className="space-y-3 pt-4 border-t border-slate-200">
+      <div className="space-y-2.5 pt-4 border-t border-slate-200">
         <Field error={errors.agreeTerms}>
           <Checkbox
             checked={values.agreeTerms}
             onChange={(v) => onChange('agreeTerms', v)}
             label="I agree to the Terms & Conditions"
-            description="By continuing you accept our professional code of conduct and service quality standards."
           />
         </Field>
         <Field error={errors.agreeCommission}>
@@ -201,19 +185,9 @@ export function VerificationStep({ values, errors, onChange, onSubmit }: Verific
             checked={values.agreeCommission}
             onChange={(v) => onChange('agreeCommission', v)}
             label="I acknowledge the 10% platform commission"
-            description="A small commission is retained on successful bookings to maintain the platform."
           />
         </Field>
       </div>
-
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="hidden lg:inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors shadow-sm hover:shadow-md"
-      >
-        Review application
-        <ArrowRight className="w-4 h-4" />
-      </button>
     </div>
   );
 }

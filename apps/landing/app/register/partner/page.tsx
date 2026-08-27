@@ -9,6 +9,7 @@ import { ExpertiseStep } from './_components/expertise-step';
 import { ScheduleStep } from './_components/schedule-step';
 import { PersonalStep } from './_components/personal-step';
 import { PhoneStep } from './_components/phone-step';
+import { PhoneGateShell } from './_components/phone-gate-shell';
 import { ProgressSummary } from './_components/progress-summary';
 import { ReviewStep } from './_components/review-step';
 import { SignupShell } from './_components/signup-shell';
@@ -72,17 +73,15 @@ const INITIAL: FormData = {
   agreeCommission: false,
 };
 
-/** Maps a screen id (1..7) to the validator step number (1..5).
- *  Steps 1 & 2 in the new flow (phone + personal) both validate against the old
- *  step 1 schema; steps 3-7 in the new flow map to old 2-5 (skipping phone since
- *  the OTP screen handles that gate). */
+/** Maps a wizard screen id (1..6) to the validator step number (1..5).
+ *  Phone/OTP is verified before the wizard mounts at all, so screen 1 here is
+ *  already "Personal info" and lines up 1:1 with the validator steps. */
 function validatorStepFor(screen: number): number {
-  if (screen === 1 || screen === 2) return 1;
-  return screen - 1;
+  return screen;
 }
 
 function validatorDataFor(screen: number, f: FormData): Record<string, unknown> {
-  if (screen === 1 || screen === 2) {
+  if (screen === 1) {
     return {
       fullName: f.fullName,
       nicNumber: f.nicNumber,
@@ -95,14 +94,14 @@ function validatorDataFor(screen: number, f: FormData): Record<string, unknown> 
       confirmPassword: f.confirmPassword,
     };
   }
-  if (screen === 3) {
+  if (screen === 2) {
     return {
       province: f.province,
       district: f.district,
       serviceZones: f.serviceZones,
     };
   }
-  if (screen === 4) {
+  if (screen === 3) {
     return {
       primaryCategory: f.primaryCategory,
       experienceLevel: f.experienceLevel,
@@ -110,7 +109,7 @@ function validatorDataFor(screen: number, f: FormData): Record<string, unknown> 
       bio: f.bio,
     };
   }
-  if (screen === 5) {
+  if (screen === 4) {
     return {
       nightService: f.nightService,
       serviceDays: f.serviceDays,
@@ -131,6 +130,10 @@ function validatorDataFor(screen: number, f: FormData): Record<string, unknown> 
 const SESSION_KEY = 'instaFixdPartnerSignup';
 
 export default function PartnerRegistration() {
+  // The OTP gate is isolated from the wizard entirely: it's not step 1 of N,
+  // it's a precondition for the wizard existing at all. Once true, there's no
+  // path back into it from inside the wizard (mirrors Uber-style onboarding).
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [screen, setScreen] = useState<number>(1);
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -146,7 +149,15 @@ export default function PartnerRegistration() {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as { screen?: number; form?: Partial<FormData>; completed?: number[] };
+        const parsed = JSON.parse(raw) as {
+          phoneVerified?: boolean;
+          screen?: number;
+          form?: Partial<FormData>;
+          completed?: number[];
+        };
+        if (parsed.phoneVerified) {
+          setPhoneVerified(true);
+        }
         if (parsed.screen && parsed.screen >= 1 && parsed.screen <= TOTAL_STEPS) {
           setScreen(parsed.screen);
         }
@@ -169,12 +180,12 @@ export default function PartnerRegistration() {
       void _a; void _b; void _c; void _d;
       sessionStorage.setItem(
         SESSION_KEY,
-        JSON.stringify({ screen, form: persistable, completed: Array.from(completed) }),
+        JSON.stringify({ phoneVerified, screen, form: persistable, completed: Array.from(completed) }),
       );
     } catch {
       /* storage may be full or disabled */
     }
-  }, [form, screen, completed]);
+  }, [form, screen, completed, phoneVerified]);
 
   const set = useMemo(
     () =>
@@ -211,27 +222,40 @@ export default function PartnerRegistration() {
     setErrors({});
     setCompleted((prev) => new Set([...prev, screen]));
     setScreen((s) => Math.min(s + 1, TOTAL_STEPS));
-    // Scroll to top for the new screen
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const goBack = () => {
     setErrors({});
     setScreen((s) => Math.max(1, s - 1));
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const goTo = (target: number) => {
     setErrors({});
     setScreen(target);
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePhoneVerified = (phone: string) => {
     set('phone', phone);
-    setCompleted((prev) => new Set([...prev, 1]));
-    setScreen(2);
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    setPhoneVerified(true);
+  };
+
+  // Exiting the flow is a deliberate break, not a navigation blip — it must
+  // wipe the persisted session so the OTP gate isn't skippable by leaving and
+  // coming back (sessionStorage otherwise survives client-side navigation
+  // within the same tab, since it's meant to survive a closed *tab*, not a
+  // deliberate exit).
+  const handleExit = () => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {
+      /* noop */
+    }
+    setPhoneVerified(false);
+    setScreen(1);
+    setForm(INITIAL);
+    setCompleted(new Set());
+    setErrors({});
+    setApiError(null);
   };
 
   // ── Submit handler ─────────────────────────────────────────────
@@ -256,7 +280,7 @@ export default function PartnerRegistration() {
           fullName: form.fullName,
           mobileNumber: form.phone,
           whatsappNumber: undefined,
-          email: form.email,
+          email: form.email || undefined,
           password: form.password,
           nicNumber: form.nicNumber,
           languageCode: form.languageCode,
@@ -314,7 +338,9 @@ export default function PartnerRegistration() {
         }
       }
 
-      // Clean up state
+      // Clean up state — including the OTP gate, so "Register another" (a new
+      // provider, likely a different phone number) has to verify again too.
+      setPhoneVerified(false);
       setForm(INITIAL);
       setCompleted(new Set());
       setErrors({});
@@ -340,12 +366,20 @@ export default function PartnerRegistration() {
     return <SuccessScreen onRegisterAnother={handleRegisterAnother} />;
   }
 
+  // Phone/OTP is a gate the user must clear before the wizard mounts at all —
+  // once verified there is no `screen` value that leads back to it.
+  if (!phoneVerified) {
+    return (
+      <PhoneGateShell onExit={handleExit}>
+        <PhoneStep initialValue={form.phone} onVerified={handlePhoneVerified} backendUrl={backendUrl} />
+      </PhoneGateShell>
+    );
+  }
+
   // ── Render the active screen ───────────────────────────────────
   const renderScreen = () => {
     switch (screen) {
       case 1:
-        return <PhoneStep initialValue={form.phone} onVerified={handlePhoneVerified} backendUrl={backendUrl} />;
-      case 2:
         return (
           <PersonalStep
             values={{
@@ -364,7 +398,7 @@ export default function PartnerRegistration() {
             primaryIcon={<ArrowRight className="w-4 h-4" />}
           />
         );
-      case 3:
+      case 2:
         return (
           <LocationStep
             values={{
@@ -377,7 +411,7 @@ export default function PartnerRegistration() {
             onSubmit={goNext}
           />
         );
-      case 4:
+      case 3:
         return (
           <ExpertiseStep
             values={{
@@ -392,7 +426,7 @@ export default function PartnerRegistration() {
             backendUrl={backendUrl}
           />
         );
-      case 5:
+      case 4:
         return (
           <ScheduleStep
             values={{
@@ -406,7 +440,7 @@ export default function PartnerRegistration() {
             onSubmit={goNext}
           />
         );
-      case 6:
+      case 5:
         return (
           <VerificationStep
             values={{
@@ -422,7 +456,7 @@ export default function PartnerRegistration() {
             onSubmit={goNext}
           />
         );
-      case 7:
+      case 6:
         return (
           <ReviewStep
             fullName={form.fullName}
@@ -454,19 +488,18 @@ export default function PartnerRegistration() {
     }
   };
 
-  // Phone screen has its own submit button (it triggers the OTP).
   // Review screen has its own submit button (final submit).
-  // All other screens get a generic mobile "Continue" sticky CTA + desktop "Continue" in footer.
-  const showShellFooter = screen !== 1 && screen !== 7;
+  // Every other screen gets a generic mobile "Continue" sticky CTA + desktop "Continue" in footer.
+  const showShellFooter = screen !== TOTAL_STEPS;
 
   const primaryAction =
     showShellFooter ? (
       <StepFooter
-        primaryLabel={screen === 6 ? 'Review application' : 'Continue'}
+        primaryLabel={screen === TOTAL_STEPS - 1 ? 'Review application' : 'Continue'}
         primaryAction={goNext}
         primaryIcon={<ArrowRight className="w-4 h-4" />}
       />
-    ) : screen === 7 ? (
+    ) : screen === TOTAL_STEPS ? (
       <button
         type="button"
         onClick={handleSubmit}
@@ -495,8 +528,9 @@ export default function PartnerRegistration() {
       stepSubtitle={stepSubtitle}
       canGoBack={screen > 1}
       onBack={goBack}
-      primaryAction={primaryAction ?? <div />}
-      summary={<ProgressSummary currentStep={screen} completedSteps={completed} />}
+      onExit={handleExit}
+      primaryAction={primaryAction}
+      summary={<ProgressSummary currentStep={screen} completedSteps={completed} verifiedPhone={form.phone} />}
     >
       {renderScreen()}
     </SignupShell>

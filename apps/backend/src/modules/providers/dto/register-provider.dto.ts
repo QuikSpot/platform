@@ -88,10 +88,10 @@ export class RegisterProviderDto {
   @Matches(/^07[0-9]{8}$/, { message: 'WhatsApp number must be a valid Sri Lankan number' })
   whatsappNumber?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsEmail()
   @MaxLength(254)
-  email: string;
+  email?: string;
 
   @IsNotEmpty()
   @IsString()

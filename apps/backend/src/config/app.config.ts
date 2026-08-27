@@ -9,4 +9,5 @@ export const appConfigSchema = Joi.object({
   JWT_EXPIRES_IN: Joi.string().default('7d'),
   APP_NAME: Joi.string().default('instaFixd'),
   AI_API_URL: Joi.string().uri().required(),
+  OTP_DEV_BYPASS_ENABLED: Joi.boolean().default(false),
 });

@@ -259,7 +259,7 @@ export default function ProfilePage() {
             </div>
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-white">{profile.fullName || '—'}</h1>
-              <p className="text-sm text-green-200 mt-0.5">{profile.email}</p>
+              <p className="text-sm text-green-200 mt-0.5">{profile.email || profile.mobileNumber}</p>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${profile.isActive ? 'bg-green-400/20 text-green-100' : 'bg-white/10 text-white/70'}`}>
                   {profile.isActive ? 'Active' : 'Pending review'}
@@ -280,7 +280,7 @@ export default function ProfilePage() {
             </div>
             <div className="bg-white/10 rounded-xl px-4 py-2.5">
               <p className="text-[10px] font-semibold text-green-300 uppercase tracking-wider">Email</p>
-              <p className="text-sm font-semibold text-white mt-0.5 truncate">{profile.email}</p>
+              <p className="text-sm font-semibold text-white mt-0.5 truncate">{profile.email || 'Not provided'}</p>
             </div>
           </div>
         </div>

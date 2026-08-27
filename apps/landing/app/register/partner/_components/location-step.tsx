@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, MapPin, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useLocations } from '@/hooks/use-locations';
 import { Chip, Field, SelectInput } from './fields';
@@ -12,7 +12,7 @@ interface LocationStepProps {
   onSubmit: () => void;
 }
 
-export function LocationStep({ values, errors, onChange, onSubmit }: LocationStepProps) {
+export function LocationStep({ values, errors, onChange }: LocationStepProps) {
   const { provinces, districts, zones, provincesLoading, districtsLoading, zonesLoading } =
     useLocations(values.province, values.district);
 
@@ -41,19 +41,7 @@ export function LocationStep({ values, errors, onChange, onSubmit }: LocationSte
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-          <MapPin className="w-5 h-5 text-[#1aae74]" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Where do you work?</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Pick the areas where you accept bookings.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5">
         <SelectInput
           label="Province"
           required
@@ -86,7 +74,7 @@ export function LocationStep({ values, errors, onChange, onSubmit }: LocationSte
       {/* Selected zones as chips */}
       {values.district && (
         <Field label="Selected service zones" required error={errors.serviceZones}>
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 min-h-[60px]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3 min-h-[56px]">
             {values.serviceZones.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {values.serviceZones.map((z) => (
@@ -130,7 +118,7 @@ export function LocationStep({ values, errors, onChange, onSubmit }: LocationSte
             />
           </div>
 
-          <div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2">
+          <div className="mt-3 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2">
             {zonesLoading ? (
               <p className="text-sm text-slate-400 italic px-2 py-3">Loading areas…</p>
             ) : filteredZones.length === 0 ? (
@@ -154,15 +142,6 @@ export function LocationStep({ values, errors, onChange, onSubmit }: LocationSte
           </div>
         </Field>
       )}
-
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="hidden lg:inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors shadow-sm hover:shadow-md"
-      >
-        Continue
-        <ArrowRight className="w-4 h-4" />
-      </button>
     </div>
   );
 }

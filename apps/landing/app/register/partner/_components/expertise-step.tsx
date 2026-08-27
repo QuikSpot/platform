@@ -1,8 +1,8 @@
 'use client';
 
-import { ArrowRight, Loader2, Sparkles, Wrench, X } from 'lucide-react';
+import { Loader2, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Chip, Field, SelectInput, TextInput } from './fields';
+import { Chip, Field, SelectInput } from './fields';
 
 interface Category {
   id: string;
@@ -40,7 +40,6 @@ export function ExpertiseStep({
   values,
   errors,
   onChange,
-  onSubmit,
   backendUrl,
 }: ExpertiseStepProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -144,22 +143,10 @@ export function ExpertiseStep({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-          <Wrench className="w-5 h-5 text-[#1aae74]" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Your expertise</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Pick your specialty and tell customers your story.
-          </p>
-        </div>
-      </div>
-
       {/* Bio with AI enhance */}
       <Field
         label="About you"
-        hint={`A short bio customers will see. ${BIO_MIN}–${BIO_MAX} characters.`}
+        hint={`${BIO_MIN}–${BIO_MAX} characters.`}
         error={enhanceError ?? errors.bio}
       >
         <div className="relative">
@@ -167,8 +154,8 @@ export function ExpertiseStep({
             value={values.bio}
             onChange={(e) => onChange('bio', e.target.value)}
             onBlur={() => predictFromBio(values.bio)}
-            placeholder="Hi! I\u2019m an experienced plumber with 8 years of residential and commercial work. I focus on emergency repairs, leak detection, and full bathroom installations…"
-            rows={5}
+            placeholder="Hi! I'm an experienced plumber with 8 years of residential and commercial work…"
+            rows={4}
             className={`w-full px-4 py-3 rounded-xl border bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1aae74]/30 focus:border-[#1aae74] transition-colors resize-none ${
               bioTooShort || bioTooLong || errors.bio ? 'border-red-300' : 'border-slate-200'
             }`}
@@ -176,7 +163,7 @@ export function ExpertiseStep({
           <div className="absolute bottom-3 right-3 flex items-center gap-2">
             {predicting && (
               <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1">
-                <Loader2 className="w-3 h-3 animate-spin" /> AI suggesting
+                <Loader2 className="w-3 h-3 animate-spin" /> AI
               </span>
             )}
             <button
@@ -190,19 +177,19 @@ export function ExpertiseStep({
               ) : (
                 <Sparkles className="w-3.5 h-3.5" />
               )}
-              {enhancing ? 'Enhancing…' : 'Enhance with AI'}
+              {enhancing ? 'Enhancing…' : 'Enhance'}
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between text-xs">
           <span className={bioTooShort ? 'text-red-500' : 'text-slate-400'}>
-            {values.bio.length} / {BIO_MAX} characters
+            {values.bio.length} / {BIO_MAX}
             {bioTooShort && ` (need ${BIO_MIN - values.bio.length} more)`}
           </span>
         </div>
       </Field>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5">
         <SelectInput
           label="Main category"
           required
@@ -246,9 +233,9 @@ export function ExpertiseStep({
 
       {/* Selected sub-categories summary */}
       {values.subCategories.length > 0 && (
-        <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4">
+        <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-3">
           <p className="text-xs font-semibold text-[#114b2e] uppercase tracking-wider mb-2">
-            You selected
+            Selected
           </p>
           <div className="flex flex-wrap gap-2">
             {values.subCategories.map((c) => (
@@ -270,15 +257,6 @@ export function ExpertiseStep({
           </div>
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="hidden lg:inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors shadow-sm hover:shadow-md"
-      >
-        Continue
-        <ArrowRight className="w-4 h-4" />
-      </button>
     </div>
   );
 }

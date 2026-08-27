@@ -98,8 +98,7 @@ export function PhoneStep({ initialValue, onVerified, backendUrl, compact }: Pho
     refs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
-  const handleVerify = async () => {
-    const code = digits.join('');
+  const handleVerify = async (code: string) => {
     if (code.length < 6) return;
     setOtpState('verifying');
     setError(null);
@@ -121,6 +120,18 @@ export function PhoneStep({ initialValue, onVerified, backendUrl, compact }: Pho
       setOtpState('error');
     }
   };
+
+  // Auto-verify the instant all 6 digits are present — no click required.
+  const autoSubmittedCode = useRef<string>('');
+  useEffect(() => {
+    const code = digits.join('');
+    if (code.length === 6 && code !== autoSubmittedCode.current && otpState !== 'verifying') {
+      autoSubmittedCode.current = code;
+      handleVerify(code);
+    }
+    if (code.length < 6) autoSubmittedCode.current = '';
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [digits]);
 
   // ── Phone entry view ───────────────────────────────────────────
   if (!showOtp) {
@@ -229,15 +240,26 @@ export function PhoneStep({ initialValue, onVerified, backendUrl, compact }: Pho
             inputMode="numeric"
             maxLength={1}
             value={d}
+            disabled={otpState === 'verifying'}
             onChange={(e) => handleDigit(i, e.target.value)}
             onKeyDown={(e) => handleKey(i, e)}
-            className={`w-full h-14 sm:h-16 text-center text-2xl font-bold rounded-2xl border-2 transition-colors focus:outline-none focus:border-[#1aae74] focus:ring-2 focus:ring-[#1aae74]/20 ${
+            className={`w-full h-14 sm:h-16 text-center text-2xl font-bold rounded-2xl border-2 transition-colors focus:outline-none focus:border-[#1aae74] focus:ring-2 focus:ring-[#1aae74]/20 disabled:opacity-60 ${
               d
                 ? 'border-[#1aae74] bg-emerald-50 text-[#114b2e]'
                 : 'border-slate-200 bg-white text-slate-900'
             }`}
           />
         ))}
+      </div>
+
+      {/* No submit button — verification fires automatically once all 6 digits are in. */}
+      <div className="flex items-center justify-center h-5">
+        {otpState === 'verifying' && (
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-500">
+            <Loader2 className="w-4 h-4 animate-spin text-[#1aae74]" />
+            Verifying…
+          </span>
+        )}
       </div>
 
       {error && (
@@ -261,25 +283,6 @@ export function PhoneStep({ initialValue, onVerified, backendUrl, compact }: Pho
           </button>
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={handleVerify}
-        disabled={digits.join('').length < 6 || otpState === 'verifying'}
-        className="w-full inline-flex items-center justify-center gap-2 bg-[#1a3d2b] text-white px-6 py-3.5 rounded-2xl font-semibold text-sm hover:bg-[#114b2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-      >
-        {otpState === 'verifying' ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Verifying…
-          </>
-        ) : (
-          <>
-            Verify and continue
-            <ArrowRight className="w-4 h-4" />
-          </>
-        )}
-      </button>
     </div>
   );
 }

@@ -66,15 +66,22 @@ export class ProvidersService {
     }
 
     // ── 1. Create Supabase Auth user ─────────────────────────────────
-    const { data: authData, error: authError } = await this.supabase.admin.createUser({
-      email: dto.email,
-      password: dto.password,
-      email_confirm: true, // mobile OTP already verified the user
-    });
+    // Email is optional — when the provider skips it, the already-OTP-verified mobile
+    // number becomes the Supabase Auth identity instead, so login still works via phone.
+    const { data: authData, error: authError } = await this.supabase.admin.createUser(
+      dto.email
+        ? { email: dto.email, password: dto.password, email_confirm: true }
+        : { phone: this.toAuthPhone(dto.mobileNumber), password: dto.password, phone_confirm: true },
+    );
 
     if (authError) {
-      if (authError.message.toLowerCase().includes('already registered')) {
-        throw new ConflictException('An account with this email already exists');
+      const msg = authError.message.toLowerCase();
+      if (msg.includes('already registered') || msg.includes('already exists')) {
+        throw new ConflictException(
+          dto.email
+            ? 'An account with this email already exists'
+            : 'An account with this mobile number already exists',
+        );
       }
       this.logger.error('Supabase auth user creation failed', authError);
       throw new InternalServerErrorException('Registration failed');
@@ -89,7 +96,7 @@ export class ProvidersService {
         full_name: dto.fullName,
         mobile_number: dto.mobileNumber,
         whatsapp_number: dto.whatsappNumber ?? null,
-        email: dto.email,
+        email: dto.email ?? null,
         nic_number: dto.nicNumber,
         province: dto.province ?? null,
         district: dto.district ?? null,
@@ -389,6 +396,11 @@ export class ProvidersService {
     if (m.startsWith('+')) m = m.slice(1);
     if (m.startsWith('0')) m = '94' + m.slice(1);
     return m;
+  }
+
+  /** E.164 phone for use as a Supabase Auth identity (email-less registration). */
+  private toAuthPhone(mobile: string): string {
+    return `+${this.normalizeMobileForVerificationTracking(mobile)}`;
   }
 
   private async insertServiceZones(providerId: string, zoneNames: string[]): Promise<void> {
