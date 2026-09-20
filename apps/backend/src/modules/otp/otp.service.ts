@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from '../../config/config.service';
 import { ProvidersService } from '../providers/providers.service';
+
+/** Fixed code accepted in place of a real OTP when AppConfigService.isOtpDevBypassEnabled is on. */
+const DEV_BYPASS_CODE = '000000';
 
 interface OtpEntry {
   code: string;
@@ -24,6 +28,7 @@ export class OtpService {
 
   constructor(
     private readonly config: ConfigService,
+    private readonly appConfig: AppConfigService,
     private readonly jwtService: JwtService,
     private readonly providersService: ProvidersService,
   ) {}
@@ -67,6 +72,15 @@ export class OtpService {
   }
 
   private verifyCode(normalized: string, code: string): void {
+    // Dev-only shortcut so local testing doesn't need a real SMS round-trip each time.
+    // Double-gated: the env flag must be explicitly on, AND we must not be in production,
+    // so a misconfigured flag in prod can never bypass real verification.
+    if (code === DEV_BYPASS_CODE && this.appConfig.isOtpDevBypassEnabled && !this.appConfig.isProduction) {
+      this.logger.warn(`[OTP] Dev bypass code used for ${normalized}`);
+      this.store.delete(normalized);
+      return;
+    }
+
     const entry = this.store.get(normalized);
 
     if (!entry) {

@@ -32,4 +32,11 @@ export class AppConfigService {
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
+
+  /** Lets local/dev environments verify OTPs with a fixed '000000' code instead of a real SMS.
+   *  Must be explicitly opted into via env — never true by default, and ignored outside production
+   *  as a second guard (see OtpService). */
+  get isOtpDevBypassEnabled(): boolean {
+    return this.config.get<boolean>('OTP_DEV_BYPASS_ENABLED', false);
+  }
 }

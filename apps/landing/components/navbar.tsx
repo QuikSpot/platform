@@ -127,7 +127,7 @@ export function Navbar() {
                   >
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-xs font-semibold text-gray-900 truncate">{profile.fullName}</p>
-                      <p className="text-xs text-gray-400 truncate">{profile.email}</p>
+                      <p className="text-xs text-gray-400 truncate">{profile.email || profile.mobileNumber}</p>
                     </div>
                     <button
                       onClick={() => { setProfileMenuOpen(false); router.push('/profile'); }}
